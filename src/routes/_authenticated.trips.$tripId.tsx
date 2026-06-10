@@ -170,10 +170,56 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const saveEdit = useMutation({
+    mutationFn: async () => {
+      const valid = editLegs.filter((l) => l.country && l.start_date && l.end_date);
+      if (valid.length === 0) throw new Error("Add at least one country");
+      const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
+      const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
+      const countries = valid.map((l) => l.country);
+      const title = `${countries.join(" • ")} — ${format(parseISO(start), "d MMM")} → ${format(parseISO(end), "d MMM yyyy")}`;
+      const { error } = await supabase.from("trips").update({
+        title, destinations: countries, start_date: start, end_date: end,
+      }).eq("id", tripId);
+      if (error) throw error;
+      await supabase.from("trip_countries").delete().eq("trip_id", tripId);
+      const rows = valid.map((l, i) => ({
+        trip_id: tripId, user_id: user!.id, country: l.country,
+        start_date: l.start_date, end_date: l.end_date, sort_order: i,
+      }));
+      const { error: e2 } = await supabase.from("trip_countries").insert(rows);
+      if (e2) throw e2;
+    },
+    onSuccess: () => {
+      toast.success("Trip updated");
+      setEditOpen(false);
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-countries", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteTrip = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("trips").delete().eq("id", tripId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Trip deleted"); navigate({ to: "/trips" }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
     setOpen(true);
+  };
+
+  const openEdit = () => {
+    setEditLegs((countries ?? []).map((c: any) => ({
+      id: c.id, country: c.country, start_date: c.start_date, end_date: c.end_date,
+    })));
+    setEditOpen(true);
   };
 
   if (!trip) return <PageContainer><p className="text-muted-foreground">Loading…</p></PageContainer>;
