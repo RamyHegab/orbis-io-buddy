@@ -16,6 +16,8 @@ import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotionDatabases, syncSchoolsFromNotion } from "@/lib/notion-sync.functions";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { MapPreview } from "@/components/map-preview";
+import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/schools")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
