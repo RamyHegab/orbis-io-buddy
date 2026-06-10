@@ -639,6 +639,22 @@ function TripPlanner() {
                   </>
                 )}
 
+                {form.type === "hotel" && (
+                  <>
+                    <div><Label>Hotel name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Bangkok" /></div>
+                    <div>
+                      <Label>Address</Label>
+                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hotel address" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>Check-in time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+                      <div><Label>Check-out time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+                    </div>
+                    <div><Label>Check-out date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                    <CostInput form={form} setForm={setForm} />
+                  </>
+                )}
+
                 {form.type === "resting_day" && (
                   <>
                     <div>
