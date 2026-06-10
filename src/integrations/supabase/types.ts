@@ -621,6 +621,7 @@ export type Database = {
         | "recruitment_event"
         | "resting_day"
         | "other"
+        | "hotel"
       agent_status: "active" | "inactive" | "prospect"
       app_role: "admin" | "member"
       school_level: "high_school" | "university" | "language_school" | "other"
@@ -759,6 +760,7 @@ export const Constants = {
         "recruitment_event",
         "resting_day",
         "other",
+        "hotel",
       ],
       agent_status: ["active", "inactive", "prospect"],
       app_role: ["admin", "member"],

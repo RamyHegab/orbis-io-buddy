@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2 } from "lucide-react";
+import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
@@ -29,6 +29,7 @@ const ACTIVITY_TYPES = [
   { value: "agent_visit", label: "Agent Visit" },
   { value: "school_visit", label: "School Visit" },
   { value: "recruitment_event", label: "Recruitment Event" },
+  { value: "hotel", label: "Hotel" },
   { value: "resting_day", label: "Resting Day" },
   { value: "other", label: "Other" },
 ];
@@ -176,6 +177,49 @@ function TripPlanner() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const repeatPrevious = useMutation({
+    mutationFn: async (targetDay: string) => {
+      if (!user) throw new Error("Not signed in");
+      const prev = format(addDays(parseISO(targetDay), -1), "yyyy-MM-dd");
+      const src = (activities ?? []).filter((a: any) => a.day_date === prev && a.type === "recruitment_event");
+      if (src.length === 0) throw new Error("No recruitment events on the previous day");
+      const rows = src.map((a: any) => ({
+        trip_id: tripId, user_id: user.id, type: a.type, day_date: targetDay,
+        title: a.title, start_time: a.start_time, end_time: a.end_time,
+        location: a.location, agent_id: a.agent_id, branch_id: a.branch_id,
+        school_id: a.school_id, cost: a.cost, cost_currency: a.cost_currency,
+        description: a.description, notes: a.notes,
+      }));
+      const { error } = await supabase.from("activities").insert(rows);
+      if (error) throw error;
+      return src.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`Repeated ${n} event${n > 1 ? "s" : ""} from previous day`);
+      qc.invalidateQueries({ queryKey: ["activities", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const costTotals = useMemo(() => {
+    const groups: Record<string, Record<string, number>> = { travel: {}, hotel: {}, recruitment_event: {}, total: {} };
+    for (const a of activities ?? []) {
+      if (!a.cost) continue;
+      const cur = a.cost_currency || "GBP";
+      const amount = Number(a.cost);
+      groups.total[cur] = (groups.total[cur] ?? 0) + amount;
+      if (groups[a.type]) groups[a.type][cur] = (groups[a.type][cur] ?? 0) + amount;
+    }
+    const fmt = (m: Record<string, number>) =>
+      Object.entries(m).map(([cur, v]) => `${cur} ${v.toFixed(2)}`).join(" · ") || "—";
+    return {
+      travel: fmt(groups.travel),
+      hotel: fmt(groups.hotel),
+      events: fmt(groups.recruitment_event),
+      total: fmt(groups.total),
+    };
+  }, [activities]);
 
 
   const saveEdit = useMutation({
@@ -368,6 +412,13 @@ function TripPlanner() {
       </Dialog>
 
 
+      <Card className="p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        <div><div className="text-xs text-muted-foreground">Travel</div><div className="font-semibold">{costTotals.travel}</div></div>
+        <div><div className="text-xs text-muted-foreground">Hotels</div><div className="font-semibold">{costTotals.hotel}</div></div>
+        <div><div className="text-xs text-muted-foreground">Events</div><div className="font-semibold">{costTotals.events}</div></div>
+        <div><div className="text-xs text-muted-foreground">Total</div><div className="font-semibold text-primary">{costTotals.total}</div></div>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {days.map((d) => {
@@ -376,6 +427,8 @@ function TripPlanner() {
             const country = countryForDay(d);
             const resting = dayActs.find((a) => a.type === "resting_day");
             const isSelected = selectedDay === key;
+            const prevKey = format(addDays(d, -1), "yyyy-MM-dd");
+            const prevHasEvents = (byDay[prevKey] ?? []).some((a) => a.type === "recruitment_event");
             return (
               <Card key={key} className={`p-5 ${resting ? "bg-muted/40" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -387,9 +440,16 @@ function TripPlanner() {
                       {resting && ` • ${resting.title} (no activities)`}
                     </div>
                   </div>
-                  <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
-                    <Plus className="h-4 w-4 mr-1" /> Add
-                  </Button>
+                  <div className="flex gap-1">
+                    {prevHasEvents && !resting && (
+                      <Button size="sm" variant="ghost" onClick={() => repeatPrevious.mutate(key)} disabled={repeatPrevious.isPending} title="Repeat previous day's event(s)">
+                        <Copy className="h-4 w-4 mr-1" /> Repeat previous day
+                      </Button>
+                    )}
+                    <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
+                      <Plus className="h-4 w-4 mr-1" /> Add
+                    </Button>
+                  </div>
                 </div>
                 {dayActs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No activities. Click "Add" to schedule.</p>
@@ -579,6 +639,22 @@ function TripPlanner() {
                   </>
                 )}
 
+                {form.type === "hotel" && (
+                  <>
+                    <div><Label>Hotel name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Bangkok" /></div>
+                    <div>
+                      <Label>Address</Label>
+                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hotel address" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>Check-in time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+                      <div><Label>Check-out time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+                    </div>
+                    <div><Label>Check-out date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                    <CostInput form={form} setForm={setForm} />
+                  </>
+                )}
+
                 {form.type === "resting_day" && (
                   <>
                     <div>
@@ -664,6 +740,7 @@ function defaultTitle(f: FormState, branches: any, schools: any, agents: any): s
       return s ? `Visit ${s.name}` : "School visit";
     }
     case "recruitment_event": return "Recruitment event";
+    case "hotel": return f.title || "Hotel stay";
     case "resting_day": return RESTING_TYPES.find((r) => r.value === f.resting_type)?.label ?? "Resting day";
     default: return "Activity";
   }
@@ -675,6 +752,7 @@ function isFormValid(f: FormState): boolean {
     case "agent_visit": return !!f.branch_id;
     case "school_visit": return !!f.school_id;
     case "recruitment_event": return !!f.title;
+    case "hotel": return !!f.title;
     case "resting_day": return !!f.resting_type;
     case "other": return !!f.title;
     default: return false;

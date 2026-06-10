@@ -46,6 +46,22 @@ export const generateTripReport = createServerFn({ method: "POST" })
     ctx += `Dates: ${trip.start_date} to ${trip.end_date}\n`;
     ctx += `Destinations: ${(trip.destinations ?? []).join(", ") || "—"}\n`;
     if (trip.notes) ctx += `Notes: ${trip.notes}\n`;
+    const totals: Record<string, Record<string, number>> = { travel: {}, hotel: {}, recruitment_event: {}, total: {} };
+    for (const a of activities ?? []) {
+      if (a.cost == null) continue;
+      const cur = a.cost_currency || "GBP";
+      const amt = Number(a.cost);
+      totals.total[cur] = (totals.total[cur] ?? 0) + amt;
+      if (totals[a.type]) totals[a.type][cur] = (totals[a.type][cur] ?? 0) + amt;
+    }
+    const fmtTotals = (m: Record<string, number>) =>
+      Object.entries(m).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(", ") || "—";
+    ctx += `\n## Cost Totals\n`;
+    ctx += `- Travel: ${fmtTotals(totals.travel)}\n`;
+    ctx += `- Hotels: ${fmtTotals(totals.hotel)}\n`;
+    ctx += `- Events: ${fmtTotals(totals.recruitment_event)}\n`;
+    ctx += `- Total: ${fmtTotals(totals.total)}\n`;
+
     ctx += `\n## Activities (${activities?.length ?? 0})\n`;
     for (const a of activities ?? []) {
       ctx += `\n### ${a.day_date}${a.start_time ? ` ${a.start_time.slice(0, 5)}` : ""} — ${a.title} [${a.type}]\n`;
@@ -53,6 +69,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
       if (a.agents) ctx += `Agent: ${a.agents.trading_name}\n`;
       if (a.schools) ctx += `School: ${a.schools.name} (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
+      if (a.cost != null) ctx += `Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}\n`;
       const cs = commentsByAct[a.id] ?? [];
       if (cs.length) {
         ctx += `Comments:\n`;
