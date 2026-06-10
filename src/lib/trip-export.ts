@@ -4,13 +4,32 @@ import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 
 type Trip = { title: string; start_date: string; end_date: string };
+type SchoolRef = {
+  name?: string;
+  address?: string | null;
+  primary_contact_name?: string | null;
+  primary_contact_position?: string | null;
+  primary_contact_email?: string | null;
+  primary_contact_phone?: string | null;
+  general_email?: string | null;
+  general_phone?: string | null;
+} | null;
+type BranchRef = {
+  branch_name?: string;
+  address?: string | null;
+  contact_first_name?: string | null;
+  contact_last_name?: string | null;
+  contact_position?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+} | null;
 type Activity = {
   day_date: string; type: string; title: string;
   start_time: string | null; end_time: string | null;
   location: string | null;
   agents?: { trading_name?: string } | null;
-  schools?: { name?: string } | null;
-  agent_branches?: { branch_name?: string } | null;
+  schools?: SchoolRef;
+  agent_branches?: BranchRef;
 };
 type Hotel = {
   name: string;
@@ -43,6 +62,44 @@ function activityRow(a: Activity) {
     a.agents?.trading_name, a.schools?.name, a.agent_branches?.branch_name, a.location,
   ].filter(Boolean).join(" • ");
   return [time, a.title, detail];
+}
+
+type ContactInfo = {
+  source: string;
+  name: string | null;
+  position: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+};
+
+function activityContact(a: Activity): ContactInfo | null {
+  if (a.agent_branches) {
+    const b = a.agent_branches;
+    const name = [b.contact_first_name, b.contact_last_name].filter(Boolean).join(" ") || null;
+    return {
+      source: b.branch_name || "Agent branch",
+      name, position: b.contact_position || null,
+      email: b.contact_email || null, phone: b.contact_phone || null,
+      address: b.address || null,
+    };
+  }
+  if (a.schools) {
+    const s = a.schools;
+    return {
+      source: s.name || "School",
+      name: s.primary_contact_name || null,
+      position: s.primary_contact_position || null,
+      email: s.primary_contact_email || s.general_email || null,
+      phone: s.primary_contact_phone || s.general_phone || null,
+      address: s.address || null,
+    };
+  }
+  return null;
+}
+
+function contactHasAny(c: ContactInfo): boolean {
+  return Boolean(c.name || c.position || c.email || c.phone || c.address);
 }
 
 function hotelDayLabel(stay: Hotel, dayKey: string): string {
@@ -165,7 +222,49 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 } },
       margin: { left: 14, right: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    y = (doc as any).lastAutoTable.finalY + 4;
+
+    for (const a of day.acts) {
+      const c = activityContact(a);
+      if (!c) continue;
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(60);
+      doc.text(`Contact — ${c.source}`, 14, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      const nameLine = c.name
+        ? `${c.name}${c.position ? ` (${c.position})` : ""}`
+        : "Name: Not provided";
+      doc.text(nameLine, 14, y); y += 4;
+      if (c.email) {
+        doc.setTextColor(20, 80, 200);
+        doc.textWithLink(`Email: ${c.email}`, 14, y, { url: `mailto:${c.email}` });
+        doc.setTextColor(60);
+      } else {
+        doc.text("Email: Not provided", 14, y);
+      }
+      y += 4;
+      if (c.phone) {
+        doc.setTextColor(20, 80, 200);
+        doc.textWithLink(`Phone: ${c.phone}`, 14, y, { url: `tel:${c.phone.replace(/\s+/g, "")}` });
+        doc.setTextColor(60);
+      } else {
+        doc.text("Phone: Not provided", 14, y);
+      }
+      y += 4;
+      if (c.address) {
+        const lines = doc.splitTextToSize(`Address: ${c.address}`, 180);
+        doc.text(lines, 14, y);
+        y += 4 * lines.length;
+      } else {
+        doc.text("Address: Not provided", 14, y); y += 4;
+      }
+      doc.setTextColor(0);
+      y += 3;
+    }
+    y += 2;
   }
   doc.save(`${trip.title.replace(/[^\w\s-]/g, "")}.pdf`);
 }
@@ -210,14 +309,37 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       : "";
     const acts = day.acts.length === 0
       ? `<p style="color:#888;font-style:italic;margin:4px 0 12px 0">${day.stay ? "No other activities" : "No activities"}</p>`
-      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:12px">
+      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
           <tr style="background:#f0f0f0"><th align="left">Time</th><th align="left">Activity</th><th align="left">Details</th></tr>
           ${day.acts.map((a) => {
             const [t, title, det] = activityRow(a);
             return `<tr><td>${esc(t)}</td><td>${esc(title)}</td><td>${esc(det)}</td></tr>`;
           }).join("")}
         </table>`;
-    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${stayLine}${acts}`;
+    const contacts = day.acts.map((a) => {
+      const c = activityContact(a);
+      if (!c) return "";
+      const nameLine = c.name
+        ? `<strong>${esc(c.name)}</strong>${c.position ? ` <span style="color:#666">(${esc(c.position)})</span>` : ""}`
+        : `<span style="color:#888">Name: Not provided</span>`;
+      const emailLine = c.email
+        ? `Email: <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`
+        : `<span style="color:#888">Email: Not provided</span>`;
+      const phoneLine = c.phone
+        ? `Phone: <a href="tel:${esc(c.phone.replace(/\s+/g, ""))}">${esc(c.phone)}</a>`
+        : `<span style="color:#888">Phone: Not provided</span>`;
+      const addrLine = c.address
+        ? `Address: ${esc(c.address)}`
+        : `<span style="color:#888">Address: Not provided</span>`;
+      return `<div style="margin:4px 0 10px 0;padding:6px 8px;border-left:3px solid #ccc;font-size:12px">
+        <div style="color:#444;margin-bottom:2px"><em>Contact — ${esc(c.source)}</em></div>
+        <div>${nameLine}</div>
+        <div>${emailLine}</div>
+        <div>${phoneLine}</div>
+        <div>${addrLine}</div>
+      </div>`;
+    }).join("");
+    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${stayLine}${acts}${contacts}`;
   }).join("");
 
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(trip.title)}</title></head>
