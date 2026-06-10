@@ -14,91 +14,268 @@ export type Database = {
   }
   public: {
     Tables: {
-      contacts: {
+      activities: {
         Row: {
-          company: string | null
+          agent_id: string | null
           created_at: string
-          email: string | null
+          day_date: string
+          end_time: string | null
           id: string
-          name: string
+          location: string | null
           notes: string | null
-          phone: string | null
-          position: string | null
+          school_id: string | null
+          start_time: string | null
+          title: string
+          trip_id: string
+          type: Database["public"]["Enums"]["activity_type"]
           updated_at: string
           user_id: string
         }
         Insert: {
-          company?: string | null
+          agent_id?: string | null
           created_at?: string
-          email?: string | null
+          day_date: string
+          end_time?: string | null
           id?: string
-          name: string
+          location?: string | null
           notes?: string | null
-          phone?: string | null
-          position?: string | null
+          school_id?: string | null
+          start_time?: string | null
+          title: string
+          trip_id: string
+          type: Database["public"]["Enums"]["activity_type"]
           updated_at?: string
           user_id: string
         }
         Update: {
-          company?: string | null
+          agent_id?: string | null
           created_at?: string
-          email?: string | null
+          day_date?: string
+          end_time?: string | null
           id?: string
-          name?: string
+          location?: string | null
           notes?: string | null
-          phone?: string | null
-          position?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      deals: {
-        Row: {
-          close_date: string | null
-          contact_id: string | null
-          created_at: string
-          id: string
-          notes: string | null
-          stage: Database["public"]["Enums"]["deal_stage"]
-          title: string
-          updated_at: string
-          user_id: string
-          value: number | null
-        }
-        Insert: {
-          close_date?: string | null
-          contact_id?: string | null
-          created_at?: string
-          id?: string
-          notes?: string | null
-          stage?: Database["public"]["Enums"]["deal_stage"]
-          title: string
-          updated_at?: string
-          user_id: string
-          value?: number | null
-        }
-        Update: {
-          close_date?: string | null
-          contact_id?: string | null
-          created_at?: string
-          id?: string
-          notes?: string | null
-          stage?: Database["public"]["Enums"]["deal_stage"]
+          school_id?: string | null
+          start_time?: string | null
           title?: string
+          trip_id?: string
+          type?: Database["public"]["Enums"]["activity_type"]
           updated_at?: string
           user_id?: string
-          value?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "deals_contact_id_fkey"
-            columns: ["contact_id"]
+            foreignKeyName: "activities_agent_id_fkey"
+            columns: ["agent_id"]
             isOneToOne: false
-            referencedRelation: "contacts"
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]
+      }
+      activity_comments: {
+        Row: {
+          activity_id: string
+          body: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          body: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_comments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_branches: {
+        Row: {
+          agent_id: string
+          city: string
+          contact_name: string | null
+          country: string
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          city: string
+          contact_name?: string | null
+          country: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          city?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_branches_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          created_at: string
+          headquarters_country: string | null
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          headquarters_country?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          headquarters_country?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      form_submissions: {
+        Row: {
+          activity_id: string
+          created_at: string
+          data: Json
+          id: string
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "form_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_templates: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          created_by: string
+          description: string | null
+          fields: Json
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          created_by: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -124,80 +301,170 @@ export type Database = {
         }
         Relationships: []
       }
-      tasks: {
+      schools: {
         Row: {
-          contact_id: string | null
+          city: string
+          contact_name: string | null
+          country: string
           created_at: string
-          deal_id: string | null
-          description: string | null
-          due_date: string | null
+          email: string | null
           id: string
-          priority: Database["public"]["Enums"]["task_priority"]
-          status: Database["public"]["Enums"]["task_status"]
+          level: Database["public"]["Enums"]["school_level"]
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          contact_name?: string | null
+          country: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["school_level"]
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["school_level"]
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trip_reports: {
+        Row: {
+          content_md: string
+          created_at: string
+          id: string
+          model: string | null
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          content_md: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          content_md?: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_reports_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trips: {
+        Row: {
+          created_at: string
+          destinations: string[]
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["trip_status"]
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          contact_id?: string | null
           created_at?: string
-          deal_id?: string | null
-          description?: string | null
-          due_date?: string | null
+          destinations?: string[]
+          end_date: string
           id?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
-          status?: Database["public"]["Enums"]["task_status"]
+          notes?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["trip_status"]
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          contact_id?: string | null
           created_at?: string
-          deal_id?: string | null
-          description?: string | null
-          due_date?: string | null
+          destinations?: string[]
+          end_date?: string
           id?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
-          status?: Database["public"]["Enums"]["task_status"]
+          notes?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["trip_status"]
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      deal_stage:
-        | "prospecting"
-        | "qualification"
-        | "proposal"
-        | "negotiation"
-        | "closed_won"
-        | "closed_lost"
-      task_priority: "low" | "medium" | "high"
-      task_status: "todo" | "in_progress" | "done" | "cancelled"
+      activity_type:
+        | "travel"
+        | "agent_visit"
+        | "school_visit"
+        | "recruitment_event"
+        | "resting_day"
+        | "other"
+      app_role: "admin" | "member"
+      school_level: "high_school" | "university" | "language_school" | "other"
+      trip_status: "planning" | "active" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -325,16 +592,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      deal_stage: [
-        "prospecting",
-        "qualification",
-        "proposal",
-        "negotiation",
-        "closed_won",
-        "closed_lost",
+      activity_type: [
+        "travel",
+        "agent_visit",
+        "school_visit",
+        "recruitment_event",
+        "resting_day",
+        "other",
       ],
-      task_priority: ["low", "medium", "high"],
-      task_status: ["todo", "in_progress", "done", "cancelled"],
+      app_role: ["admin", "member"],
+      school_level: ["high_school", "university", "language_school", "other"],
+      trip_status: ["planning", "active", "completed"],
     },
   },
 } as const
