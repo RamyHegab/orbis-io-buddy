@@ -1,69 +1,46 @@
 ## Goal
 
-Add **hotels as multi-day stays** that show on every day they cover. Entry point is an "Add hotel" button on each day card (greyed out when that day is already covered by another stay). Hotels also surface in the daily itinerary report and the cost summary.
+Add Google Maps Platform to every location field so users can autocomplete an address while typing and view/click an embedded map preview. Coverage: recruitment event venue, agent branch address, school address, plus links in the trip day list and PDF/Word exports.
 
-## Data model
+## Setup
 
-New table `trip_hotels`:
-- `trip_id` (FK → trips, cascade delete)
-- `name` (text, required)
-- `map_url` (text — the Google Maps hyperlink wrapped on the name)
-- `address` (text, optional — fallback for the embedded map preview)
-- `check_in_date`, `check_out_date` (date, required; check_out > check_in)
-- `check_in_time`, `check_out_time` (time, optional)
-- `cost` (numeric), `cost_currency` (text, default 'GBP')
-- `notes` (text, optional)
-- `id`, `user_id`, `created_at`, `updated_at`
-- RLS scoped to `auth.uid() = user_id`, GRANT to authenticated + service_role, `update_updated_at_column` trigger
+- Link the **Google Maps Platform** connector. This injects `GOOGLE_MAPS_API_KEY` (gateway), `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY`, and `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID`.
+- DB: add `lat numeric`, `lng numeric`, `place_id text`, `formatted_address text` to:
+  - `activities` (used by event venue when `type = recruitment_event`)
+  - `agent_branches`
+  - `schools`
 
-The existing `hotel` activity type is removed from the picker (`ACTIVITY_TYPES`) for new entries; legacy rows still render.
+## New shared component: `<AddressAutocomplete>`
 
-## UI — `src/routes/_authenticated.trips.$tripId.tsx`
+- Loads Maps JS API once (`loading=async`, `callback=initMap`, channel param) using the browser key.
+- Uses Places API (New) `AutocompleteSuggestion.fetchAutocompleteSuggestions` (debounced, session token) for type-ahead.
+- On select, returns `{ formatted_address, place_id, lat, lng }`. The visible text input still acts as a free-form fallback if the user ignores suggestions.
+- Right side of the input: a small "Open in Maps" icon-link.
+- Below the input: a compact embedded preview using `google.maps.Map` + `google.maps.Marker` (no `mapId`, no AdvancedMarkerElement), centred on selected lat/lng, or hidden when empty.
 
-### Day card
+## Wire-up per surface
 
-Header gets a second button next to **Add**:
+1. **Activity editor — recruitment event venue** (`src/routes/_authenticated.trips.$tripId.tsx`): replace the existing `location` Input + `map_url` Input + manual embed block with `<AddressAutocomplete>`. Persist `lat/lng/place_id/formatted_address` alongside existing `location` and `map_url`. Keep current behaviour for hotels (already has its own embed).
+2. **Agent branch form & list** (`src/routes/_authenticated.agents.$agentId.tsx`): swap the branch "Address / Maps URL" Input for `<AddressAutocomplete>`. In the branch list card, when `lat/lng` exists show a small inline static-style preview (same `<Map>` component, height ~120px) and a "View on Maps" link; otherwise just a link built from `formatted_address`.
+3. **School form & detail** (`src/routes/_authenticated.schools.tsx`): same swap for the school address field; show preview + link on the school card.
+4. **Itinerary day list** (`src/routes/_authenticated.trips.$tripId.tsx`, day view): next to event/agent/school rows, render a Maps link icon when an address/lat is available.
+5. **Exports** (`src/lib/trip-export.ts`):
+   - PDF: append a "Map" hyperlink under each activity that has a location (uses `https://www.google.com/maps/search/?api=1&query=...` or `&query_place_id=...`).
+   - Word: same link inline with the activity details.
 
-```text
-[ + Add ]   [ 🏨 Add hotel ]
-```
+## Server work
 
-Rules:
-- If a hotel covers this day (`check_in_date ≤ day < check_out_date`):
-  - "Add hotel" button is **greyed out / disabled** with tooltip "Covered by {hotel name}".
-  - A pinned row appears at the top of the day's activity list:
-    `🏨 {hotel name as hyperlink to map_url} · check-in 14:00` on the check-in day,
-    `· check-out 11:00` on the check-out day, plain "Staying at …" in between. Clicking opens the edit dialog.
-- If no hotel covers this day: "Add hotel" opens the hotel dialog with `check_in_date` prefilled to that day and `check_out_date` to the next day.
+- Migration adds the four columns to each of the three tables (nullable, no defaults, no policy changes — existing user-owned RLS still applies).
+- No new server function needed; autocomplete runs in the browser with the referrer-restricted browser key. Geocoding fallback (when a user types an address but never picks a suggestion) goes through a small `createServerFn` that calls the gateway `maps/api/geocode/json` with the server `GOOGLE_MAPS_API_KEY`, so the browser key is never used for server-side APIs.
 
-### Hotel dialog
+## Guardrails
 
-Fields: Hotel name · Google Maps link · Address (optional) · Check-in date + time · Check-out date + time · Cost + currency (reuse `CostInput`) · Notes.
-- Validation: name + check-in + check-out (out > in). Dates may sit outside the trip range; we just warn inline.
-- Overlap check on save: if the new range overlaps an existing stay (other than the one being edited), block with toast "Overlaps {hotel name} ({dates})".
-- Embedded map preview using `https://maps.google.com/maps?q={encodeURIComponent(address || name)}&output=embed`.
-- Edit dialog reuses the same form; includes a Delete button.
+- Use legacy `google.maps.Marker` (per project rules) and never set `mapId`.
+- Never call Geocoding/Routes with the browser key — always via the connector gateway from a server function.
+- Debounce autocomplete (250ms) and reuse a session token per editing session to keep Places billing predictable.
+- If the connector is not linked at runtime, the components degrade to a plain text input plus a "Search on Google Maps" link (existing behaviour) and skip the embed.
 
-### Cost summary card
+## Files touched
 
-`Hotels` total sums `trip_hotels.cost` per currency (replacing the current hotel-activity sum). Travel / Events / Total unchanged otherwise.
-
-## Report — `src/lib/trip-report.functions.ts`
-
-- Fetch `trip_hotels` alongside activities.
-- Daily breakdown: prefix each day with a `Staying at {name} ({map_url})` line when a stay covers it (with check-in/out time on boundary days).
-- Add an **Accommodation** section listing each stay (name, dates, nights, cost, link).
-- Cost totals: pull hotel totals from `trip_hotels`.
-
-## Technical notes
-
-- New query key `["trip-hotels", tripId]`; invalidate after add/edit/delete and after trip date edits.
-- All reads/writes via the browser supabase client with RLS.
-- Helper `hotelForDay(date)` returns the covering stay for a given day — used by the day card chip and the "Add hotel" disabled state.
-- Migration runs `CREATE TABLE … GRANT … ENABLE RLS … CREATE POLICY …` + updated-at trigger in one file.
-
-## Out of scope
-
-- Per-night cost split.
-- Auto-linking a hotel to its arrival travel activity.
-- Multi-room / guest tracking.
+- New: `src/components/address-autocomplete.tsx`, `src/components/map-preview.tsx`, `src/lib/google-maps.ts` (script loader), `src/lib/geocode.functions.ts`.
+- Edited: trip detail route, agent detail route, schools route, `trip-export.ts`, plus one migration.
