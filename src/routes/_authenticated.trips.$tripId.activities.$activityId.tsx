@@ -119,9 +119,34 @@ function ActivityDetail() {
         {activity.notes && <p className="text-sm whitespace-pre-wrap">{activity.notes}</p>}
       </Card>
 
+      {(activity.type === "agent_visit" && activity.agent_branches) && (
+        <ContactCard
+          title={`${activity.agents?.trading_name ?? "Agent"} — ${activity.agent_branches.branch_name}`}
+          contactName={[activity.agent_branches.contact_first_name, activity.agent_branches.contact_last_name].filter(Boolean).join(" ")}
+          contactPosition={activity.agent_branches.contact_position}
+          email={activity.agent_branches.contact_email}
+          phone={activity.agent_branches.contact_phone}
+          address={[activity.agent_branches.address, activity.agent_branches.city, activity.agent_branches.country].filter(Boolean).join(", ")}
+          directoryLink={activity.agents?.id ? { to: "/agents/$agentId", params: { agentId: activity.agents.id }, label: "Open agent in directory" } : null}
+        />
+      )}
+
+      {(activity.type === "school_visit" && activity.schools) && (
+        <ContactCard
+          title={activity.schools.name}
+          contactName={activity.schools.primary_contact_name}
+          contactPosition={activity.schools.primary_contact_position}
+          email={activity.schools.primary_contact_email || activity.schools.general_email}
+          phone={activity.schools.primary_contact_phone || activity.schools.general_phone}
+          address={[activity.schools.address, activity.schools.city, activity.schools.country].filter(Boolean).join(", ")}
+          directoryLink={{ to: "/schools", params: {}, label: "Open schools directory" }}
+        />
+      )}
+
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-5">
           <h3 className="font-semibold mb-3">Forms</h3>
+
           {templates && templates.length > 0 ? (
             <div className="space-y-2">
               {templates.map((t) => (
