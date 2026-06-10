@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { MapPreview } from "@/components/map-preview";
+import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
