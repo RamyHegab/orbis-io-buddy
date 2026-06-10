@@ -275,7 +275,7 @@ function TripPlanner() {
   });
 
   const repeatPrevious = useMutation({
-    mutationFn: async (targetDay: string) => {
+    mutationFn: async ({ targetDay, includeCost }: { targetDay: string; includeCost: boolean }) => {
       if (!user) throw new Error("Not signed in");
       const prev = format(addDays(parseISO(targetDay), -1), "yyyy-MM-dd");
       const src = (activities ?? []).filter((a: any) => a.day_date === prev && a.type === "recruitment_event");
@@ -284,7 +284,9 @@ function TripPlanner() {
         trip_id: tripId, user_id: user.id, type: a.type, day_date: targetDay,
         title: a.title, start_time: a.start_time, end_time: a.end_time,
         location: a.location, agent_id: a.agent_id, branch_id: a.branch_id,
-        school_id: a.school_id, cost: a.cost, cost_currency: a.cost_currency,
+        school_id: a.school_id,
+        cost: includeCost ? a.cost : null,
+        cost_currency: includeCost ? a.cost_currency : null,
         description: a.description, notes: a.notes,
       }));
       const { error } = await supabase.from("activities").insert(rows);
