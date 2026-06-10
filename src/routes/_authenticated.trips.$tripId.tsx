@@ -196,23 +196,26 @@ function TripPlanner() {
           const key = format(d, "yyyy-MM-dd");
           const dayActs = byDay[key] ?? [];
           const country = countryForDay(d);
+          const resting = dayActs.find((a) => a.type === "resting_day");
           return (
-            <Card key={key} className="p-5">
+            <Card key={key} className={`p-5 ${resting ? "bg-muted/40" : ""}`}>
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="font-semibold">{format(d, "EEEE, MMMM d")}</div>
                   <div className="text-xs text-muted-foreground">
                     Day {differenceInDays(d, parseISO(trip.start_date)) + 1}
                     {country && ` • ${country}`}
+                    {resting && ` • ${resting.title} (no activities)`}
                   </div>
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => openForDay(d)}>
+                <Button size="sm" variant="ghost" onClick={() => openForDay(d)} disabled={!!resting}>
                   <Plus className="h-4 w-4 mr-1" /> Add
                 </Button>
               </div>
               {dayActs.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No activities. Click "Add" to schedule.</p>
               ) : (
+
                 <div className="space-y-2">
                   {dayActs.map((a) => (
                     <Link
