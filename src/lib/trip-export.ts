@@ -217,16 +217,27 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       if (a.school_id && a.schools?.name) {
         items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
       }
-      if (items.length === 0) return "";
-      return `<div style="margin:2px 0 8px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`;
+      const linkLine = items.length
+        ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`
+        : "";
+      const obj = a.objectives
+        ? `<div style="margin:2px 0;font-size:12px"><strong>Objectives:</strong> ${esc(a.objectives)}</div>` : "";
+      const vis = a.visit_notes
+        ? `<div style="margin:2px 0 8px 0;font-size:12px"><strong>Notes during visit:</strong> ${esc(a.visit_notes)}</div>` : "";
+      if (!linkLine && !obj && !vis) return "";
+      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${obj}${vis}</div>`;
     }).join("");
     return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
   }).join("");
+
+  const objectivesBlock = trip.objectives
+    ? `<h2>Trip objectives</h2><p style="white-space:pre-wrap">${esc(trip.objectives)}</p>` : "";
 
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(trip.title)}</title></head>
     <body style="font-family:Calibri,Arial,sans-serif">
       <h1>${esc(trip.title)}</h1>
       <p style="color:#666">${format(parseISO(trip.start_date), "d MMM yyyy")} → ${format(parseISO(trip.end_date), "d MMM yyyy")}</p>
+      ${objectivesBlock}
       ${costTable}
       ${rows}
     </body></html>`;
