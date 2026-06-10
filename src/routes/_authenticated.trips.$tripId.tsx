@@ -627,6 +627,11 @@ function TripPlanner() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {daysTruncated && (
+            <Card className="p-3 border-amber-500 bg-amber-50 text-sm">
+              Showing the first {MAX_DAYS} of {dayCount} days. Trim the trip date range to see the rest.
+            </Card>
+          )}
           {days.map((d) => {
             const key = format(d, "yyyy-MM-dd");
             const dayActs = byDay[key] ?? [];
