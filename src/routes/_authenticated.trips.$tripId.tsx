@@ -53,7 +53,7 @@ function TripPlanner() {
   const { data: activities } = useQuery({
     queryKey: ["activities", tripId],
     queryFn: async () => {
-      const { data } = await supabase.from("activities").select("*, agents(name), schools(name)").eq("trip_id", tripId).order("day_date").order("start_time");
+      const { data } = await supabase.from("activities").select("*, agents(trading_name), schools(name)").eq("trip_id", tripId).order("day_date").order("start_time");
       return data ?? [];
     },
   });
@@ -166,7 +166,7 @@ function TripPlanner() {
                           <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
                           <div className="text-xs text-muted-foreground">
                             {ACTIVITY_TYPE_LABELS[a.type]}
-                            {a.agents?.name && ` • ${a.agents.name}`}
+                            {a.agents?.trading_name && ` • ${a.agents.trading_name}`}
                             {a.schools?.name && ` • ${a.schools.name}`}
                             {a.location && ` • ${a.location}`}
                           </div>

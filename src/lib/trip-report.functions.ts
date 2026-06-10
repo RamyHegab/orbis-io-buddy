@@ -23,7 +23,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
 
     const { data: activities } = await supabase
       .from("activities")
-      .select("*, agents(name, headquarters_country), schools(name, country, city)")
+      .select("*, agents(trading_name, hq_country), schools(name, country, city)")
       .eq("trip_id", data.tripId)
       .order("day_date")
       .order("start_time");
@@ -50,7 +50,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
     for (const a of activities ?? []) {
       ctx += `\n### ${a.day_date}${a.start_time ? ` ${a.start_time.slice(0, 5)}` : ""} — ${a.title} [${a.type}]\n`;
       if (a.location) ctx += `Location: ${a.location}\n`;
-      if (a.agents) ctx += `Agent: ${a.agents.name}\n`;
+      if (a.agents) ctx += `Agent: ${a.agents.trading_name}\n`;
       if (a.schools) ctx += `School: ${a.schools.name} (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
       const cs = commentsByAct[a.id] ?? [];
