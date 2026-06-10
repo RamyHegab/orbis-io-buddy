@@ -51,6 +51,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
     let ctx = `# Trip: ${trip.title}\n`;
     ctx += `Dates: ${trip.start_date} to ${trip.end_date}\n`;
     ctx += `Destinations: ${(trip.destinations ?? []).join(", ") || "—"}\n`;
+    if (trip.objectives) ctx += `\n## Trip Objectives\n${trip.objectives}\n`;
     if (trip.notes) ctx += `Notes: ${trip.notes}\n`;
     const totals: Record<string, Record<string, number>> = { travel: {}, hotel: {}, recruitment_event: {}, total: {} };
     for (const a of activities ?? []) {
