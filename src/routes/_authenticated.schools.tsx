@@ -198,7 +198,25 @@ function SchoolsPage() {
                       <div><Label>City *</Label><Input value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="City of school/branch" /></div>
                       <div><Label>Country</Label><Input value={form.country} onChange={(e) => set("country", e.target.value)} /></div>
                     </div>
-                    <div><Label>Address</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="School address" /></div>
+                    <AddressAutocomplete
+                      label="Address"
+                      placeholder="School address"
+                      value={{
+                        address: form.address,
+                        place_id: form.place_id || null,
+                        lat: form.lat,
+                        lng: form.lng,
+                        formatted_address: form.formatted_address || null,
+                      }}
+                      onChange={(v) => setForm({
+                        ...form,
+                        address: v.address,
+                        place_id: v.place_id ?? "",
+                        lat: v.lat,
+                        lng: v.lng,
+                        formatted_address: v.formatted_address ?? "",
+                      })}
+                    />
                     <div>
                       <Label>Level</Label>
                       <Select value={form.level} onValueChange={(v) => set("level", v)}>
