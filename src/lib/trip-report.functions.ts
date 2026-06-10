@@ -69,6 +69,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
       if (a.agents) ctx += `Agent: ${a.agents.trading_name}\n`;
       if (a.schools) ctx += `School: ${a.schools.name} (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
+      if (a.cost != null) ctx += `Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}\n`;
       const cs = commentsByAct[a.id] ?? [];
       if (cs.length) {
         ctx += `Comments:\n`;
