@@ -76,6 +76,7 @@ function AgentDetail() {
       setOpen(false);
       setBranchForm({
         branch_name: "", city: "", country: "", address: "",
+        place_id: "", lat: null, lng: null, formatted_address: "",
         contact_first_name: "", contact_last_name: "", contact_email: "",
         contact_position: "", contact_phone: "", in_country_trading_name: "", agency_name: "",
       });
