@@ -89,6 +89,18 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
 
   let y = 32;
 
+  if (trip.objectives) {
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Trip objectives", 14, y);
+    y += 5;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const lines = doc.splitTextToSize(trip.objectives, 180);
+    doc.text(lines, 14, y);
+    y += lines.length * 5 + 4;
+  }
+
   const totals = computeCostTotals(activities, hotels);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
