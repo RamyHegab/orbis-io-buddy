@@ -198,6 +198,16 @@ function TripsPage() {
                     <div className="font-medium text-sm">{previewTitle}</div>
                   </div>
                 )}
+                <div>
+                  <Label>Trip objectives</Label>
+                  <p className="text-xs text-muted-foreground mb-2">A few lines on the purpose of this trip.</p>
+                  <Textarea
+                    value={objectives}
+                    onChange={(e) => setObjectives(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. Attending IDP fairs in Vietnam and visiting agents in HCMC to train on September intake"
+                  />
+                </div>
                 <Button onClick={() => create.mutate()} disabled={!previewTitle || create.isPending} className="w-full">
                   Create trip
                 </Button>
