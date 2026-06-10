@@ -680,6 +680,14 @@ function TripPlanner() {
               onClick={() => setEditLegs([...editLegs, { country: "", start_date: "", end_date: "" }])}>
               <Plus className="h-4 w-4 mr-1" /> Add country
             </Button>
+            <div>
+              <Label>Trip objectives</Label>
+              <Textarea
+                value={editObjectives}
+                onChange={(e) => setEditObjectives(e.target.value)}
+                placeholder="e.g. Attend IDP fairs in Hanoi & HCMC, visit agents to train on September intake"
+              />
+            </div>
             <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending} className="w-full">Save</Button>
             <p className="text-xs text-muted-foreground">
               Changing dates may leave existing activities outside the new range — they'll stop appearing in the calendar.
