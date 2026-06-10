@@ -243,13 +243,32 @@ function TripPlanner() {
         description: form.description || null,
         notes: form.notes || null,
       };
-      const { error } = await supabase.from("activities").insert(payload);
+      if (editingActivityId) {
+        const { error } = await supabase.from("activities").update(payload).eq("id", editingActivityId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("activities").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editingActivityId ? "Activity updated" : "Activity added");
+      setForm(emptyForm);
+      setSelectedDay(null);
+      setEditingActivityId(null);
+      qc.invalidateQueries({ queryKey: ["activities", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteActivity = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("activities").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Activity added");
-      setForm(emptyForm);
-      setSelectedDay(null);
+      toast.success("Activity deleted");
+      if (editingActivityId) { setEditingActivityId(null); setSelectedDay(null); setForm(emptyForm); }
       qc.invalidateQueries({ queryKey: ["activities", tripId] });
     },
     onError: (e: any) => toast.error(e.message),
