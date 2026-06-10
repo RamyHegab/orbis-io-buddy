@@ -237,7 +237,7 @@ function TripPlanner() {
         description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
+            <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit trip</Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm"><FileDown className="h-4 w-4 mr-1" /> Export</Button>
