@@ -71,6 +71,7 @@ function TripsPage() {
       const { data: trip, error } = await supabase.from("trips").insert({
         title, destinations: valid.map((l) => l.country),
         start_date: start, end_date: end, user_id: user.id,
+        objectives: objectives || null,
       }).select("id").single();
       if (error) throw error;
       const rows = valid.map((l, i) => ({
