@@ -267,7 +267,92 @@ function TripPlanner() {
       total: fmt(groups.total),
 
     };
-  }, [activities]);
+  }, [activities, hotels]);
+
+  const saveHotel = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Not signed in");
+      const h = hotelForm;
+      if (!h.name.trim()) throw new Error("Hotel name is required");
+      if (!h.check_in_date || !h.check_out_date) throw new Error("Check-in and check-out dates are required");
+      if (h.check_out_date < h.check_in_date) throw new Error("Check-out date must be on or after check-in");
+      const overlap = (hotels ?? []).find((other: any) => {
+        if (h.id && other.id === h.id) return false;
+        return !(h.check_out_date < other.check_in_date || h.check_in_date > other.check_out_date);
+      });
+      if (overlap) throw new Error(`Overlaps "${overlap.name}" (${overlap.check_in_date} → ${overlap.check_out_date})`);
+      const payload: any = {
+        trip_id: tripId,
+        user_id: user.id,
+        name: h.name.trim(),
+        map_url: h.map_url || null,
+        address: h.address || null,
+        check_in_date: h.check_in_date,
+        check_out_date: h.check_out_date,
+        check_in_time: h.check_in_time || null,
+        check_out_time: h.check_out_time || null,
+        cost: h.cost ? Number(h.cost) : null,
+        cost_currency: h.cost ? h.cost_currency : null,
+        notes: h.notes || null,
+      };
+      if (h.id) {
+        const { error } = await supabase.from("trip_hotels").update(payload).eq("id", h.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("trip_hotels").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(hotelForm.id ? "Hotel updated" : "Hotel added");
+      setHotelDialogOpen(false);
+      setHotelForm(emptyHotel);
+      qc.invalidateQueries({ queryKey: ["trip-hotels", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteHotel = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("trip_hotels").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Hotel removed");
+      setHotelDialogOpen(false);
+      setHotelForm(emptyHotel);
+      qc.invalidateQueries({ queryKey: ["trip-hotels", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const openAddHotel = (dayKey: string) => {
+    setHotelForm({
+      ...emptyHotel,
+      check_in_date: dayKey,
+      check_out_date: format(addDays(parseISO(dayKey), 1), "yyyy-MM-dd"),
+    });
+    setHotelDialogOpen(true);
+  };
+
+  const openEditHotel = (h: any) => {
+    setHotelForm({
+      id: h.id,
+      name: h.name ?? "",
+      map_url: h.map_url ?? "",
+      address: h.address ?? "",
+      check_in_date: h.check_in_date ?? "",
+      check_out_date: h.check_out_date ?? "",
+      check_in_time: h.check_in_time ? h.check_in_time.slice(0, 5) : "",
+      check_out_time: h.check_out_time ? h.check_out_time.slice(0, 5) : "",
+      cost: h.cost != null ? String(h.cost) : "",
+      cost_currency: h.cost_currency ?? "GBP",
+      notes: h.notes ?? "",
+    });
+    setHotelDialogOpen(true);
+  };
+
+
 
 
   const saveEdit = useMutation({
