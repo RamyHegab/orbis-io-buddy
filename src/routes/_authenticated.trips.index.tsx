@@ -175,8 +175,8 @@ function TripsPage() {
                     {legs.map((leg, i) => (
                       <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
                         <Input placeholder="Country" value={leg.country} onChange={(e) => updateLeg(i, { country: e.target.value })} />
-                        <Input type="date" value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
-                        <Input type="date" value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
+                        <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
+                        <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
                         <Button type="button" size="icon" variant="ghost" disabled={legs.length === 1} onClick={() => setLegs(legs.filter((_, idx) => idx !== i))}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
