@@ -3,7 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 
-type Trip = { title: string; start_date: string; end_date: string };
+type Trip = { title: string; start_date: string; end_date: string; objectives?: string | null };
 type Activity = {
   id?: string;
   day_date: string; type: string; title: string;
@@ -13,6 +13,8 @@ type Activity = {
   cost_currency?: string | null;
   agent_id?: string | null;
   school_id?: string | null;
+  objectives?: string | null;
+  visit_notes?: string | null;
   agents?: { trading_name?: string } | null;
   schools?: { name?: string } | null;
   agent_branches?: { branch_name?: string } | null;
