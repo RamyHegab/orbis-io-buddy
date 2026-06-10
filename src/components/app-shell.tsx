@@ -12,6 +12,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Globe2,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const navItems = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
+  { to: "/inbox", label: "Inbox", icon: Inbox },
   { to: "/forms", label: "Forms", icon: FileText },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
