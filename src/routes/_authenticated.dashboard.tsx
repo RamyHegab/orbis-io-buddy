@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plane, Users, GraduationCap, CalendarDays } from "lucide-react";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
+import { DiscoveryBanner } from "@/components/discovery-banner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Orbis CRM" }] }),
@@ -79,6 +80,8 @@ function Dashboard() {
         title={`Welcome${user?.email ? `, ${user.email.split("@")[0]}` : ""}`}
         description="Your recruitment pipeline at a glance."
       />
+
+      <DiscoveryBanner />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {cards.map((c) => (
