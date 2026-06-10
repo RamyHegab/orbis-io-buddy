@@ -186,7 +186,25 @@ function AgentDetail() {
                 <div><Label>City</Label><Input value={branchForm.city} onChange={(e) => setBranchForm({ ...branchForm, city: e.target.value })} /></div>
                 <div><Label>Country</Label><Input value={branchForm.country} onChange={(e) => setBranchForm({ ...branchForm, country: e.target.value })} /></div>
               </div>
-              <div><Label>Address / Maps URL</Label><Input value={branchForm.address} onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })} /></div>
+              <AddressAutocomplete
+                label="Address"
+                placeholder="Street, city, country"
+                value={{
+                  address: branchForm.address,
+                  place_id: branchForm.place_id,
+                  lat: branchForm.lat,
+                  lng: branchForm.lng,
+                  formatted_address: branchForm.formatted_address,
+                }}
+                onChange={(v) => setBranchForm({
+                  ...branchForm,
+                  address: v.address,
+                  place_id: v.place_id,
+                  lat: v.lat,
+                  lng: v.lng,
+                  formatted_address: v.formatted_address,
+                })}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Agency name</Label><Input value={branchForm.agency_name} onChange={(e) => setBranchForm({ ...branchForm, agency_name: e.target.value })} /></div>
                 <div><Label>In-country trading name</Label><Input value={branchForm.in_country_trading_name} onChange={(e) => setBranchForm({ ...branchForm, in_country_trading_name: e.target.value })} /></div>
