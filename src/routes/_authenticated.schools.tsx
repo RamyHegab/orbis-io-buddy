@@ -159,7 +159,8 @@ function SchoolsPage() {
                 <Button onClick={() => create.mutate()} disabled={!form.name || !form.country || !form.city} className="w-full">Create</Button>
               </div>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         }
       />
 
