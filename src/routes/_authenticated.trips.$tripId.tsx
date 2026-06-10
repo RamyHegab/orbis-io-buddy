@@ -214,8 +214,8 @@ function TripPlanner() {
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
-    setOpen(true);
   };
+
 
   const openEdit = () => {
     setEditLegs((countries ?? []).map((c: any) => ({
