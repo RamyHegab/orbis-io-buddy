@@ -112,7 +112,7 @@ export function AddToItineraryButton(props: Props) {
           {props.size !== "icon" && <span className="ml-1">Add to itinerary</span>}
         </Button>
       </DialogTrigger>
-      <DialogContent onClick={stop} className="max-w-md">
+      <DialogContent onClick={stopContent} className="max-w-md">
         <DialogHeader><DialogTitle>Add "{props.name}" to itinerary</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
