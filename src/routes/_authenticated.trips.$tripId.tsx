@@ -419,6 +419,45 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const fixDateYear = (d: string): string => {
+    const m = d.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
+    if (!m) return d;
+    const y = Number(m[1]);
+    if (y >= 2000 && y <= 2099) return d;
+    const corrected = y < 100 ? y + 2000 : 2000 + (y % 100);
+    return `${String(corrected).padStart(4, "0")}-${m[2]}-${m[3]}`;
+  };
+
+  const fixYear = useMutation({
+    mutationFn: async () => {
+      if (!trip) throw new Error("No trip");
+      const newStart = fixDateYear(trip.start_date);
+      const newEnd = fixDateYear(trip.end_date);
+      const { error } = await supabase.from("trips")
+        .update({ start_date: newStart, end_date: newEnd })
+        .eq("id", tripId);
+      if (error) throw error;
+      for (const c of countries ?? []) {
+        const cs = fixDateYear(c.start_date);
+        const ce = fixDateYear(c.end_date);
+        if (cs !== c.start_date || ce !== c.end_date) {
+          const { error: e2 } = await supabase.from("trip_countries")
+            .update({ start_date: cs, end_date: ce })
+            .eq("id", c.id);
+          if (e2) throw e2;
+        }
+      }
+    },
+    onSuccess: () => {
+      toast.success("Trip dates corrected");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-countries", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
