@@ -27,18 +27,36 @@ function InboxPage() {
     },
   });
 
+  const ALLOWED: Record<string, string[]> = {
+    school: ["name","country","city","address","level","general_email","general_phone","primary_contact_name","primary_contact_position","primary_contact_email","primary_contact_phone","secondary_contact_name","secondary_contact_email","secondary_contact_phone","notes","place_id","lat","lng","formatted_address","campus_image_url"],
+    agent: ["trading_name","legal_name","website","hq_country","hq_city","hq_address","general_email","general_phone","primary_contact_name","primary_contact_position","primary_contact_email","primary_contact_phone","notes","place_id","lat","lng","formatted_address"],
+    agent_branch: ["branch_name","city","country","address","contact_first_name","contact_last_name","contact_position","contact_email","contact_phone","in_country_trading_name","agency_name","place_id","lat","lng","formatted_address"],
+  };
+
   const approve = useMutation({
     mutationFn: async (item: any) => {
       if (!user) throw new Error("Not signed in");
       const table = item.type === "school" ? "schools" : item.type === "agent" ? "agents" : "agent_branches";
-      const payload = { ...item.payload, user_id: user.id, ...(item.type === "agent_branch" && item.agent_id ? { agent_id: item.agent_id } : {}) };
+      const allowed = ALLOWED[item.type] ?? [];
+      const clean: Record<string, any> = {};
+      for (const k of allowed) {
+        const v = item.payload?.[k];
+        if (v !== undefined && v !== null && v !== "") clean[k] = v;
+      }
+      const payload: any = { ...clean, user_id: user.id };
+      if (item.type === "agent_branch") {
+        if (!item.agent_id) throw new Error("Missing agent_id on submission");
+        payload.agent_id = item.agent_id;
+        if (!payload.city) payload.city = "Unknown";
+        if (!payload.country) payload.country = "Unknown";
+      }
       const { error } = await supabase.from(table as any).insert(payload);
       if (error) throw error;
       const { error: e2 } = await supabase.from("pending_submissions").update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: user.id }).eq("id", item.id);
       if (e2) throw e2;
     },
     onSuccess: () => { toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message ?? "Approve failed"),
   });
 
   const reject = useMutation({
@@ -71,7 +89,7 @@ function InboxPage() {
                       </a>
                     )}
                   </div>
-                  <pre className="text-xs bg-muted/40 p-2 rounded overflow-x-auto">{JSON.stringify(s.payload, null, 2)}</pre>
+                  <SubmissionSummary type={s.type} payload={s.payload} />
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button size="sm" onClick={() => approve.mutate(s)} disabled={approve.isPending}><Check className="h-4 w-4 mr-1" /> Approve</Button>
@@ -83,5 +101,45 @@ function InboxPage() {
         </div>
       )}
     </PageContainer>
+  );
+}
+
+const LABELS: Record<string, string> = {
+  name: "Name", trading_name: "Name", legal_name: "Legal name", branch_name: "Branch",
+  city: "City", country: "Country", address: "Address", formatted_address: "Address",
+  level: "Level", website: "Website", hq_country: "HQ country", hq_city: "HQ city", hq_address: "HQ address",
+  general_email: "General email", general_phone: "General phone",
+  primary_contact_name: "Primary contact", primary_contact_position: "Position",
+  primary_contact_email: "Email", primary_contact_phone: "Phone",
+  secondary_contact_name: "Secondary contact", secondary_contact_email: "Secondary email", secondary_contact_phone: "Secondary phone",
+  contact_first_name: "Contact first name", contact_last_name: "Contact last name",
+  contact_position: "Position", contact_email: "Contact email", contact_phone: "Contact phone",
+  in_country_trading_name: "In-country trading name", agency_name: "Agency name",
+  notes: "Notes", confidence: "Confidence",
+};
+const HIDDEN = new Set(["place_id", "lat", "lng", "campus_image_url"]);
+
+function SubmissionSummary({ type, payload }: { type: string; payload: any }) {
+  if (!payload || typeof payload !== "object") return null;
+  const entries = Object.entries(payload).filter(([k, v]) => !HIDDEN.has(k) && v !== null && v !== undefined && v !== "");
+  if (entries.length === 0) return <div className="text-sm text-muted-foreground">No details.</div>;
+  const title = payload.branch_name || payload.name || payload.trading_name || (type === "agent_branch" ? "Branch" : "");
+  return (
+    <div className="text-sm space-y-1">
+      {title && <div className="font-medium">{title}</div>}
+      <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1">
+        {entries.map(([k, v]) => {
+          if (k === "branch_name" || k === "name" || k === "trading_name") return null;
+          const label = LABELS[k] ?? k.replace(/_/g, " ");
+          const val = k === "confidence" && typeof v === "number" ? `${Math.round(v * 100)}%` : String(v);
+          return (
+            <div key={k} className="contents">
+              <dt className="text-muted-foreground capitalize">{label}</dt>
+              <dd className="break-words">{val}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
   );
 }
