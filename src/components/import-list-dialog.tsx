@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +8,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { SCHEMAS, autoMatch, mapRow, type ImportType } from "@/lib/import-mapping";
+import { SCHEMAS, autoMatch, mapRow, parseWorkbook, type ImportType } from "@/lib/import-mapping";
+
 
 type Props = {
   type: ImportType;
