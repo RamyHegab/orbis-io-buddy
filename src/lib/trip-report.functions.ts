@@ -51,6 +51,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
     let ctx = `# Trip: ${trip.title}\n`;
     ctx += `Dates: ${trip.start_date} to ${trip.end_date}\n`;
     ctx += `Destinations: ${(trip.destinations ?? []).join(", ") || "—"}\n`;
+    if (trip.objectives) ctx += `\n## Trip Objectives\n${trip.objectives}\n`;
     if (trip.notes) ctx += `Notes: ${trip.notes}\n`;
     const totals: Record<string, Record<string, number>> = { travel: {}, hotel: {}, recruitment_event: {}, total: {} };
     for (const a of activities ?? []) {
@@ -82,6 +83,8 @@ export const generateTripReport = createServerFn({ method: "POST" })
       if (a.agents && a.agent_id) ctx += `Agent: [${a.agents.trading_name}](/agents/${a.agent_id})\n`;
       if (a.schools && a.school_id) ctx += `School: [${a.schools.name}](/schools) (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
+      if (a.objectives) ctx += `Objectives: ${a.objectives}\n`;
+      if (a.visit_notes) ctx += `Notes during visit: ${a.visit_notes}\n`;
       if (a.cost != null) ctx += `Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}\n`;
       const cs = commentsByAct[a.id] ?? [];
       if (cs.length) {
@@ -109,7 +112,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
           {
             role: "system",
             content:
-              "You are an executive assistant for a university international recruitment team. Write a professional, well-structured trip report in Markdown based on the provided data. Include an Executive Summary, Highlights by Country/City, Key Agent & School Engagements, Recruitment Event Outcomes, Action Items / Follow-ups, and a brief Conclusion. For the cost summary, only show Travel, Hotels, Events and Total — do NOT list individual hotels, nights, or accommodation breakdowns. Do NOT include any agent or school contact details (names, emails, phones, addresses). When referencing an agent or school, preserve the markdown link provided in the source data (e.g. [Agent Name](/agents/<id>)) so the reader can click through. Be concise and concrete. Use bullet points where helpful.",
+              "You are an executive assistant for a university international recruitment team. Write a professional, well-structured trip report in Markdown based on the provided data. Start with an Executive Summary that reflects the stated Trip Objectives (if provided) and assesses how well they were met. Then include Highlights by Country/City, Key Agent & School Engagements, Recruitment Event Outcomes, Action Items / Follow-ups, and a brief Conclusion. Weave each activity's Objectives and 'Notes during visit' into the narrative — these are the primary source of qualitative insight. For the cost summary, only show Travel, Hotels, Events and Total — do NOT list individual hotels, nights, or accommodation breakdowns. Do NOT include any agent or school contact details (names, emails, phones, addresses). When referencing an agent or school, preserve the markdown link provided in the source data (e.g. [Agent Name](/agents/<id>)) so the reader can click through. Be concise and concrete. Use bullet points where helpful.",
           },
           { role: "user", content: ctx },
         ],

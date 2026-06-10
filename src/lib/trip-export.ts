@@ -3,7 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 
-type Trip = { title: string; start_date: string; end_date: string };
+type Trip = { title: string; start_date: string; end_date: string; objectives?: string | null };
 type Activity = {
   id?: string;
   day_date: string; type: string; title: string;
@@ -13,6 +13,8 @@ type Activity = {
   cost_currency?: string | null;
   agent_id?: string | null;
   school_id?: string | null;
+  objectives?: string | null;
+  visit_notes?: string | null;
   agents?: { trading_name?: string } | null;
   schools?: { name?: string } | null;
   agent_branches?: { branch_name?: string } | null;
@@ -87,6 +89,18 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
 
   let y = 32;
 
+  if (trip.objectives) {
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Trip objectives", 14, y);
+    y += 5;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const lines = doc.splitTextToSize(trip.objectives, 180);
+    doc.text(lines, 14, y);
+    y += lines.length * 5 + 4;
+  }
+
   const totals = computeCostTotals(activities, hotels);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
@@ -127,7 +141,7 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
     });
     y = (doc as any).lastAutoTable.finalY + 2;
 
-    // Reference links (require login when opened) — agent/school card hyperlinks
+    // Per-activity references + objectives + visit notes
     for (const a of day.acts) {
       const links: Array<{ label: string; url: string }> = [];
       if (a.agent_id) {
@@ -137,16 +151,28 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       if (a.school_id && a.schools?.name) {
         links.push({ label: `School: ${a.schools.name}`, url: schoolUrl() });
       }
-      if (links.length === 0) continue;
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.setFont("helvetica", "normal");
+      const hasExtra = links.length || a.objectives || a.visit_notes;
+      if (!hasExtra) continue;
+      if (y > 260) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
+      doc.text(a.title, 14, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
       for (const l of links) {
         doc.setTextColor(20, 80, 200);
         doc.textWithLink(l.label, 14, y, { url: l.url });
         y += 4;
       }
       doc.setTextColor(0);
+      const writeBlock = (label: string, text: string) => {
+        const lines = doc.splitTextToSize(`${label}: ${text}`, 180);
+        if (y + lines.length * 4 > 280) { doc.addPage(); y = 20; }
+        doc.text(lines, 14, y);
+        y += lines.length * 4;
+      };
+      if (a.objectives) writeBlock("Objectives", a.objectives);
+      if (a.visit_notes) writeBlock("Notes during visit", a.visit_notes);
       y += 2;
     }
     y += 2;
@@ -191,16 +217,27 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       if (a.school_id && a.schools?.name) {
         items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
       }
-      if (items.length === 0) return "";
-      return `<div style="margin:2px 0 8px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`;
+      const linkLine = items.length
+        ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`
+        : "";
+      const obj = a.objectives
+        ? `<div style="margin:2px 0;font-size:12px"><strong>Objectives:</strong> ${esc(a.objectives)}</div>` : "";
+      const vis = a.visit_notes
+        ? `<div style="margin:2px 0 8px 0;font-size:12px"><strong>Notes during visit:</strong> ${esc(a.visit_notes)}</div>` : "";
+      if (!linkLine && !obj && !vis) return "";
+      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${obj}${vis}</div>`;
     }).join("");
     return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
   }).join("");
+
+  const objectivesBlock = trip.objectives
+    ? `<h2>Trip objectives</h2><p style="white-space:pre-wrap">${esc(trip.objectives)}</p>` : "";
 
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(trip.title)}</title></head>
     <body style="font-family:Calibri,Arial,sans-serif">
       <h1>${esc(trip.title)}</h1>
       <p style="color:#666">${format(parseISO(trip.start_date), "d MMM yyyy")} → ${format(parseISO(trip.end_date), "d MMM yyyy")}</p>
+      ${objectivesBlock}
       ${costTable}
       ${rows}
     </body></html>`;

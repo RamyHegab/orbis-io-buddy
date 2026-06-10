@@ -6,6 +6,7 @@ import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -47,6 +48,7 @@ function TripsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [legs, setLegs] = useState<Leg[]>([{ country: "", start_date: "", end_date: "" }]);
+  const [objectives, setObjectives] = useState("");
 
   const { data: trips } = useQuery({
     queryKey: ["trips"],
@@ -69,6 +71,7 @@ function TripsPage() {
       const { data: trip, error } = await supabase.from("trips").insert({
         title, destinations: valid.map((l) => l.country),
         start_date: start, end_date: end, user_id: user.id,
+        objectives: objectives || null,
       }).select("id").single();
       if (error) throw error;
       const rows = valid.map((l, i) => ({
@@ -82,6 +85,7 @@ function TripsPage() {
       toast.success("Trip created");
       setOpen(false);
       setLegs([{ country: "", start_date: "", end_date: "" }]);
+      setObjectives("");
       qc.invalidateQueries({ queryKey: ["trips"] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -194,6 +198,16 @@ function TripsPage() {
                     <div className="font-medium text-sm">{previewTitle}</div>
                   </div>
                 )}
+                <div>
+                  <Label>Trip objectives</Label>
+                  <p className="text-xs text-muted-foreground mb-2">A few lines on the purpose of this trip.</p>
+                  <Textarea
+                    value={objectives}
+                    onChange={(e) => setObjectives(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. Attending IDP fairs in Vietnam and visiting agents in HCMC to train on September intake"
+                  />
+                </div>
                 <Button onClick={() => create.mutate()} disabled={!previewTitle || create.isPending} className="w-full">
                   Create trip
                 </Button>

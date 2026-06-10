@@ -65,6 +65,8 @@ type FormState = {
   resting_type: string;
   description: string;
   notes: string;
+  objectives: string;
+  visit_notes: string;
 };
 
 const emptyForm: FormState = {
@@ -72,7 +74,7 @@ const emptyForm: FormState = {
   location: "", map_url: "", agent_id: "", branch_id: "", school_id: "",
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
-  resting_type: "", description: "", notes: "",
+  resting_type: "", description: "", notes: "", objectives: "", visit_notes: "",
 };
 
 type HotelForm = {
@@ -108,6 +110,7 @@ function TripPlanner() {
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
+  const [editObjectives, setEditObjectives] = useState("");
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -242,6 +245,8 @@ function TripPlanner() {
         resting_type: form.resting_type || null,
         description: form.description || null,
         notes: form.notes || null,
+        objectives: form.objectives || null,
+        visit_notes: form.visit_notes || null,
       };
       if (editingActivityId) {
         const { error } = await supabase.from("activities").update(payload).eq("id", editingActivityId);
@@ -288,6 +293,7 @@ function TripPlanner() {
         cost: includeCost ? a.cost : null,
         cost_currency: includeCost ? a.cost_currency : null,
         description: a.description, notes: a.notes,
+        objectives: a.objectives, visit_notes: a.visit_notes,
       }));
       const { error } = await supabase.from("activities").insert(rows);
       if (error) throw error;
@@ -428,6 +434,7 @@ function TripPlanner() {
       const title = `${countries.join(" • ")} — ${format(parseISO(start), "d MMM")} → ${format(parseISO(end), "d MMM yyyy")}`;
       const { error } = await supabase.from("trips").update({
         title, destinations: countries, start_date: start, end_date: end,
+        objectives: editObjectives || null,
       }).eq("id", tripId);
       if (error) throw error;
       await supabase.from("trip_countries").delete().eq("trip_id", tripId);
@@ -542,6 +549,8 @@ function TripPlanner() {
       resting_type: a.resting_type ?? "",
       description: a.description ?? "",
       notes: a.notes ?? "",
+      objectives: a.objectives ?? "",
+      visit_notes: a.visit_notes ?? "",
     });
   };
 
@@ -550,6 +559,7 @@ function TripPlanner() {
     setEditLegs((countries ?? []).map((c: any) => ({
       id: c.id, country: c.country, start_date: c.start_date, end_date: c.end_date,
     })));
+    setEditObjectives(trip?.objectives ?? "");
     setEditOpen(true);
   };
 
@@ -670,6 +680,14 @@ function TripPlanner() {
               onClick={() => setEditLegs([...editLegs, { country: "", start_date: "", end_date: "" }])}>
               <Plus className="h-4 w-4 mr-1" /> Add country
             </Button>
+            <div>
+              <Label>Trip objectives</Label>
+              <Textarea
+                value={editObjectives}
+                onChange={(e) => setEditObjectives(e.target.value)}
+                placeholder="e.g. Attend IDP fairs in Hanoi & HCMC, visit agents to train on September intake"
+              />
+            </div>
             <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending} className="w-full">Save</Button>
             <p className="text-xs text-muted-foreground">
               Changing dates may leave existing activities outside the new range — they'll stop appearing in the calendar.
@@ -1150,6 +1168,23 @@ function TripPlanner() {
                   <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
                 </>
               )}
+
+              <div>
+                <Label>Objectives</Label>
+                <Textarea
+                  value={form.objectives}
+                  onChange={(e) => setForm({ ...form, objectives: e.target.value })}
+                  placeholder="What you plan to achieve (e.g. discuss September intake, sign new agreement)"
+                />
+              </div>
+              <div>
+                <Label>Notes during visit</Label>
+                <Textarea
+                  value={form.visit_notes}
+                  onChange={(e) => setForm({ ...form, visit_notes: e.target.value })}
+                  placeholder="Observations, outcomes, follow-ups — used by the AI trip report"
+                />
+              </div>
 
               {validationMessage && (
                 <p className="text-xs text-muted-foreground">{validationMessage}</p>
