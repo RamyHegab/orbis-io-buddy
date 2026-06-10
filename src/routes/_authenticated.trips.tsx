@@ -7,24 +7,37 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Plane } from "lucide-react";
+import { Plus, Plane, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
+import { format, parseISO } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/trips")({
   head: () => ({ meta: [{ title: "Trips — Orbis CRM" }] }),
   component: TripsPage,
 });
 
+type Leg = { country: string; start_date: string; end_date: string };
+
+function buildTitle(legs: Leg[]): string {
+  const valid = legs.filter((l) => l.country && l.start_date && l.end_date);
+  if (valid.length === 0) return "";
+  const countries = valid.map((l) => l.country).join(" • ");
+  const starts = valid.map((l) => parseISO(l.start_date).getTime());
+  const ends = valid.map((l) => parseISO(l.end_date).getTime());
+  const min = new Date(Math.min(...starts));
+  const max = new Date(Math.max(...ends));
+  return `${countries} — ${format(min, "d MMM")} → ${format(max, "d MMM yyyy")}`;
+}
+
 function TripsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", destinations: "", start_date: "", end_date: "", notes: "" });
+  const [legs, setLegs] = useState<Leg[]>([{ country: "", start_date: "", end_date: "" }]);
 
   const { data: trips } = useQuery({
     queryKey: ["trips"],
@@ -37,25 +50,39 @@ function TripsPage() {
   const create = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
-      const destArr = form.destinations.split(",").map((s) => s.trim()).filter(Boolean);
-      const { error } = await supabase.from("trips").insert({
-        title: form.title,
-        destinations: destArr,
-        start_date: form.start_date,
-        end_date: form.end_date,
-        notes: form.notes,
+      const valid = legs.filter((l) => l.country && l.start_date && l.end_date);
+      if (valid.length === 0) throw new Error("Add at least one country with dates");
+      const title = buildTitle(valid);
+      const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
+      const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
+      const { data: trip, error } = await supabase.from("trips").insert({
+        title,
+        destinations: valid.map((l) => l.country),
+        start_date: start,
+        end_date: end,
         user_id: user.id,
-      });
+      }).select("id").single();
       if (error) throw error;
+      const rows = valid.map((l, i) => ({
+        trip_id: trip.id, user_id: user.id, country: l.country,
+        start_date: l.start_date, end_date: l.end_date, sort_order: i,
+      }));
+      const { error: e2 } = await supabase.from("trip_countries").insert(rows);
+      if (e2) throw e2;
     },
     onSuccess: () => {
       toast.success("Trip created");
       setOpen(false);
-      setForm({ title: "", destinations: "", start_date: "", end_date: "", notes: "" });
+      setLegs([{ country: "", start_date: "", end_date: "" }]);
       qc.invalidateQueries({ queryKey: ["trips"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const updateLeg = (i: number, patch: Partial<Leg>) =>
+    setLegs((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+
+  const previewTitle = buildTitle(legs);
 
   return (
     <PageContainer>
@@ -65,17 +92,40 @@ function TripsPage() {
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New trip</Button></DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-xl">
               <DialogHeader><DialogTitle>New trip</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Fall 2026 — Southeast Asia" /></div>
-                <div><Label>Destinations (comma separated)</Label><Input value={form.destinations} onChange={(e) => setForm({ ...form, destinations: e.target.value })} placeholder="Vietnam, Thailand, Indonesia" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Start *</Label><Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
-                  <div><Label>End *</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+              <div className="space-y-4">
+                <div>
+                  <Label>Countries & dates</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Add each country you're visiting with the dates you'll be there.</p>
+                  <div className="space-y-2">
+                    {legs.map((leg, i) => (
+                      <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+                        <div>
+                          <Input placeholder="Country" value={leg.country} onChange={(e) => updateLeg(i, { country: e.target.value })} />
+                        </div>
+                        <Input type="date" value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
+                        <Input type="date" value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
+                        <Button type="button" size="icon" variant="ghost" disabled={legs.length === 1} onClick={() => setLegs(legs.filter((_, idx) => idx !== i))}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button type="button" size="sm" variant="outline" className="mt-2"
+                    onClick={() => setLegs([...legs, { country: "", start_date: "", end_date: "" }])}>
+                    <Plus className="h-4 w-4 mr-1" /> Add country
+                  </Button>
                 </div>
-                <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-                <Button onClick={() => create.mutate()} disabled={!form.title || !form.start_date || !form.end_date} className="w-full">Create trip</Button>
+                {previewTitle && (
+                  <div className="rounded-md border bg-muted/40 p-3">
+                    <div className="text-xs text-muted-foreground">Itinerary title</div>
+                    <div className="font-medium text-sm">{previewTitle}</div>
+                  </div>
+                )}
+                <Button onClick={() => create.mutate()} disabled={!previewTitle || create.isPending} className="w-full">
+                  Create trip
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -95,7 +145,7 @@ function TripsPage() {
                     <div className="font-medium truncate">{t.title}</div>
                     <div className="text-xs text-muted-foreground mt-1">{fmtDate(t.start_date)} → {fmtDate(t.end_date)}</div>
                     <div className="flex flex-wrap gap-1 mt-3">
-                      {t.destinations?.slice(0, 3).map((d) => <Badge key={d} variant="secondary">{d}</Badge>)}
+                      {t.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
                     </div>
                     <Badge className="mt-3 capitalize" variant="outline">{t.status}</Badge>
                   </div>
