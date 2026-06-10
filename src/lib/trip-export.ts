@@ -173,9 +173,10 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
 export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
   const days = buildDays(trip, activities, hotels);
 
+  const totals = hotelTotals(hotels);
   const hotelsTable = hotels.length === 0 ? "" : `
     <h2>Accommodation</h2>
-    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:16px">
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
       <tr style="background:#f0f0f0">
         <th align="left">Hotel</th><th align="left">Check-in</th><th align="left">Check-out</th>
         <th align="left">Nights</th><th align="left">Cost</th><th align="left">Map / Address</th>
@@ -197,7 +198,9 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
           <td>${mapCell}</td>
         </tr>`;
       }).join("")}
-    </table>`;
+    </table>
+    ${totals ? `<p style="margin:0 0 16px 0;font-size:13px"><strong>Totals:</strong> ${totals.count} hotel${totals.count > 1 ? "s" : ""} · ${totals.totalNights} night${totals.totalNights > 1 ? "s" : ""} · ${esc(totals.range)} · ${esc(totals.costStr)}</p>` : ""}`;
+
 
   const rows = days.map((day) => {
     const stayLine = day.stay
