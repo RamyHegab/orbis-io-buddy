@@ -31,6 +31,7 @@ export type Database = {
           location: string | null
           map_url: string | null
           notes: string | null
+          objectives: string | null
           resting_type: string | null
           school_id: string | null
           start_time: string | null
@@ -40,6 +41,7 @@ export type Database = {
           type: Database["public"]["Enums"]["activity_type"]
           updated_at: string
           user_id: string
+          visit_notes: string | null
         }
         Insert: {
           agent_id?: string | null
@@ -57,6 +59,7 @@ export type Database = {
           location?: string | null
           map_url?: string | null
           notes?: string | null
+          objectives?: string | null
           resting_type?: string | null
           school_id?: string | null
           start_time?: string | null
@@ -66,6 +69,7 @@ export type Database = {
           type: Database["public"]["Enums"]["activity_type"]
           updated_at?: string
           user_id: string
+          visit_notes?: string | null
         }
         Update: {
           agent_id?: string | null
@@ -83,6 +87,7 @@ export type Database = {
           location?: string | null
           map_url?: string | null
           notes?: string | null
+          objectives?: string | null
           resting_type?: string | null
           school_id?: string | null
           start_time?: string | null
@@ -92,6 +97,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["activity_type"]
           updated_at?: string
           user_id?: string
+          visit_notes?: string | null
         }
         Relationships: [
           {
@@ -612,6 +618,7 @@ export type Database = {
           end_date: string
           id: string
           notes: string | null
+          objectives: string | null
           start_date: string
           status: Database["public"]["Enums"]["trip_status"]
           title: string
@@ -624,6 +631,7 @@ export type Database = {
           end_date: string
           id?: string
           notes?: string | null
+          objectives?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["trip_status"]
           title: string
@@ -636,6 +644,7 @@ export type Database = {
           end_date?: string
           id?: string
           notes?: string | null
+          objectives?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["trip_status"]
           title?: string
