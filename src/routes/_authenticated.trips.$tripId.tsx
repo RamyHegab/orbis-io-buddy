@@ -156,6 +156,7 @@ function TripPlanner() {
         end_time: form.end_time || null,
         end_date: form.end_date || null,
         location: form.location || null,
+        map_url: form.map_url || null,
         agent_id: form.agent_id || null,
         branch_id: form.branch_id || null,
         school_id: form.school_id || null,
