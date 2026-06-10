@@ -734,9 +734,32 @@ function TripPlanner() {
                   </div>
                   <div className="flex gap-1">
                     {prevHasEvents && !resting && (
-                      <Button size="sm" variant="ghost" onClick={() => repeatPrevious.mutate(key)} disabled={repeatPrevious.isPending} title="Repeat previous day's event(s)">
-                        <Copy className="h-4 w-4 mr-1" /> Repeat previous day
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" disabled={repeatPrevious.isPending} title="Repeat previous day's event(s)">
+                            <Copy className="h-4 w-4 mr-1" /> Repeat previous day
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Repeat previous day's events?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              The previous day's recruitment event(s) had a cost recorded. Was that cost for a single day, or for the whole run of repeated days?
+                              <br /><br />
+                              Choose <strong>Include cost</strong> to copy the same cost onto this day (cost per day). Choose <strong>Skip cost</strong> if the previous day's cost already covers today (cost was for the whole event).
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => repeatPrevious.mutate({ targetDay: key, includeCost: false })}>
+                              Skip cost
+                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => repeatPrevious.mutate({ targetDay: key, includeCost: true })}>
+                              Include cost
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                     <TooltipProvider>
                       <Tooltip>
