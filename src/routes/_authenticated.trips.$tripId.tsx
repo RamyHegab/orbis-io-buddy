@@ -244,6 +244,8 @@ function TripPlanner() {
         resting_type: form.resting_type || null,
         description: form.description || null,
         notes: form.notes || null,
+        objectives: form.objectives || null,
+        visit_notes: form.visit_notes || null,
       };
       if (editingActivityId) {
         const { error } = await supabase.from("activities").update(payload).eq("id", editingActivityId);
