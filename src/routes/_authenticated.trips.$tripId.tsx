@@ -972,7 +972,8 @@ function TripPlanner() {
                     ) : (
                       <Select value={form.branch_id} onValueChange={(v) => {
                         const b: any = filteredBranches.find((x: any) => x.id === v);
-                        setForm({ ...form, branch_id: v, agent_id: b?.agent_id ?? form.agent_id, title: b ? `Visit ${b.branch_name}` : form.title });
+                        const agentName = b?.agents?.trading_name ?? agents?.find((a: any) => a.id === (b?.agent_id ?? form.agent_id))?.trading_name;
+                        setForm({ ...form, branch_id: v, agent_id: b?.agent_id ?? form.agent_id, title: b ? `${agentName ? `${agentName} — ` : ""}${b.branch_name}` : form.title });
                       }}>
                         <SelectTrigger><SelectValue placeholder="Pick a branch" /></SelectTrigger>
                         <SelectContent>
