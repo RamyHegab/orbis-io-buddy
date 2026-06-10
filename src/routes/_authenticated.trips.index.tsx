@@ -48,6 +48,7 @@ function TripsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [legs, setLegs] = useState<Leg[]>([{ country: "", start_date: "", end_date: "" }]);
+  const [objectives, setObjectives] = useState("");
 
   const { data: trips } = useQuery({
     queryKey: ["trips"],
