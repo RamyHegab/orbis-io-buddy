@@ -116,8 +116,22 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       headStyles: { fillColor: [240, 240, 240], textColor: 30 },
       margin: { left: 14, right: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable.finalY + 4;
+    const totals = hotelTotals(hotels);
+    if (totals) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text("Totals:", 14, y + 4);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `${totals.count} hotel${totals.count > 1 ? "s" : ""} · ${totals.totalNights} night${totals.totalNights > 1 ? "s" : ""} · ${totals.range} · ${totals.costStr}`,
+        30, y + 4,
+      );
+      y += 10;
+    }
+    y += 4;
   }
+
 
   for (const day of buildDays(trip, activities, hotels)) {
     if (y > 260) { doc.addPage(); y = 20; }
