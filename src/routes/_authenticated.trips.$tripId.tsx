@@ -217,6 +217,20 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const setStatus = useMutation({
+    mutationFn: async (status: "active" | "confirmed") => {
+      const { error } = await supabase.from("trips").update({ status }).eq("id", tripId);
+      if (error) throw error;
+      return status;
+    },
+    onSuccess: (status) => {
+      toast.success(status === "confirmed" ? "Itinerary confirmed — ready to submit for approval" : "Itinerary saved as in progress");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
