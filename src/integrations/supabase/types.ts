@@ -17,6 +17,7 @@ export type Database = {
       activities: {
         Row: {
           agent_id: string | null
+          branch_id: string | null
           created_at: string
           day_date: string
           end_time: string | null
@@ -33,6 +34,7 @@ export type Database = {
         }
         Insert: {
           agent_id?: string | null
+          branch_id?: string | null
           created_at?: string
           day_date: string
           end_time?: string | null
@@ -49,6 +51,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string | null
+          branch_id?: string | null
           created_at?: string
           day_date?: string
           end_time?: string | null
@@ -69,6 +72,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "agent_branches"
             referencedColumns: ["id"]
           },
           {
@@ -121,41 +131,56 @@ export type Database = {
       }
       agent_branches: {
         Row: {
+          address: string | null
+          agency_name: string | null
           agent_id: string
-          city: string
-          contact_name: string | null
-          country: string
+          branch_name: string | null
+          city: string | null
+          contact_email: string | null
+          contact_first_name: string | null
+          contact_last_name: string | null
+          contact_phone: string | null
+          contact_position: string | null
+          country: string | null
           created_at: string
-          email: string | null
           id: string
-          notes: string | null
-          phone: string | null
+          in_country_trading_name: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
+          agency_name?: string | null
           agent_id: string
-          city: string
-          contact_name?: string | null
-          country: string
+          branch_name?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_first_name?: string | null
+          contact_last_name?: string | null
+          contact_phone?: string | null
+          contact_position?: string | null
+          country?: string | null
           created_at?: string
-          email?: string | null
           id?: string
-          notes?: string | null
-          phone?: string | null
+          in_country_trading_name?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
+          agency_name?: string | null
           agent_id?: string
-          city?: string
-          contact_name?: string | null
-          country?: string
+          branch_name?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_first_name?: string | null
+          contact_last_name?: string | null
+          contact_phone?: string | null
+          contact_position?: string | null
+          country?: string | null
           created_at?: string
-          email?: string | null
           id?: string
-          notes?: string | null
-          phone?: string | null
+          in_country_trading_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -171,31 +196,61 @@ export type Database = {
       }
       agents: {
         Row: {
+          account_manager: string | null
+          agent_code: string | null
+          agreement_end_date: string | null
+          agreement_start_date: string | null
+          countries_of_operation: string[]
           created_at: string
-          headquarters_country: string | null
+          hq_address: string | null
+          hq_country: string | null
           id: string
-          name: string
-          notes: string | null
+          legal_name: string | null
+          main_contact_email: string | null
+          main_contact_name: string | null
+          main_contact_phone: string | null
+          status: Database["public"]["Enums"]["agent_status"]
+          trading_name: string
           updated_at: string
           user_id: string
           website: string | null
         }
         Insert: {
+          account_manager?: string | null
+          agent_code?: string | null
+          agreement_end_date?: string | null
+          agreement_start_date?: string | null
+          countries_of_operation?: string[]
           created_at?: string
-          headquarters_country?: string | null
+          hq_address?: string | null
+          hq_country?: string | null
           id?: string
-          name: string
-          notes?: string | null
+          legal_name?: string | null
+          main_contact_email?: string | null
+          main_contact_name?: string | null
+          main_contact_phone?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          trading_name: string
           updated_at?: string
           user_id: string
           website?: string | null
         }
         Update: {
+          account_manager?: string | null
+          agent_code?: string | null
+          agreement_end_date?: string | null
+          agreement_start_date?: string | null
+          countries_of_operation?: string[]
           created_at?: string
-          headquarters_country?: string | null
+          hq_address?: string | null
+          hq_country?: string | null
           id?: string
-          name?: string
-          notes?: string | null
+          legal_name?: string | null
+          main_contact_email?: string | null
+          main_contact_name?: string | null
+          main_contact_phone?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          trading_name?: string
           updated_at?: string
           user_id?: string
           website?: string | null
@@ -309,10 +364,14 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_synced_at: string | null
           level: Database["public"]["Enums"]["school_level"]
           name: string
           notes: string | null
+          notion_page_id: string | null
           phone: string | null
+          properties: Json
+          status: string | null
           updated_at: string
           user_id: string
         }
@@ -323,10 +382,14 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_synced_at?: string | null
           level?: Database["public"]["Enums"]["school_level"]
           name: string
           notes?: string | null
+          notion_page_id?: string | null
           phone?: string | null
+          properties?: Json
+          status?: string | null
           updated_at?: string
           user_id: string
         }
@@ -337,10 +400,14 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_synced_at?: string | null
           level?: Database["public"]["Enums"]["school_level"]
           name?: string
           notes?: string | null
+          notion_page_id?: string | null
           phone?: string | null
+          properties?: Json
+          status?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -462,6 +529,7 @@ export type Database = {
         | "recruitment_event"
         | "resting_day"
         | "other"
+      agent_status: "active" | "inactive" | "prospect"
       app_role: "admin" | "member"
       school_level: "high_school" | "university" | "language_school" | "other"
       trip_status: "planning" | "active" | "completed"
@@ -600,6 +668,7 @@ export const Constants = {
         "resting_day",
         "other",
       ],
+      agent_status: ["active", "inactive", "prospect"],
       app_role: ["admin", "member"],
       school_level: ["high_school", "university", "language_school", "other"],
       trip_status: ["planning", "active", "completed"],
