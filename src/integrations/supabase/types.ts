@@ -624,7 +624,7 @@ export type Database = {
       agent_status: "active" | "inactive" | "prospect"
       app_role: "admin" | "member"
       school_level: "high_school" | "university" | "language_school" | "other"
-      trip_status: "planning" | "active" | "completed"
+      trip_status: "planning" | "active" | "completed" | "confirmed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -763,7 +763,7 @@ export const Constants = {
       agent_status: ["active", "inactive", "prospect"],
       app_role: ["admin", "member"],
       school_level: ["high_school", "university", "language_school", "other"],
-      trip_status: ["planning", "active", "completed"],
+      trip_status: ["planning", "active", "completed", "confirmed"],
     },
   },
 } as const
