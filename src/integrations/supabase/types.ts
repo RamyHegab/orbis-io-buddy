@@ -314,6 +314,56 @@ export type Database = {
         }
         Relationships: []
       }
+      discovery_jobs: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          error: string | null
+          found_count: number
+          id: string
+          kind: string
+          processed_count: number
+          status: string
+          total_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          error?: string | null
+          found_count?: number
+          id?: string
+          kind?: string
+          processed_count?: number
+          status?: string
+          total_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          error?: string | null
+          found_count?: number
+          id?: string
+          kind?: string
+          processed_count?: number
+          status?: string
+          total_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_jobs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_submissions: {
         Row: {
           activity_id: string
@@ -397,6 +447,8 @@ export type Database = {
           payload: Json
           reviewed_at: string | null
           reviewed_by: string | null
+          source: string | null
+          source_url: string | null
           status: string
           submitter_email: string | null
           submitter_name: string | null
@@ -409,6 +461,8 @@ export type Database = {
           payload?: Json
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string | null
+          source_url?: string | null
           status?: string
           submitter_email?: string | null
           submitter_name?: string | null
@@ -421,6 +475,8 @@ export type Database = {
           payload?: Json
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string | null
+          source_url?: string | null
           status?: string
           submitter_email?: string | null
           submitter_name?: string | null
@@ -440,6 +496,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          discovery_banner_dismissed_at: string | null
           full_name: string | null
           id: string
           updated_at: string
@@ -447,6 +504,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          discovery_banner_dismissed_at?: string | null
           full_name?: string | null
           id: string
           updated_at?: string
@@ -454,6 +512,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          discovery_banner_dismissed_at?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string
