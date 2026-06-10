@@ -292,6 +292,7 @@ function TripPlanner() {
         cost: includeCost ? a.cost : null,
         cost_currency: includeCost ? a.cost_currency : null,
         description: a.description, notes: a.notes,
+        objectives: a.objectives, visit_notes: a.visit_notes,
       }));
       const { error } = await supabase.from("activities").insert(rows);
       if (error) throw error;
