@@ -336,7 +336,7 @@ function DirectoryPreviewModal({
           supabase
             .from("activities")
             .select("id, title, day_date, notes, trip_id")
-            .eq("agent_branch_id", target.branchId)
+            .eq("branch_id", target.branchId)
             .order("day_date", { ascending: false })
             .limit(5),
         ]);
