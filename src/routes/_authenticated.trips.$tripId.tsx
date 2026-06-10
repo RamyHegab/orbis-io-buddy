@@ -479,6 +479,7 @@ function TripPlanner() {
   if (!trip) return <PageContainer><p className="text-muted-foreground">Loading…</p></PageContainer>;
 
   const canSubmit = isFormValid(form);
+  const validationMessage = validateForm(form);
 
   return (
     <PageContainer>
