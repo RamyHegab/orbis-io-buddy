@@ -22,29 +22,28 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
 }
 
 async function aiExtract(markdown: string, agentName: string, sourceUrl: string) {
-  const { generateText, Output } = await import("ai");
+  const { generateObject } = await import("ai");
   const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
   const gateway = createLovableAiGatewayProvider(apiKey);
 
   const truncated = markdown.length > 18000 ? markdown.slice(0, 18000) : markdown;
-  const { experimental_output } = await generateText({
+  const { object } = await generateObject({
     model: gateway("google/gemini-3-flash-preview"),
-    experimental_output: Output.object({ schema: BranchesSchema }),
+    schema: BranchesSchema,
     prompt: `You are extracting branch/office locations for the education agency "${agentName}" from the following page content (source: ${sourceUrl}).
 
-Return a JSON object { "branches": [...] }. Each branch must be a real, distinct office of THIS agency (not partners, not schools, not destinations they send students to). If unsure, omit it.
+Return { "branches": [...] }. Each branch must be a real, distinct office of THIS agency (not partners, not schools, not destinations they send students to). If unsure, omit it.
 
-For each branch include any of: branch_name (e.g. "Lahore Office"), city, country, address (full street address), contact_first_name, contact_last_name, contact_position, contact_email, contact_phone, and a confidence score 0-1 reflecting how sure you are this is a real branch of "${agentName}".
+For each branch include any of: branch_name (e.g. "Lahore Office"), city, country, address (full street), contact_first_name, contact_last_name, contact_position, contact_email, contact_phone, and a confidence 0-1 reflecting certainty this is a real branch of "${agentName}".
 
-If the page contains no clear branch information, return an empty array.
+If no clear branch info, return an empty array.
 
 PAGE CONTENT:
 ${truncated}`,
   });
-  const parsed = (experimental_output as any) as z.infer<typeof BranchesSchema>;
-  return parsed.branches ?? [];
+  return object.branches ?? [];
 }
 
 async function discoverForAgent(agent: { id: string; trading_name: string; website: string | null; hq_country: string | null }) {
