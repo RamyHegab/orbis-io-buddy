@@ -251,6 +251,13 @@ function TripPlanner() {
       groups.total[cur] = (groups.total[cur] ?? 0) + amount;
       if (groups[a.type]) groups[a.type][cur] = (groups[a.type][cur] ?? 0) + amount;
     }
+    for (const h of hotels ?? []) {
+      if (h.cost == null) continue;
+      const cur = h.cost_currency || "GBP";
+      const amount = Number(h.cost);
+      groups.total[cur] = (groups.total[cur] ?? 0) + amount;
+      groups.hotel[cur] = (groups.hotel[cur] ?? 0) + amount;
+    }
     const fmt = (m: Record<string, number>) =>
       Object.entries(m).map(([cur, v]) => `${cur} ${v.toFixed(2)}`).join(" · ") || "—";
     return {
@@ -258,6 +265,7 @@ function TripPlanner() {
       hotel: fmt(groups.hotel),
       events: fmt(groups.recruitment_event),
       total: fmt(groups.total),
+
     };
   }, [activities]);
 
