@@ -560,10 +560,14 @@ export type Database = {
           cost: number | null
           cost_currency: string | null
           created_at: string
+          formatted_address: string | null
           id: string
+          lat: number | null
+          lng: number | null
           map_url: string | null
           name: string
           notes: string | null
+          place_id: string | null
           trip_id: string
           updated_at: string
           user_id: string
@@ -577,10 +581,14 @@ export type Database = {
           cost?: number | null
           cost_currency?: string | null
           created_at?: string
+          formatted_address?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           map_url?: string | null
           name: string
           notes?: string | null
+          place_id?: string | null
           trip_id: string
           updated_at?: string
           user_id: string
@@ -594,10 +602,14 @@ export type Database = {
           cost?: number | null
           cost_currency?: string | null
           created_at?: string
+          formatted_address?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           map_url?: string | null
           name?: string
           notes?: string | null
+          place_id?: string | null
           trip_id?: string
           updated_at?: string
           user_id?: string
