@@ -95,7 +95,8 @@ export function AddToItineraryButton(props: Props) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const stop = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const stop = (e: React.MouseEvent) => { e.stopPropagation(); };
+  const stopContent = (e: React.MouseEvent) => { e.stopPropagation(); };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
