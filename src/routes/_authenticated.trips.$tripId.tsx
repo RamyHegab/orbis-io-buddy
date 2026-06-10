@@ -511,8 +511,38 @@ function TripPlanner() {
 
 
   const openForDay = (d: Date) => {
+    setEditingActivityId(null);
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
+  };
+
+  const openEditActivity = (a: any) => {
+    setEditingActivityId(a.id);
+    setSelectedDay(a.day_date);
+    setForm({
+      type: a.type ?? "school_visit",
+      title: a.title ?? "",
+      start_time: a.start_time ? a.start_time.slice(0, 5) : "",
+      end_time: a.end_time ? a.end_time.slice(0, 5) : "",
+      end_date: a.end_date ?? a.day_date ?? "",
+      location: a.location ?? "",
+      map_url: a.map_url ?? "",
+      agent_id: a.agent_id ?? "",
+      branch_id: a.branch_id ?? "",
+      school_id: a.school_id ?? "",
+      transport_mode: a.transport_mode ?? "",
+      from_city: a.from_city ?? "",
+      to_city: a.to_city ?? "",
+      from_country: a.from_country ?? "",
+      to_country: a.to_country ?? "",
+      airline: a.airline ?? "",
+      flight_number: a.flight_number ?? "",
+      cost: a.cost != null ? String(a.cost) : "",
+      cost_currency: a.cost_currency ?? "GBP",
+      resting_type: a.resting_type ?? "",
+      description: a.description ?? "",
+      notes: a.notes ?? "",
+    });
   };
 
 
