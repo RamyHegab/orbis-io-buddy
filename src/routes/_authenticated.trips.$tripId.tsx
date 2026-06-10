@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2, Copy } from "lucide-react";
+import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2, Copy, Hotel as HotelIcon } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
@@ -29,10 +30,10 @@ const ACTIVITY_TYPES = [
   { value: "agent_visit", label: "Agent Visit" },
   { value: "school_visit", label: "School Visit" },
   { value: "recruitment_event", label: "Recruitment Event" },
-  { value: "hotel", label: "Hotel" },
   { value: "resting_day", label: "Resting Day" },
   { value: "other", label: "Other" },
 ];
+
 
 const TRANSPORT_MODES = ["Air travel", "Train", "Taxi", "Bus", "Private car", "Ferry", "Other"];
 const RESTING_TYPES = [
@@ -74,6 +75,28 @@ const emptyForm: FormState = {
   resting_type: "", description: "", notes: "",
 };
 
+type HotelForm = {
+  id?: string;
+  name: string;
+  map_url: string;
+  address: string;
+  check_in_date: string;
+  check_out_date: string;
+  check_in_time: string;
+  check_out_time: string;
+  cost: string;
+  cost_currency: string;
+  notes: string;
+};
+
+const emptyHotel: HotelForm = {
+  name: "", map_url: "", address: "",
+  check_in_date: "", check_out_date: "",
+  check_in_time: "", check_out_time: "",
+  cost: "", cost_currency: "GBP", notes: "",
+};
+
+
 
 function TripPlanner() {
   const { tripId } = Route.useParams();
@@ -84,6 +107,9 @@ function TripPlanner() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
+  const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
+  const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+
 
 
   const { data: trip } = useQuery({
@@ -100,6 +126,12 @@ function TripPlanner() {
     queryKey: ["activities", tripId],
     queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name), agent_branches(branch_name, city)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
   });
+
+  const { data: hotels } = useQuery({
+    queryKey: ["trip-hotels", tripId],
+    queryFn: async () => (await supabase.from("trip_hotels").select("*").eq("trip_id", tripId).order("check_in_date")).data ?? [],
+  });
+
 
   const { data: agents } = useQuery({
     queryKey: ["agents-list"],
@@ -136,6 +168,11 @@ function TripPlanner() {
     for (const a of activities ?? []) (map[a.day_date] = map[a.day_date] ?? []).push(a);
     return map;
   }, [activities]);
+
+  const hotelForDay = (dayKey: string) => {
+    return (hotels ?? []).find((h: any) => dayKey >= h.check_in_date && dayKey <= h.check_out_date);
+  };
+
 
   const filteredBranches = useMemo(() => {
     if (!branches) return [];
@@ -214,6 +251,13 @@ function TripPlanner() {
       groups.total[cur] = (groups.total[cur] ?? 0) + amount;
       if (groups[a.type]) groups[a.type][cur] = (groups[a.type][cur] ?? 0) + amount;
     }
+    for (const h of hotels ?? []) {
+      if (h.cost == null) continue;
+      const cur = h.cost_currency || "GBP";
+      const amount = Number(h.cost);
+      groups.total[cur] = (groups.total[cur] ?? 0) + amount;
+      groups.hotel[cur] = (groups.hotel[cur] ?? 0) + amount;
+    }
     const fmt = (m: Record<string, number>) =>
       Object.entries(m).map(([cur, v]) => `${cur} ${v.toFixed(2)}`).join(" · ") || "—";
     return {
@@ -221,8 +265,94 @@ function TripPlanner() {
       hotel: fmt(groups.hotel),
       events: fmt(groups.recruitment_event),
       total: fmt(groups.total),
+
     };
-  }, [activities]);
+  }, [activities, hotels]);
+
+  const saveHotel = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Not signed in");
+      const h = hotelForm;
+      if (!h.name.trim()) throw new Error("Hotel name is required");
+      if (!h.check_in_date || !h.check_out_date) throw new Error("Check-in and check-out dates are required");
+      if (h.check_out_date < h.check_in_date) throw new Error("Check-out date must be on or after check-in");
+      const overlap = (hotels ?? []).find((other: any) => {
+        if (h.id && other.id === h.id) return false;
+        return !(h.check_out_date < other.check_in_date || h.check_in_date > other.check_out_date);
+      });
+      if (overlap) throw new Error(`Overlaps "${overlap.name}" (${overlap.check_in_date} → ${overlap.check_out_date})`);
+      const payload: any = {
+        trip_id: tripId,
+        user_id: user.id,
+        name: h.name.trim(),
+        map_url: h.map_url || null,
+        address: h.address || null,
+        check_in_date: h.check_in_date,
+        check_out_date: h.check_out_date,
+        check_in_time: h.check_in_time || null,
+        check_out_time: h.check_out_time || null,
+        cost: h.cost ? Number(h.cost) : null,
+        cost_currency: h.cost ? h.cost_currency : null,
+        notes: h.notes || null,
+      };
+      if (h.id) {
+        const { error } = await supabase.from("trip_hotels").update(payload).eq("id", h.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("trip_hotels").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(hotelForm.id ? "Hotel updated" : "Hotel added");
+      setHotelDialogOpen(false);
+      setHotelForm(emptyHotel);
+      qc.invalidateQueries({ queryKey: ["trip-hotels", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteHotel = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("trip_hotels").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Hotel removed");
+      setHotelDialogOpen(false);
+      setHotelForm(emptyHotel);
+      qc.invalidateQueries({ queryKey: ["trip-hotels", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const openAddHotel = (dayKey: string) => {
+    setHotelForm({
+      ...emptyHotel,
+      check_in_date: dayKey,
+      check_out_date: format(addDays(parseISO(dayKey), 1), "yyyy-MM-dd"),
+    });
+    setHotelDialogOpen(true);
+  };
+
+  const openEditHotel = (h: any) => {
+    setHotelForm({
+      id: h.id,
+      name: h.name ?? "",
+      map_url: h.map_url ?? "",
+      address: h.address ?? "",
+      check_in_date: h.check_in_date ?? "",
+      check_out_date: h.check_out_date ?? "",
+      check_in_time: h.check_in_time ? h.check_in_time.slice(0, 5) : "",
+      check_out_time: h.check_out_time ? h.check_out_time.slice(0, 5) : "",
+      cost: h.cost != null ? String(h.cost) : "",
+      cost_currency: h.cost_currency ?? "GBP",
+      notes: h.notes ?? "",
+    });
+    setHotelDialogOpen(true);
+  };
+
+
 
 
   const saveEdit = useMutation({
@@ -432,6 +562,9 @@ function TripPlanner() {
             const isSelected = selectedDay === key;
             const prevKey = format(addDays(d, -1), "yyyy-MM-dd");
             const prevHasEvents = (byDay[prevKey] ?? []).some((a) => a.type === "recruitment_event");
+            const stay = hotelForDay(key);
+            const isCheckIn = stay && stay.check_in_date === key;
+            const isCheckOut = stay && stay.check_out_date === key;
             return (
               <Card key={key} className={`p-5 ${resting ? "bg-muted/40" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -449,13 +582,65 @@ function TripPlanner() {
                         <Copy className="h-4 w-4 mr-1" /> Repeat previous day
                       </Button>
                     )}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => !stay && openAddHotel(key)}
+                              disabled={!!stay || !!resting}
+                            >
+                              <HotelIcon className="h-4 w-4 mr-1" /> Add hotel
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        {stay && (
+                          <TooltipContent>Covered by {stay.name} ({stay.check_in_date} → {stay.check_out_date})</TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                     <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
                       <Plus className="h-4 w-4 mr-1" /> Add
                     </Button>
                   </div>
                 </div>
+                {stay && (
+                  <button
+                    type="button"
+                    onClick={() => openEditHotel(stay)}
+                    className="w-full text-left mb-2 flex items-center gap-3 rounded-lg border border-dashed bg-muted/40 px-3 py-2 hover:bg-muted transition-colors"
+                  >
+                    <HotelIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="flex-1 min-w-0 text-sm">
+                      <div className="font-medium truncate">
+                        {stay.map_url ? (
+                          <a
+                            href={stay.map_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="underline text-primary"
+                          >
+                            {stay.name}
+                          </a>
+                        ) : (
+                          stay.name
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {isCheckIn
+                          ? `Check-in${stay.check_in_time ? ` ${stay.check_in_time.slice(0, 5)}` : ""}`
+                          : isCheckOut
+                            ? `Check-out${stay.check_out_time ? ` ${stay.check_out_time.slice(0, 5)}` : ""}`
+                            : "Staying overnight"}
+                      </div>
+                    </div>
+                  </button>
+                )}
                 {dayActs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No activities. Click "Add" to schedule.</p>
+                  <p className="text-sm text-muted-foreground">{stay ? "No other activities scheduled." : "No activities. Click \"Add\" to schedule."}</p>
                 ) : (
                   <div className="space-y-2">
                     {dayActs.map((a) => (
@@ -489,6 +674,7 @@ function TripPlanner() {
               </Card>
             );
           })}
+
         </div>
 
         <div className="lg:col-span-1">
@@ -733,7 +919,87 @@ function TripPlanner() {
         </div>
       </div>
 
+      <Dialog open={hotelDialogOpen} onOpenChange={(o) => { setHotelDialogOpen(o); if (!o) setHotelForm(emptyHotel); }}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{hotelForm.id ? "Edit hotel" : "Add hotel"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Hotel name</Label>
+              <Input value={hotelForm.name} onChange={(e) => setHotelForm({ ...hotelForm, name: e.target.value })} placeholder="Hilton Bangkok" />
+            </div>
+            <div>
+              <Label>Google Maps link</Label>
+              <Input
+                value={hotelForm.map_url}
+                onChange={(e) => setHotelForm({ ...hotelForm, map_url: e.target.value })}
+                placeholder="Paste the Google Maps URL"
+              />
+              {!hotelForm.map_url && hotelForm.name && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotelForm.name)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-primary underline mt-1 inline-block"
+                >
+                  Find "{hotelForm.name}" on Google Maps →
+                </a>
+              )}
+              {hotelForm.map_url && (
+                <a
+                  href={hotelForm.map_url}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-primary underline mt-1 inline-block"
+                >
+                  Open saved location ↗
+                </a>
+              )}
+            </div>
+            <div>
+              <Label>Address (optional)</Label>
+              <Input value={hotelForm.address} onChange={(e) => setHotelForm({ ...hotelForm, address: e.target.value })} placeholder="Street, city" />
+            </div>
+            {(hotelForm.address || hotelForm.name) && (
+              <div className="rounded-md overflow-hidden border">
+                <iframe
+                  title="Hotel map"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(hotelForm.address || hotelForm.name)}&output=embed`}
+                  className="w-full h-40 border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Check-in date</Label><Input type="date" value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
+              <div><Label>Check-in time</Label><Input type="time" value={hotelForm.check_in_time} onChange={(e) => setHotelForm({ ...hotelForm, check_in_time: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Check-out date</Label><Input type="date" value={hotelForm.check_out_date} onChange={(e) => setHotelForm({ ...hotelForm, check_out_date: e.target.value })} /></div>
+              <div><Label>Check-out time</Label><Input type="time" value={hotelForm.check_out_time} onChange={(e) => setHotelForm({ ...hotelForm, check_out_time: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <div><Label>Cost</Label><Input type="number" inputMode="decimal" value={hotelForm.cost} onChange={(e) => setHotelForm({ ...hotelForm, cost: e.target.value })} placeholder="0.00" /></div>
+              <div><Label>Currency</Label><Input value={hotelForm.cost_currency} onChange={(e) => setHotelForm({ ...hotelForm, cost_currency: e.target.value.toUpperCase() })} maxLength={3} /></div>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={hotelForm.notes} onChange={(e) => setHotelForm({ ...hotelForm, notes: e.target.value })} placeholder="Booking ref, room type…" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={() => saveHotel.mutate()} disabled={saveHotel.isPending} className="flex-1">
+                {hotelForm.id ? "Save changes" : "Add hotel"}
+              </Button>
+              {hotelForm.id && (
+                <Button variant="outline" onClick={() => deleteHotel.mutate(hotelForm.id!)} disabled={deleteHotel.isPending}>
+                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </PageContainer>
+
   );
 }
 

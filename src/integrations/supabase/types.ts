@@ -508,6 +508,68 @@ export type Database = {
           },
         ]
       }
+      trip_hotels: {
+        Row: {
+          address: string | null
+          check_in_date: string
+          check_in_time: string | null
+          check_out_date: string
+          check_out_time: string | null
+          cost: number | null
+          cost_currency: string | null
+          created_at: string
+          id: string
+          map_url: string | null
+          name: string
+          notes: string | null
+          trip_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          check_in_date: string
+          check_in_time?: string | null
+          check_out_date: string
+          check_out_time?: string | null
+          cost?: number | null
+          cost_currency?: string | null
+          created_at?: string
+          id?: string
+          map_url?: string | null
+          name: string
+          notes?: string | null
+          trip_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          check_in_date?: string
+          check_in_time?: string | null
+          check_out_date?: string
+          check_out_time?: string | null
+          cost?: number | null
+          cost_currency?: string | null
+          created_at?: string
+          id?: string
+          map_url?: string | null
+          name?: string
+          notes?: string | null
+          trip_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_hotels_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_reports: {
         Row: {
           content_md: string
