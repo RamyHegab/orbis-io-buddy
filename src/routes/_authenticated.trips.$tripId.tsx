@@ -235,11 +235,77 @@ function TripPlanner() {
         title={trip.title}
         description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
         actions={
-          <Link to="/trips/$tripId/report" params={{ tripId }}>
-            <Button variant="outline"><Sparkles className="h-4 w-4 mr-1" /> AI Report</Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm"><FileDown className="h-4 w-4 mr-1" /> Export</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportTripPdf(trip, (activities ?? []) as any)}>
+                  <FileText className="h-4 w-4 mr-2" /> PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportTripWord(trip, (activities ?? []) as any)}>
+                  <FileText className="h-4 w-4 mr-2" /> Word (.doc)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link to="/trips/$tripId/report" params={{ tripId }}>
+              <Button variant="outline" size="sm"><Sparkles className="h-4 w-4 mr-1" /> AI Report</Button>
+            </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm"><Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+                  <AlertDialogDescription>This removes the trip and all its activities.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => deleteTrip.mutate()}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         }
       />
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>Edit trip</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Label>Countries & dates</Label>
+            <p className="text-xs text-muted-foreground">The title is generated from countries and dates.</p>
+            <div className="space-y-2">
+              {editLegs.map((leg, i) => (
+                <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+                  <Input placeholder="Country" value={leg.country}
+                    onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, country: e.target.value } : l))} />
+                  <Input type="date" value={leg.start_date}
+                    onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, start_date: e.target.value } : l))} />
+                  <Input type="date" value={leg.end_date}
+                    onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, end_date: e.target.value } : l))} />
+                  <Button type="button" size="icon" variant="ghost" disabled={editLegs.length === 1}
+                    onClick={() => setEditLegs(editLegs.filter((_, idx) => idx !== i))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button type="button" size="sm" variant="outline"
+              onClick={() => setEditLegs([...editLegs, { country: "", start_date: "", end_date: "" }])}>
+              <Plus className="h-4 w-4 mr-1" /> Add country
+            </Button>
+            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending} className="w-full">Save</Button>
+            <p className="text-xs text-muted-foreground">
+              Changing dates may leave existing activities outside the new range — they'll stop appearing in the calendar.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <div className="space-y-4">
         {days.map((d) => {
