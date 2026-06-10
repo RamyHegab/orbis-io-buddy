@@ -253,6 +253,10 @@ function TripPlanner() {
         notes: form.notes || null,
         objectives: form.objectives || null,
         visit_notes: form.visit_notes || null,
+        place_id: form.place_id || null,
+        lat: form.lat,
+        lng: form.lng,
+        formatted_address: form.formatted_address || null,
       };
       if (editingActivityId) {
         const { error } = await supabase.from("activities").update(payload).eq("id", editingActivityId);
