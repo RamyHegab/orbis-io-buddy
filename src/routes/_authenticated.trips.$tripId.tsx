@@ -8,9 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +29,40 @@ const ACTIVITY_TYPES = [
   { value: "other", label: "Other" },
 ];
 
+const TRANSPORT_MODES = ["Air travel", "Train", "Taxi", "Bus", "Private car", "Ferry", "Other"];
+const RESTING_TYPES = [
+  { value: "toil", label: "TOIL" },
+  { value: "weekend", label: "Weekend" },
+  { value: "bank_holiday", label: "Bank Holiday" },
+];
+
+type FormState = {
+  type: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  end_date: string;
+  location: string;
+  agent_id: string;
+  branch_id: string;
+  school_id: string;
+  transport_mode: string;
+  airline: string;
+  flight_number: string;
+  cost: string;
+  cost_currency: string;
+  resting_type: string;
+  description: string;
+  notes: string;
+};
+
+const emptyForm: FormState = {
+  type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
+  location: "", agent_id: "", branch_id: "", school_id: "",
+  transport_mode: "", airline: "", flight_number: "", cost: "", cost_currency: "GBP",
+  resting_type: "", description: "", notes: "",
+};
+
 function TripPlanner() {
   const { tripId } = Route.useParams();
   const { user } = useAuth();
@@ -37,30 +70,31 @@ function TripPlanner() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    type: "school_visit", title: "", start_time: "", end_time: "", location: "",
-    agent_id: "", school_id: "", notes: "",
-  });
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   const { data: trip } = useQuery({
     queryKey: ["trip", tripId],
-    queryFn: async () => {
-      const { data } = await supabase.from("trips").select("*").eq("id", tripId).maybeSingle();
-      return data;
-    },
+    queryFn: async () => (await supabase.from("trips").select("*").eq("id", tripId).maybeSingle()).data,
+  });
+
+  const { data: countries } = useQuery({
+    queryKey: ["trip-countries", tripId],
+    queryFn: async () => (await supabase.from("trip_countries").select("*").eq("trip_id", tripId).order("sort_order")).data ?? [],
   });
 
   const { data: activities } = useQuery({
     queryKey: ["activities", tripId],
-    queryFn: async () => {
-      const { data } = await supabase.from("activities").select("*, agents(trading_name), schools(name)").eq("trip_id", tripId).order("day_date").order("start_time");
-      return data ?? [];
-    },
+    queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name), agent_branches(branch_name, city)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
   });
 
   const { data: agents } = useQuery({
     queryKey: ["agents-list"],
     queryFn: async () => (await supabase.from("agents").select("id, trading_name").order("trading_name")).data ?? [],
+  });
+
+  const { data: branches } = useQuery({
+    queryKey: ["agent-branches-list"],
+    queryFn: async () => (await supabase.from("agent_branches").select("id, branch_name, city, agent_id, agents(trading_name)").order("branch_name")).data ?? [],
   });
 
   const { data: schools } = useQuery({
@@ -76,11 +110,24 @@ function TripPlanner() {
     return Array.from({ length: n }, (_, i) => addDays(start, i));
   }, [trip]);
 
+  const countryForDay = (d: Date): string | null => {
+    if (!countries) return null;
+    const key = format(d, "yyyy-MM-dd");
+    const c = countries.find((c) => key >= c.start_date && key <= c.end_date);
+    return c?.country ?? null;
+  };
+
   const byDay = useMemo(() => {
     const map: Record<string, any[]> = {};
     for (const a of activities ?? []) (map[a.day_date] = map[a.day_date] ?? []).push(a);
     return map;
   }, [activities]);
+
+  const filteredBranches = useMemo(() => {
+    if (!branches) return [];
+    if (!form.agent_id) return branches;
+    return branches.filter((b: any) => b.agent_id === form.agent_id);
+  }, [branches, form.agent_id]);
 
   const create = useMutation({
     mutationFn: async () => {
@@ -89,13 +136,22 @@ function TripPlanner() {
         trip_id: tripId,
         user_id: user.id,
         type: form.type,
-        title: form.title,
         day_date: selectedDay,
+        title: form.title || defaultTitle(form, branches, schools, agents),
         start_time: form.start_time || null,
         end_time: form.end_time || null,
+        end_date: form.end_date || null,
         location: form.location || null,
         agent_id: form.agent_id || null,
+        branch_id: form.branch_id || null,
         school_id: form.school_id || null,
+        transport_mode: form.transport_mode || null,
+        airline: form.airline || null,
+        flight_number: form.flight_number || null,
+        cost: form.cost ? Number(form.cost) : null,
+        cost_currency: form.cost ? form.cost_currency : null,
+        resting_type: form.resting_type || null,
+        description: form.description || null,
         notes: form.notes || null,
       };
       const { error } = await supabase.from("activities").insert(payload);
@@ -104,7 +160,7 @@ function TripPlanner() {
     onSuccess: () => {
       toast.success("Activity added");
       setOpen(false);
-      setForm({ type: "school_visit", title: "", start_time: "", end_time: "", location: "", agent_id: "", school_id: "", notes: "" });
+      setForm(emptyForm);
       qc.invalidateQueries({ queryKey: ["activities", tripId] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -112,10 +168,13 @@ function TripPlanner() {
 
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
+    setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
     setOpen(true);
   };
 
   if (!trip) return <PageContainer><p className="text-muted-foreground">Loading…</p></PageContainer>;
+
+  const canSubmit = isFormValid(form);
 
   return (
     <PageContainer>
@@ -124,7 +183,7 @@ function TripPlanner() {
       </Button>
       <PageHeader
         title={trip.title}
-        description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)} • ${trip.destinations?.join(", ") || "No destinations"}`}
+        description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
         actions={
           <Link to="/trips/$tripId/report" params={{ tripId }}>
             <Button variant="outline"><Sparkles className="h-4 w-4 mr-1" /> AI Report</Button>
@@ -136,12 +195,16 @@ function TripPlanner() {
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
           const dayActs = byDay[key] ?? [];
+          const country = countryForDay(d);
           return (
             <Card key={key} className="p-5">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="font-semibold">{format(d, "EEEE, MMMM d")}</div>
-                  <div className="text-xs text-muted-foreground">Day {differenceInDays(d, parseISO(trip.start_date)) + 1}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Day {differenceInDays(d, parseISO(trip.start_date)) + 1}
+                    {country && ` • ${country}`}
+                  </div>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => openForDay(d)}>
                   <Plus className="h-4 w-4 mr-1" /> Add
@@ -166,7 +229,10 @@ function TripPlanner() {
                           <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
                           <div className="text-xs text-muted-foreground">
                             {ACTIVITY_TYPE_LABELS[a.type]}
-                            {a.agents?.trading_name && ` • ${a.agents.trading_name}`}
+                            {a.transport_mode && ` • ${a.transport_mode}`}
+                            {a.flight_number && ` • ${a.flight_number}`}
+                            {a.agent_branches?.branch_name && ` • ${a.agent_branches.branch_name}`}
+                            {a.agents?.trading_name && !a.agent_branches && ` • ${a.agents.trading_name}`}
                             {a.schools?.name && ` • ${a.schools.name}`}
                             {a.location && ` • ${a.location}`}
                           </div>
@@ -182,47 +248,215 @@ function TripPlanner() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>New activity {selectedDay && `— ${fmtDate(selectedDay)}`}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Type</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+              <Label>Activity type</Label>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...emptyForm, type: v, end_date: selectedDay ?? "" })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{ACTIVITY_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Start time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
-              <div><Label>End time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
-            </div>
-            <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+
+            {form.type === "travel" && (
+              <>
+                <div>
+                  <Label>Mode of transport</Label>
+                  <Select value={form.transport_mode} onValueChange={(v) => setForm({ ...form, transport_mode: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select transport" /></SelectTrigger>
+                    <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label>From → To</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="London → Bangkok" /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+                  <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+                </div>
+                <div><Label>Arrival date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                {form.transport_mode === "Air travel" && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>Airline</Label><Input value={form.airline} onChange={(e) => setForm({ ...form, airline: e.target.value })} /></div>
+                    <div><Label>Flight number</Label><Input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} /></div>
+                  </div>
+                )}
+                <CostInput form={form} setForm={setForm} />
+              </>
+            )}
+
             {form.type === "agent_visit" && (
-              <div>
-                <Label>Agent</Label>
-                <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
-                  <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              <>
+                <div>
+                  <Label>Agent</Label>
+                  <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v, branch_id: "" })}>
+                    <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                    <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Agent branch</Label>
+                  {filteredBranches.length === 0 ? (
+                    <div className="text-sm text-muted-foreground border rounded-md p-3">
+                      No branches yet. <Link to="/agents" className="underline text-primary">Add a branch</Link> first.
+                    </div>
+                  ) : (
+                    <Select value={form.branch_id} onValueChange={(v) => {
+                      const b: any = filteredBranches.find((x: any) => x.id === v);
+                      setForm({ ...form, branch_id: v, agent_id: b?.agent_id ?? form.agent_id, title: b ? `Visit ${b.branch_name}` : form.title });
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Pick a branch" /></SelectTrigger>
+                      <SelectContent>
+                        {filteredBranches.map((b: any) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.branch_name}{b.city && ` — ${b.city}`}{!form.agent_id && b.agents?.trading_name && ` (${b.agents.trading_name})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <TimeRange form={form} setForm={setForm} />
+              </>
             )}
+
             {form.type === "school_visit" && (
-              <div>
-                <Label>School</Label>
-                <Select value={form.school_id} onValueChange={(v) => setForm({ ...form, school_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
-                  <SelectContent>{schools?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {s.city}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              <>
+                <div>
+                  <Label>School</Label>
+                  {(!schools || schools.length === 0) ? (
+                    <div className="text-sm text-muted-foreground border rounded-md p-3">
+                      No schools yet. <Link to="/schools" className="underline text-primary">Add a school</Link> first.
+                    </div>
+                  ) : (
+                    <Select value={form.school_id} onValueChange={(v) => {
+                      const s = schools.find((x) => x.id === v);
+                      setForm({ ...form, school_id: v, title: s ? `Visit ${s.name}` : form.title });
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
+                      <SelectContent>{schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {s.city}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <TimeRange form={form} setForm={setForm} />
+                <div>
+                  <Label>Linked agent</Label>
+                  <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                    <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <CostInput form={form} setForm={setForm} />
+              </>
             )}
-            <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-            <Button onClick={() => create.mutate()} disabled={!form.title} className="w-full">Add activity</Button>
+
+            {form.type === "recruitment_event" && (
+              <>
+                <div><Label>Venue name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Conference Centre" /></div>
+                <div><Label>Address</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Search address on Google Maps" /></div>
+                <TimeRange form={form} setForm={setForm} />
+                <div>
+                  <Label>Linked agent</Label>
+                  <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                    <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <CostInput form={form} setForm={setForm} />
+              </>
+            )}
+
+            {form.type === "resting_day" && (
+              <>
+                <div>
+                  <Label>Reason</Label>
+                  <Select value={form.resting_type} onValueChange={(v) => setForm({ ...form, resting_type: v, title: RESTING_TYPES.find((r) => r.value === v)?.label ?? "" })}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>{RESTING_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">No other activities will be scheduled for this day.</p>
+              </>
+            )}
+
+            {form.type === "other" && (
+              <>
+                <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="British Council meeting" /></div>
+                <TimeRange form={form} setForm={setForm} />
+                <div>
+                  <Label>Linked agent</Label>
+                  <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                    <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Linked school</Label>
+                  <Select value={form.school_id} onValueChange={(v) => setForm({ ...form, school_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
+                    <SelectContent>{schools?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Location / venue</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+                <CostInput form={form} setForm={setForm} />
+                <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              </>
+            )}
+
+            <Button onClick={() => create.mutate()} disabled={!canSubmit || create.isPending} className="w-full">
+              Add activity
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
     </PageContainer>
   );
+}
+
+function TimeRange({ form, setForm }: { form: FormState; setForm: (f: FormState) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div><Label>Time from</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+      <div><Label>Time to</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+    </div>
+  );
+}
+
+function CostInput({ form, setForm }: { form: FormState; setForm: (f: FormState) => void }) {
+  return (
+    <div className="grid grid-cols-[1fr_120px] gap-3">
+      <div><Label>Cost</Label><Input type="number" inputMode="decimal" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} placeholder="0.00" /></div>
+      <div><Label>Currency</Label><Input value={form.cost_currency} onChange={(e) => setForm({ ...form, cost_currency: e.target.value.toUpperCase() })} maxLength={3} /></div>
+    </div>
+  );
+}
+
+function defaultTitle(f: FormState, branches: any, schools: any, agents: any): string {
+  switch (f.type) {
+    case "travel": return f.transport_mode ? `${f.transport_mode}` : "Travel";
+    case "agent_visit": {
+      const b = branches?.find((x: any) => x.id === f.branch_id);
+      return b ? `Visit ${b.branch_name}` : "Agent visit";
+    }
+    case "school_visit": {
+      const s = schools?.find((x: any) => x.id === f.school_id);
+      return s ? `Visit ${s.name}` : "School visit";
+    }
+    case "recruitment_event": return "Recruitment event";
+    case "resting_day": return RESTING_TYPES.find((r) => r.value === f.resting_type)?.label ?? "Resting day";
+    default: return "Activity";
+  }
+}
+
+function isFormValid(f: FormState): boolean {
+  switch (f.type) {
+    case "travel": return !!f.transport_mode;
+    case "agent_visit": return !!f.branch_id;
+    case "school_visit": return !!f.school_id;
+    case "recruitment_event": return !!f.title;
+    case "resting_day": return !!f.resting_type;
+    case "other": return !!f.title;
+    default: return false;
+  }
 }
