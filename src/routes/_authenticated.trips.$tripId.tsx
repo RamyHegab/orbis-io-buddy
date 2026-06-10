@@ -970,7 +970,7 @@ function TripPlanner() {
                     <div><Label>Check-in time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
                     <div><Label>Check-out time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
                   </div>
-                  <div><Label>Check-out date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  <div><Label>Check-out date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
                   <CostInput form={form} setForm={setForm} />
                 </>
               )}
