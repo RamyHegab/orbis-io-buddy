@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +8,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { SCHEMAS, autoMatch, mapRow, type ImportType } from "@/lib/import-mapping";
+import { SCHEMAS, autoMatch, mapRow, parseWorkbook, type ImportType } from "@/lib/import-mapping";
+
 
 type Props = {
   type: ImportType;
@@ -54,16 +54,14 @@ export function ImportListDialog({ type, agentId, triggerLabel = "Import list", 
 
   const handleFile = async (file: File) => {
     const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type: "array" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+    const { headers: hdrs, rows: json } = parseWorkbook(buf);
     if (!json.length) { toast.error("Sheet is empty"); return; }
-    const hdrs = Object.keys(json[0]);
     setHeaders(hdrs);
     setRows(json);
     setMapping(autoMatch(hdrs, fields));
     setStep("map");
   };
+
 
   const preview = useMemo(() => rows.slice(0, 3).map((r) => mapRow(r, mapping)), [rows, mapping]);
 
