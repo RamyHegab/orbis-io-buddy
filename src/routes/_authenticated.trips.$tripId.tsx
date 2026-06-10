@@ -357,7 +357,20 @@ function TripPlanner() {
             {form.type === "recruitment_event" && (
               <>
                 <div><Label>Venue name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Conference Centre" /></div>
-                <div><Label>Address</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Search address on Google Maps" /></div>
+                <div>
+                  <Label>Address</Label>
+                  <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Venue address" />
+                  {form.location && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.location)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-primary underline mt-1 inline-block"
+                    >
+                      Find on Google Maps
+                    </a>
+                  )}
+                </div>
+
                 <TimeRange form={form} setForm={setForm} />
                 <div>
                   <Label>Linked agent</Label>
