@@ -1241,16 +1241,37 @@ function TripPlanner() {
               <Label>Notes</Label>
               <Textarea value={hotelForm.notes} onChange={(e) => setHotelForm({ ...hotelForm, notes: e.target.value })} placeholder="Booking ref, room type…" />
             </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={() => saveHotel.mutate()} disabled={saveHotel.isPending} className="flex-1">
-                {hotelForm.id ? "Save changes" : "Add hotel"}
-              </Button>
-              {hotelForm.id && (
-                <Button variant="outline" onClick={() => deleteHotel.mutate(hotelForm.id!)} disabled={deleteHotel.isPending}>
-                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
-                </Button>
-              )}
-            </div>
+            {(() => {
+              const hotelOutOfRange =
+                (hotelForm.check_in_date && (hotelForm.check_in_date < trip.start_date || hotelForm.check_in_date > trip.end_date)) ||
+                (hotelForm.check_out_date && (hotelForm.check_out_date < trip.start_date || hotelForm.check_out_date > trip.end_date));
+              const checkoutBeforeIn = hotelForm.check_in_date && hotelForm.check_out_date && hotelForm.check_out_date < hotelForm.check_in_date;
+              const blocked = !!(hotelOutOfRange || checkoutBeforeIn);
+              return (
+                <>
+                  {hotelOutOfRange && (
+                    <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                      Hotel dates must be within the trip range ({trip.start_date} → {trip.end_date}).
+                    </div>
+                  )}
+                  {checkoutBeforeIn && (
+                    <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                      Check-out must be on or after check-in.
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={() => saveHotel.mutate()} disabled={saveHotel.isPending || blocked} className="flex-1">
+                      {hotelForm.id ? "Save changes" : "Add hotel"}
+                    </Button>
+                    {hotelForm.id && (
+                      <Button variant="outline" onClick={() => deleteHotel.mutate(hotelForm.id!)} disabled={deleteHotel.isPending}>
+                        <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                      </Button>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
