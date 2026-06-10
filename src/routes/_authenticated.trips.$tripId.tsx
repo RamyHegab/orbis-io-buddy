@@ -29,10 +29,10 @@ const ACTIVITY_TYPES = [
   { value: "agent_visit", label: "Agent Visit" },
   { value: "school_visit", label: "School Visit" },
   { value: "recruitment_event", label: "Recruitment Event" },
-  { value: "hotel", label: "Hotel" },
   { value: "resting_day", label: "Resting Day" },
   { value: "other", label: "Other" },
 ];
+
 
 const TRANSPORT_MODES = ["Air travel", "Train", "Taxi", "Bus", "Private car", "Ferry", "Other"];
 const RESTING_TYPES = [
