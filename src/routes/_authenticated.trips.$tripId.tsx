@@ -312,7 +312,9 @@ function TripPlanner() {
       if (!h.name.trim()) throw new Error("Hotel name is required");
       if (!h.check_in_date || !h.check_out_date) throw new Error("Check-in and check-out dates are required");
       if (h.check_out_date < h.check_in_date) throw new Error("Check-out date must be on or after check-in");
-      const overlap = (hotels ?? []).find((other: any) => {
+      if (trip && (h.check_in_date < trip.start_date || h.check_in_date > trip.end_date || h.check_out_date < trip.start_date || h.check_out_date > trip.end_date)) {
+        throw new Error(`Hotel dates must be within trip range (${trip.start_date} → ${trip.end_date})`);
+      }
         if (h.id && other.id === h.id) return false;
         return !(h.check_out_date < other.check_in_date || h.check_in_date > other.check_out_date);
       });
