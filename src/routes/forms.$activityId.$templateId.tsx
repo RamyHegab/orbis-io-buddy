@@ -69,7 +69,7 @@ function FormFill() {
   if (loading || !user) return <div className="p-8 text-center">Loading…</div>;
   if (!template) return <div className="p-8 text-center text-muted-foreground">Template not found.</div>;
 
-  const fields = (Array.isArray(template.fields) ? template.fields : []) as Field[];
+  const fields = (Array.isArray(template.fields) ? template.fields : []) as unknown as Field[];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary via-background to-accent/30 px-4 py-8">
