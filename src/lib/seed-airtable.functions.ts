@@ -62,8 +62,8 @@ export const seedAirtableData = createServerFn({ method: "POST" })
     const { count } = await supabase.from("agents").select("*", { count: "exact", head: true }).eq("user_id", userId);
     if ((count ?? 0) > 0) return { agents: 0, branches: 0, skipped: true };
 
-    const agentsCsv = readFileSync(join(process.cwd(), "src/data/seed/agents.csv"), "utf-8");
-    const branchesCsv = readFileSync(join(process.cwd(), "src/data/seed/branches.csv"), "utf-8");
+    const agentsCsv = agentsCsvText;
+    const branchesCsv = branchesCsvText;
 
     const agentRows = rowsToObjects(parseCsv(agentsCsv));
     const branchRows = rowsToObjects(parseCsv(branchesCsv));
