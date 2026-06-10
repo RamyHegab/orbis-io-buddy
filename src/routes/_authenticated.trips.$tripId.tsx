@@ -843,9 +843,31 @@ function TripPlanner() {
                               {ACTIVITY_TYPE_LABELS[a.type]}
                               {a.transport_mode && ` • ${a.transport_mode}`}
                               {a.flight_number && ` • ${a.flight_number}`}
-                              {a.agent_branches?.branch_name && ` • ${a.agent_branches.branch_name}`}
-                              {a.agents?.trading_name && !a.agent_branches && ` • ${a.agents.trading_name}`}
-                              {a.schools?.name && ` • ${a.schools.name}`}
+                              {a.agent_id && (a.agent_branches?.branch_name || a.agents?.trading_name) && (
+                                <>
+                                  {" • "}
+                                  <Link
+                                    to="/agents/$agentId"
+                                    params={{ agentId: a.agent_id }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="underline hover:text-primary"
+                                  >
+                                    {a.agent_branches?.branch_name ?? a.agents?.trading_name}
+                                  </Link>
+                                </>
+                              )}
+                              {a.school_id && a.schools?.name && (
+                                <>
+                                  {" • "}
+                                  <Link
+                                    to="/schools"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="underline hover:text-primary"
+                                  >
+                                    {a.schools.name}
+                                  </Link>
+                                </>
+                              )}
                               {a.location && ` • ${a.location}`}
                             </div>
                           </button>
