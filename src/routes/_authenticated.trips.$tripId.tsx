@@ -919,7 +919,87 @@ function TripPlanner() {
         </div>
       </div>
 
+      <Dialog open={hotelDialogOpen} onOpenChange={(o) => { setHotelDialogOpen(o); if (!o) setHotelForm(emptyHotel); }}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{hotelForm.id ? "Edit hotel" : "Add hotel"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Hotel name</Label>
+              <Input value={hotelForm.name} onChange={(e) => setHotelForm({ ...hotelForm, name: e.target.value })} placeholder="Hilton Bangkok" />
+            </div>
+            <div>
+              <Label>Google Maps link</Label>
+              <Input
+                value={hotelForm.map_url}
+                onChange={(e) => setHotelForm({ ...hotelForm, map_url: e.target.value })}
+                placeholder="Paste the Google Maps URL"
+              />
+              {!hotelForm.map_url && hotelForm.name && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotelForm.name)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-primary underline mt-1 inline-block"
+                >
+                  Find "{hotelForm.name}" on Google Maps →
+                </a>
+              )}
+              {hotelForm.map_url && (
+                <a
+                  href={hotelForm.map_url}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-primary underline mt-1 inline-block"
+                >
+                  Open saved location ↗
+                </a>
+              )}
+            </div>
+            <div>
+              <Label>Address (optional)</Label>
+              <Input value={hotelForm.address} onChange={(e) => setHotelForm({ ...hotelForm, address: e.target.value })} placeholder="Street, city" />
+            </div>
+            {(hotelForm.address || hotelForm.name) && (
+              <div className="rounded-md overflow-hidden border">
+                <iframe
+                  title="Hotel map"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(hotelForm.address || hotelForm.name)}&output=embed`}
+                  className="w-full h-40 border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Check-in date</Label><Input type="date" value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
+              <div><Label>Check-in time</Label><Input type="time" value={hotelForm.check_in_time} onChange={(e) => setHotelForm({ ...hotelForm, check_in_time: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Check-out date</Label><Input type="date" value={hotelForm.check_out_date} onChange={(e) => setHotelForm({ ...hotelForm, check_out_date: e.target.value })} /></div>
+              <div><Label>Check-out time</Label><Input type="time" value={hotelForm.check_out_time} onChange={(e) => setHotelForm({ ...hotelForm, check_out_time: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <div><Label>Cost</Label><Input type="number" inputMode="decimal" value={hotelForm.cost} onChange={(e) => setHotelForm({ ...hotelForm, cost: e.target.value })} placeholder="0.00" /></div>
+              <div><Label>Currency</Label><Input value={hotelForm.cost_currency} onChange={(e) => setHotelForm({ ...hotelForm, cost_currency: e.target.value.toUpperCase() })} maxLength={3} /></div>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={hotelForm.notes} onChange={(e) => setHotelForm({ ...hotelForm, notes: e.target.value })} placeholder="Booking ref, room type…" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={() => saveHotel.mutate()} disabled={saveHotel.isPending} className="flex-1">
+                {hotelForm.id ? "Save changes" : "Add hotel"}
+              </Button>
+              {hotelForm.id && (
+                <Button variant="outline" onClick={() => deleteHotel.mutate(hotelForm.id!)} disabled={deleteHotel.isPending}>
+                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </PageContainer>
+
   );
 }
 
