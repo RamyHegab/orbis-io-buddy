@@ -832,13 +832,15 @@ function TripPlanner() {
                           <div className="text-xs font-mono w-20 shrink-0">
                             {a.start_time ? a.start_time.slice(0, 5) : "—"}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => openEditActivity(a)}
-                            className="flex-1 min-w-0 text-left hover:opacity-80"
-                            title="Edit activity"
-                          >
-                            <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
+                          <div className="flex-1 min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => openEditActivity(a)}
+                              className="text-left hover:opacity-80 block w-full"
+                              title="Edit activity"
+                            >
+                              <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
+                            </button>
                             <div className="text-xs text-muted-foreground">
                               {ACTIVITY_TYPE_LABELS[a.type]}
                               {a.transport_mode && ` • ${a.transport_mode}`}
@@ -849,7 +851,6 @@ function TripPlanner() {
                                   <Link
                                     to="/agents/$agentId"
                                     params={{ agentId: a.agent_id }}
-                                    onClick={(e) => e.stopPropagation()}
                                     className="underline hover:text-primary"
                                   >
                                     {a.agent_branches?.branch_name ?? a.agents?.trading_name}
@@ -861,7 +862,6 @@ function TripPlanner() {
                                   {" • "}
                                   <Link
                                     to="/schools"
-                                    onClick={(e) => e.stopPropagation()}
                                     className="underline hover:text-primary"
                                   >
                                     {a.schools.name}
@@ -870,7 +870,7 @@ function TripPlanner() {
                               )}
                               {a.location && ` • ${a.location}`}
                             </div>
-                          </button>
+                          </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditActivity(a)} title="Edit">
                               <Pencil className="h-3.5 w-3.5" />
