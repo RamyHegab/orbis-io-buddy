@@ -77,15 +77,29 @@ export const generateTripReport = createServerFn({ method: "POST" })
 
     if (hotels && hotels.length) {
       ctx += `\n## Accommodation (${hotels.length})\n`;
+      let totalNights = 0;
+      let earliest = hotels[0].check_in_date;
+      let latest = hotels[0].check_out_date;
+      const hotelByCurrency: Record<string, number> = {};
       for (const h of hotels) {
         const nights = Math.max(1, Math.round((new Date(h.check_out_date).getTime() - new Date(h.check_in_date).getTime()) / 86400000));
+        totalNights += nights;
+        if (h.check_in_date < earliest) earliest = h.check_in_date;
+        if (h.check_out_date > latest) latest = h.check_out_date;
+        if (h.cost != null) {
+          const cur = h.cost_currency || "GBP";
+          hotelByCurrency[cur] = (hotelByCurrency[cur] ?? 0) + Number(h.cost);
+        }
         ctx += `- **${h.name}** — ${h.check_in_date} → ${h.check_out_date} (${nights} night${nights > 1 ? "s" : ""})`;
         if (h.cost != null) ctx += ` · ${h.cost_currency || "GBP"} ${Number(h.cost).toFixed(2)}`;
         if (h.map_url) ctx += ` · [Map](${h.map_url})`;
         if (h.address) ctx += ` · ${h.address}`;
         ctx += `\n`;
       }
+      const totalCost = Object.entries(hotelByCurrency).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(", ") || "—";
+      ctx += `\n**Accommodation totals:** ${hotels.length} hotel${hotels.length > 1 ? "s" : ""} · ${totalNights} night${totalNights > 1 ? "s" : ""} · ${earliest} → ${latest} · ${totalCost}\n`;
     }
+
 
 
     ctx += `\n## Activities (${activities?.length ?? 0})\n`;

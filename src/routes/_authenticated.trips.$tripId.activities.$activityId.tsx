@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Trash2, QrCode, Send } from "lucide-react";
+import { ArrowLeft, Trash2, QrCode, Send, ExternalLink, Mail, Phone, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
@@ -32,7 +32,15 @@ function ActivityDetail() {
   const { data: activity } = useQuery({
     queryKey: ["activity", activityId],
     queryFn: async () => {
-      const { data } = await supabase.from("activities").select("*, agents(trading_name), schools(name, city)").eq("id", activityId).maybeSingle();
+      const { data } = await supabase
+        .from("activities")
+        .select(`*,
+          agents(id, trading_name),
+          schools(id, name, city, country, address, primary_contact_name, primary_contact_position, primary_contact_email, primary_contact_phone, general_email, general_phone),
+          agent_branches(id, branch_name, city, country, address, contact_first_name, contact_last_name, contact_position, contact_email, contact_phone)
+        `)
+        .eq("id", activityId)
+        .maybeSingle();
       return data;
     },
   });
@@ -111,9 +119,34 @@ function ActivityDetail() {
         {activity.notes && <p className="text-sm whitespace-pre-wrap">{activity.notes}</p>}
       </Card>
 
+      {(activity.type === "agent_visit" && activity.agent_branches) && (
+        <ContactCard
+          title={`${activity.agents?.trading_name ?? "Agent"} — ${activity.agent_branches.branch_name}`}
+          contactName={[activity.agent_branches.contact_first_name, activity.agent_branches.contact_last_name].filter(Boolean).join(" ")}
+          contactPosition={activity.agent_branches.contact_position}
+          email={activity.agent_branches.contact_email}
+          phone={activity.agent_branches.contact_phone}
+          address={[activity.agent_branches.address, activity.agent_branches.city, activity.agent_branches.country].filter(Boolean).join(", ")}
+          directoryLink={activity.agents?.id ? { to: "/agents/$agentId", params: { agentId: activity.agents.id }, label: "Open agent in directory" } : null}
+        />
+      )}
+
+      {(activity.type === "school_visit" && activity.schools) && (
+        <ContactCard
+          title={activity.schools.name}
+          contactName={activity.schools.primary_contact_name}
+          contactPosition={activity.schools.primary_contact_position}
+          email={activity.schools.primary_contact_email || activity.schools.general_email}
+          phone={activity.schools.primary_contact_phone || activity.schools.general_phone}
+          address={[activity.schools.address, activity.schools.city, activity.schools.country].filter(Boolean).join(", ")}
+          directoryLink={{ to: "/schools", params: {}, label: "Open schools directory" }}
+        />
+      )}
+
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-5">
           <h3 className="font-semibold mb-3">Forms</h3>
+
           {templates && templates.length > 0 ? (
             <div className="space-y-2">
               {templates.map((t) => (
@@ -194,3 +227,71 @@ function ActivityDetail() {
     </PageContainer>
   );
 }
+
+function ContactCard({
+  title,
+  contactName,
+  contactPosition,
+  email,
+  phone,
+  address,
+  directoryLink,
+}: {
+  title: string;
+  contactName?: string | null;
+  contactPosition?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  directoryLink: { to: string; params: any; label: string } | null;
+}) {
+  const hasContact = contactName || email || phone || address;
+  return (
+    <Card className="p-5 mb-6">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <h3 className="font-semibold">{title}</h3>
+        {directoryLink && (
+          <Link to={directoryLink.to as any} params={directoryLink.params}>
+            <Button size="sm" variant="outline">
+              <ExternalLink className="h-3.5 w-3.5 mr-1" /> {directoryLink.label}
+            </Button>
+          </Link>
+        )}
+      </div>
+      {hasContact ? (
+        <div className="grid sm:grid-cols-2 gap-3 text-sm">
+          {(contactName || contactPosition) && (
+            <div className="flex items-start gap-2">
+              <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div>
+                <div className="font-medium">{contactName || "—"}</div>
+                {contactPosition && <div className="text-xs text-muted-foreground">{contactPosition}</div>}
+              </div>
+            </div>
+          )}
+          {email && (
+            <div className="flex items-start gap-2">
+              <Mail className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <a href={`mailto:${email}`} className="text-primary hover:underline break-all">{email}</a>
+            </div>
+          )}
+          {phone && (
+            <div className="flex items-start gap-2">
+              <Phone className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <a href={`tel:${phone}`} className="text-primary hover:underline">{phone}</a>
+            </div>
+          )}
+          {address && (
+            <div className="flex items-start gap-2 sm:col-span-2">
+              <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <span className="text-foreground">{address}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">No contact details on record. {directoryLink && "Open the directory to add them."}</p>
+      )}
+    </Card>
+  );
+}
+

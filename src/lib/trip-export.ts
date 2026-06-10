@@ -60,6 +60,28 @@ function hotelCost(h: Hotel): string {
   return `${h.cost_currency || "GBP"} ${Number(h.cost).toFixed(2)}`;
 }
 
+function hotelTotals(hotels: Hotel[]) {
+  if (hotels.length === 0) return null;
+  let totalNights = 0;
+  const byCurrency: Record<string, number> = {};
+  let earliest = hotels[0].check_in_date;
+  let latest = hotels[0].check_out_date;
+  for (const h of hotels) {
+    const nights = Math.max(1, Math.round((parseISO(h.check_out_date).getTime() - parseISO(h.check_in_date).getTime()) / 86400000));
+    totalNights += nights;
+    if (h.cost != null && h.cost !== "") {
+      const cur = h.cost_currency || "GBP";
+      byCurrency[cur] = (byCurrency[cur] ?? 0) + Number(h.cost);
+    }
+    if (h.check_in_date < earliest) earliest = h.check_in_date;
+    if (h.check_out_date > latest) latest = h.check_out_date;
+  }
+  const costStr = Object.entries(byCurrency).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") || "—";
+  const range = `${format(parseISO(earliest), "d MMM yyyy")} → ${format(parseISO(latest), "d MMM yyyy")}`;
+  return { totalNights, costStr, range, count: hotels.length };
+}
+
+
 export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
   const doc = new jsPDF();
   doc.setFontSize(16);
@@ -94,8 +116,22 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       headStyles: { fillColor: [240, 240, 240], textColor: 30 },
       margin: { left: 14, right: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable.finalY + 4;
+    const totals = hotelTotals(hotels);
+    if (totals) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text("Totals:", 14, y + 4);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `${totals.count} hotel${totals.count > 1 ? "s" : ""} · ${totals.totalNights} night${totals.totalNights > 1 ? "s" : ""} · ${totals.range} · ${totals.costStr}`,
+        30, y + 4,
+      );
+      y += 10;
+    }
+    y += 4;
   }
+
 
   for (const day of buildDays(trip, activities, hotels)) {
     if (y > 260) { doc.addPage(); y = 20; }
@@ -137,9 +173,10 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
 export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
   const days = buildDays(trip, activities, hotels);
 
+  const totals = hotelTotals(hotels);
   const hotelsTable = hotels.length === 0 ? "" : `
     <h2>Accommodation</h2>
-    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:16px">
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
       <tr style="background:#f0f0f0">
         <th align="left">Hotel</th><th align="left">Check-in</th><th align="left">Check-out</th>
         <th align="left">Nights</th><th align="left">Cost</th><th align="left">Map / Address</th>
@@ -161,7 +198,9 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
           <td>${mapCell}</td>
         </tr>`;
       }).join("")}
-    </table>`;
+    </table>
+    ${totals ? `<p style="margin:0 0 16px 0;font-size:13px"><strong>Totals:</strong> ${totals.count} hotel${totals.count > 1 ? "s" : ""} · ${totals.totalNights} night${totals.totalNights > 1 ? "s" : ""} · ${esc(totals.range)} · ${esc(totals.costStr)}</p>` : ""}`;
+
 
   const rows = days.map((day) => {
     const stayLine = day.stay
