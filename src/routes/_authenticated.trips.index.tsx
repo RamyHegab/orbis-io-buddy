@@ -38,8 +38,8 @@ function buildTitle(legs: Leg[]): string {
 function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "upcoming" {
   const today = format(new Date(), "yyyy-MM-dd");
   if (t.end_date < today) return "past";
-  if (t.start_date <= today && today <= t.end_date) return "in_progress";
-  return "upcoming";
+  if (t.status === "confirmed") return "upcoming";
+  return "in_progress";
 }
 
 function TripsPage() {
@@ -144,6 +144,7 @@ function TripsPage() {
                   <div className="font-medium truncate">{t.title}</div>
                   <div className="text-xs text-muted-foreground mt-1">{fmtDate(t.start_date)} → {fmtDate(t.end_date)}</div>
                   <div className="flex flex-wrap gap-1 mt-3">
+                    {t.status === "confirmed" && <Badge className="bg-emerald-600 hover:bg-emerald-600">Confirmed</Badge>}
                     {t.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
                   </div>
                 </div>

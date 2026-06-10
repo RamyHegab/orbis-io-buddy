@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2 } from "lucide-react";
+import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -216,6 +217,20 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const setStatus = useMutation({
+    mutationFn: async (status: "active" | "confirmed") => {
+      const { error } = await supabase.from("trips").update({ status }).eq("id", tripId);
+      if (error) throw error;
+      return status;
+    },
+    onSuccess: (status) => {
+      toast.success(status === "confirmed" ? "Itinerary confirmed — ready to submit for approval" : "Itinerary saved as in progress");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
@@ -239,11 +254,50 @@ function TripPlanner() {
         <ArrowLeft className="h-4 w-4 mr-1" /> All trips
       </Button>
       <PageHeader
-        title={trip.title}
+        title={
+          <span className="flex items-center gap-2">
+            {trip.title}
+            {trip.status === "confirmed" && (
+              <Badge className="bg-emerald-600 hover:bg-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Confirmed</Badge>
+            )}
+            {trip.status === "active" && <Badge variant="secondary">In progress</Badge>}
+            {trip.status === "planning" && <Badge variant="outline">Draft</Badge>}
+          </span>
+        }
         description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit trip</Button>
+            {trip.status !== "confirmed" ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setStatus.mutate("active")} disabled={setStatus.isPending}>
+                  <Save className="h-4 w-4 mr-1" /> Save as in progress
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" disabled={setStatus.isPending}>
+                      <CheckCircle2 className="h-4 w-4 mr-1" /> Confirm itinerary
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm itinerary?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Marks this itinerary as complete and ready to submit for approval. You can still edit it afterwards.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => setStatus.mutate("confirmed")}>Confirm</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => setStatus.mutate("active")} disabled={setStatus.isPending}>
+                <Pencil className="h-4 w-4 mr-1" /> Reopen for edits
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm"><FileDown className="h-4 w-4 mr-1" /> Export</Button>
