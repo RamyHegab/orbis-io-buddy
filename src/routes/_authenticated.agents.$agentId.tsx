@@ -239,6 +239,7 @@ function AgentDetail() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {branches && branches.length > 0 ? (
