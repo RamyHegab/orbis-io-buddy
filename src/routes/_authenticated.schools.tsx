@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +65,7 @@ const EMPTY_FORM: FormState = {
 
 function SchoolsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -262,7 +263,11 @@ function SchoolsPage() {
                     lng: s.lng,
                   });
                   return (
-                  <Card key={s.id} className="p-4">
+                  <Card
+                    key={s.id}
+                    className="p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => navigate({ to: "/schools/$schoolId", params: { schoolId: s.id } })}
+                  >
                     <div className="flex items-start gap-3">
                       {s.campus_image_url ? (
                         <img src={s.campus_image_url} alt={s.name} className="h-9 w-9 rounded-md object-cover shrink-0" />
@@ -278,7 +283,7 @@ function SchoolsPage() {
                           <div className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
                             <span className="truncate">{s.formatted_address || s.address}</span>
                             {mapUrl && (
-                              <a href={mapUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline shrink-0" title="Open in Google Maps">
+                              <a href={mapUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline shrink-0" title="Open in Google Maps">
                                 <MapPin className="h-3 w-3" />
                               </a>
                             )}
@@ -290,7 +295,7 @@ function SchoolsPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
+                      <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </button>
