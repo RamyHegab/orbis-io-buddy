@@ -144,6 +144,7 @@ function TripsPage() {
                   <div className="font-medium truncate">{t.title}</div>
                   <div className="text-xs text-muted-foreground mt-1">{fmtDate(t.start_date)} → {fmtDate(t.end_date)}</div>
                   <div className="flex flex-wrap gap-1 mt-3">
+                    {t.status === "confirmed" && <Badge className="bg-emerald-600 hover:bg-emerald-600">Confirmed</Badge>}
                     {t.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
                   </div>
                 </div>
