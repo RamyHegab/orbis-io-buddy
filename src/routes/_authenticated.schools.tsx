@@ -45,6 +45,10 @@ type FormState = {
   secondary_contact_email: string;
   secondary_contact_phone: string;
   notes: string;
+  place_id: string;
+  lat: number | null;
+  lng: number | null;
+  formatted_address: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -53,6 +57,7 @@ const EMPTY_FORM: FormState = {
   primary_contact_name: "", primary_contact_position: "", primary_contact_email: "", primary_contact_phone: "",
   secondary_contact_name: "", secondary_contact_email: "", secondary_contact_phone: "",
   notes: "",
+  place_id: "", lat: null, lng: null, formatted_address: "",
 };
 
 function SchoolsPage() {
