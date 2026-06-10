@@ -13,6 +13,9 @@ import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar } 
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { MapPreview } from "@/components/map-preview";
+import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
