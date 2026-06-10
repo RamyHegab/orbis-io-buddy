@@ -48,6 +48,7 @@ type FormState = {
   end_time: string;
   end_date: string;
   location: string;
+  map_url: string;
   agent_id: string;
   branch_id: string;
   school_id: string;
@@ -67,11 +68,12 @@ type FormState = {
 
 const emptyForm: FormState = {
   type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
-  location: "", agent_id: "", branch_id: "", school_id: "",
+  location: "", map_url: "", agent_id: "", branch_id: "", school_id: "",
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
   resting_type: "", description: "", notes: "",
 };
+
 
 function TripPlanner() {
   const { tripId } = Route.useParams();
