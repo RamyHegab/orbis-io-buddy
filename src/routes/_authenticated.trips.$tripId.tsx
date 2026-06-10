@@ -763,257 +763,274 @@ function TripPlanner() {
 
         </div>
 
-        <div className="lg:col-span-1" ref={editorRef}>
-          <Card className="p-5 lg:sticky lg:top-4 scroll-mt-4">
-
-            {!selectedDay ? (
-              <div className="text-sm text-muted-foreground space-y-2">
-                <div className="font-semibold text-foreground">Activity editor</div>
-                <p>Select a day on the left and click <span className="font-medium">Add</span> to schedule an activity here.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold">New activity</div>
-                    <div className="text-xs text-muted-foreground">{fmtDate(selectedDay)}</div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => { setSelectedDay(null); setForm(emptyForm); }}>Cancel</Button>
-                </div>
+        {(() => {
+          const editorBody = !selectedDay ? (
+            <div className="text-sm text-muted-foreground space-y-2">
+              <div className="font-semibold text-foreground">Activity editor</div>
+              <p>Select a day on the left and click <span className="font-medium">Add</span> to schedule an activity here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Label>Activity type</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm({ ...emptyForm, type: v, end_date: selectedDay ?? "" })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{ACTIVITY_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                  </Select>
+                  <div className="font-semibold">New activity</div>
+                  <div className="text-xs text-muted-foreground">{fmtDate(selectedDay)}</div>
                 </div>
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedDay(null); setForm(emptyForm); }}>Cancel</Button>
+              </div>
+              <div>
+                <Label>Activity type</Label>
+                <Select value={form.type} onValueChange={(v) => setForm({ ...emptyForm, type: v, end_date: selectedDay ?? "" })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{ACTIVITY_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
 
-                {form.type === "travel" && (
-                  <>
-                    <div>
-                      <Label>Mode of transport</Label>
-                      <Select value={form.transport_mode} onValueChange={(v) => setForm({ ...form, transport_mode: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select transport" /></SelectTrigger>
-                        <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
+              {form.type === "travel" && (
+                <>
+                  <div>
+                    <Label>Mode of transport</Label>
+                    <Select value={form.transport_mode} onValueChange={(v) => setForm({ ...form, transport_mode: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select transport" /></SelectTrigger>
+                      <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                    <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
+                  </div>
+                  {form.transport_mode === "Air travel" && (
                     <div className="grid grid-cols-2 gap-3">
-                      <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
-                      <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
+                      <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
+                      <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
                     </div>
-                    {form.transport_mode === "Air travel" && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
-                        <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
-                      </div>
-                    )}
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+                    <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+                  </div>
+                  <div><Label>Arrival date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  {form.transport_mode === "Air travel" && (
                     <div className="grid grid-cols-2 gap-3">
-                      <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
-                      <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+                      <div><Label>Airline</Label><Input value={form.airline} onChange={(e) => setForm({ ...form, airline: e.target.value })} /></div>
+                      <div><Label>Flight number</Label><Input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} /></div>
                     </div>
-                    <div><Label>Arrival date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
-                    {form.transport_mode === "Air travel" && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Airline</Label><Input value={form.airline} onChange={(e) => setForm({ ...form, airline: e.target.value })} /></div>
-                        <div><Label>Flight number</Label><Input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} /></div>
+                  )}
+                  <CostInput form={form} setForm={setForm} />
+                </>
+              )}
+
+              {form.type === "agent_visit" && (
+                <>
+                  <div>
+                    <Label>Agent</Label>
+                    <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v, branch_id: "" })}>
+                      <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                      <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Agent branch</Label>
+                    {filteredBranches.length === 0 ? (
+                      <div className="text-sm text-muted-foreground border rounded-md p-3">
+                        No branches yet. <Link to="/agents" className="underline text-primary">Add a branch</Link> first.
                       </div>
+                    ) : (
+                      <Select value={form.branch_id} onValueChange={(v) => {
+                        const b: any = filteredBranches.find((x: any) => x.id === v);
+                        setForm({ ...form, branch_id: v, agent_id: b?.agent_id ?? form.agent_id, title: b ? `Visit ${b.branch_name}` : form.title });
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Pick a branch" /></SelectTrigger>
+                        <SelectContent>
+                          {filteredBranches.map((b: any) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.branch_name}{b.city && ` — ${b.city}`}{!form.agent_id && b.agents?.trading_name && ` (${b.agents.trading_name})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
-                    <CostInput form={form} setForm={setForm} />
-                  </>
-                )}
+                  </div>
+                  <TimeRange form={form} setForm={setForm} />
+                </>
+              )}
 
-                {form.type === "agent_visit" && (
-                  <>
-                    <div>
-                      <Label>Agent</Label>
-                      <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v, branch_id: "" })}>
-                        <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
-                        <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+              {form.type === "school_visit" && (
+                <>
+                  <div>
+                    <Label>School</Label>
+                    {(!schools || schools.length === 0) ? (
+                      <div className="text-sm text-muted-foreground border rounded-md p-3">
+                        No schools yet. <Link to="/schools" className="underline text-primary">Add a school</Link> first.
+                      </div>
+                    ) : (
+                      <Select value={form.school_id} onValueChange={(v) => {
+                        const s = schools.find((x) => x.id === v);
+                        setForm({ ...form, school_id: v, title: s ? `Visit ${s.name}` : form.title });
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
+                        <SelectContent>{schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {s.city}</SelectItem>)}</SelectContent>
                       </Select>
-                    </div>
-                    <div>
-                      <Label>Agent branch</Label>
-                      {filteredBranches.length === 0 ? (
-                        <div className="text-sm text-muted-foreground border rounded-md p-3">
-                          No branches yet. <Link to="/agents" className="underline text-primary">Add a branch</Link> first.
-                        </div>
-                      ) : (
-                        <Select value={form.branch_id} onValueChange={(v) => {
-                          const b: any = filteredBranches.find((x: any) => x.id === v);
-                          setForm({ ...form, branch_id: v, agent_id: b?.agent_id ?? form.agent_id, title: b ? `Visit ${b.branch_name}` : form.title });
-                        }}>
-                          <SelectTrigger><SelectValue placeholder="Pick a branch" /></SelectTrigger>
-                          <SelectContent>
-                            {filteredBranches.map((b: any) => (
-                              <SelectItem key={b.id} value={b.id}>
-                                {b.branch_name}{b.city && ` — ${b.city}`}{!form.agent_id && b.agents?.trading_name && ` (${b.agents.trading_name})`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                    <TimeRange form={form} setForm={setForm} />
-                  </>
-                )}
+                    )}
+                  </div>
+                  <TimeRange form={form} setForm={setForm} />
+                  <div>
+                    <Label>Linked agent</Label>
+                    <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                      <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <CostInput form={form} setForm={setForm} />
+                </>
+              )}
 
-                {form.type === "school_visit" && (
-                  <>
-                    <div>
-                      <Label>School</Label>
-                      {(!schools || schools.length === 0) ? (
-                        <div className="text-sm text-muted-foreground border rounded-md p-3">
-                          No schools yet. <Link to="/schools" className="underline text-primary">Add a school</Link> first.
-                        </div>
-                      ) : (
-                        <Select value={form.school_id} onValueChange={(v) => {
-                          const s = schools.find((x) => x.id === v);
-                          setForm({ ...form, school_id: v, title: s ? `Visit ${s.name}` : form.title });
-                        }}>
-                          <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
-                          <SelectContent>{schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {s.city}</SelectItem>)}</SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                    <TimeRange form={form} setForm={setForm} />
-                    <div>
-                      <Label>Linked agent</Label>
-                      <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-                        <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
-                        <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <CostInput form={form} setForm={setForm} />
-                  </>
-                )}
-
-                {form.type === "recruitment_event" && (
-                  <>
-                    <div><Label>Event title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Spring Education Fair 2026" /></div>
-                    <div>
-                      <Label>Venue</Label>
-                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hilton Conference Centre" />
-                    </div>
-                    <div>
-                      <Label>Google Maps link</Label>
-                      <Input
-                        value={form.map_url}
-                        onChange={(e) => setForm({ ...form, map_url: e.target.value })}
-                        placeholder="Paste the Google Maps URL for the venue"
-                      />
-                      {!form.map_url && form.location && (
+              {form.type === "recruitment_event" && (
+                <>
+                  <div><Label>Event title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Spring Education Fair 2026" /></div>
+                  <div>
+                    <Label>Venue</Label>
+                    <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hilton Conference Centre" />
+                  </div>
+                  <div>
+                    <Label>Google Maps link</Label>
+                    <Input
+                      value={form.map_url}
+                      onChange={(e) => setForm({ ...form, map_url: e.target.value })}
+                      placeholder="Paste the Google Maps URL for the venue"
+                    />
+                    {!form.map_url && form.location && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.location)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-primary underline mt-1 inline-block"
+                      >
+                        Find "{form.location}" on Google Maps →
+                      </a>
+                    )}
+                    {form.map_url && (
+                      <>
                         <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.location)}`}
+                          href={form.map_url}
                           target="_blank" rel="noopener noreferrer"
                           className="text-xs text-primary underline mt-1 inline-block"
                         >
-                          Find "{form.location}" on Google Maps →
+                          Open saved location ↗
                         </a>
-                      )}
-                      {form.map_url && (
-                        <>
-                          <a
-                            href={form.map_url}
-                            target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-primary underline mt-1 inline-block"
-                          >
-                            Open saved location ↗
-                          </a>
-                          <div className="mt-2 rounded-md overflow-hidden border">
-                            <iframe
-                              title="Venue map"
-                              src={`https://maps.google.com/maps?q=${encodeURIComponent(form.location || form.map_url)}&output=embed`}
-                              className="w-full h-48 border-0"
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <TimeRange form={form} setForm={setForm} />
-                    <div>
-                      <Label>Linked agent</Label>
-                      <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-                        <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
-                        <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <CostInput form={form} setForm={setForm} />
-                  </>
-                )}
+                        <div className="mt-2 rounded-md overflow-hidden border">
+                          <iframe
+                            title="Venue map"
+                            src={`https://maps.google.com/maps?q=${encodeURIComponent(form.location || form.map_url)}&output=embed`}
+                            className="w-full h-48 border-0"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <TimeRange form={form} setForm={setForm} />
+                  <div>
+                    <Label>Linked agent</Label>
+                    <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                      <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <CostInput form={form} setForm={setForm} />
+                </>
+              )}
 
+              {form.type === "hotel" && (
+                <>
+                  <div><Label>Hotel name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Bangkok" /></div>
+                  <div>
+                    <Label>Address</Label>
+                    <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hotel address" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>Check-in time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+                    <div><Label>Check-out time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+                  </div>
+                  <div><Label>Check-out date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  <CostInput form={form} setForm={setForm} />
+                </>
+              )}
 
-                {form.type === "hotel" && (
-                  <>
-                    <div><Label>Hotel name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Bangkok" /></div>
-                    <div>
-                      <Label>Address</Label>
-                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hotel address" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><Label>Check-in time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
-                      <div><Label>Check-out time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
-                    </div>
-                    <div><Label>Check-out date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
-                    <CostInput form={form} setForm={setForm} />
-                  </>
-                )}
+              {form.type === "resting_day" && (
+                <>
+                  <div>
+                    <Label>Reason</Label>
+                    <Select value={form.resting_type} onValueChange={(v) => setForm({ ...form, resting_type: v, title: RESTING_TYPES.find((r) => r.value === v)?.label ?? "" })}>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>{RESTING_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">No other activities will be scheduled for this day.</p>
+                </>
+              )}
 
-                {form.type === "resting_day" && (
-                  <>
-                    <div>
-                      <Label>Reason</Label>
-                      <Select value={form.resting_type} onValueChange={(v) => setForm({ ...form, resting_type: v, title: RESTING_TYPES.find((r) => r.value === v)?.label ?? "" })}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>{RESTING_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <p className="text-xs text-muted-foreground">No other activities will be scheduled for this day.</p>
-                  </>
-                )}
+              {form.type === "other" && (
+                <>
+                  <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="British Council meeting" /></div>
+                  <TimeRange form={form} setForm={setForm} />
+                  <div>
+                    <Label>Linked agent</Label>
+                    <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
+                      <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Linked school</Label>
+                    <Select value={form.school_id} onValueChange={(v) => setForm({ ...form, school_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
+                      <SelectContent>{schools?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Location / venue</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+                  <CostInput form={form} setForm={setForm} />
+                  <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+                </>
+              )}
 
-                {form.type === "other" && (
-                  <>
-                    <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="British Council meeting" /></div>
-                    <TimeRange form={form} setForm={setForm} />
-                    <div>
-                      <Label>Linked agent</Label>
-                      <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-                        <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
-                        <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Linked school</Label>
-                      <Select value={form.school_id} onValueChange={(v) => setForm({ ...form, school_id: v })}>
-                        <SelectTrigger><SelectValue placeholder="Pick a school" /></SelectTrigger>
-                        <SelectContent>{schools?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div><Label>Location / venue</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-                    <CostInput form={form} setForm={setForm} />
-                    <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-                  </>
-                )}
+              {validationMessage && (
+                <p className="text-xs text-muted-foreground">{validationMessage}</p>
+              )}
+              <Button
+                onClick={() => {
+                  if (validationMessage) { toast.error(validationMessage); return; }
+                  create.mutate();
+                }}
+                disabled={create.isPending}
+                className="w-full"
+              >
+                Add activity
+              </Button>
+            </div>
+          );
 
-                {validationMessage && (
-                  <p className="text-xs text-muted-foreground">{validationMessage}</p>
-                )}
-                <Button
-                  onClick={() => {
-                    if (validationMessage) { toast.error(validationMessage); return; }
-                    create.mutate();
-                  }}
-                  disabled={create.isPending}
-                  className="w-full"
-                >
-                  Add activity
-                </Button>
+          return (
+            <>
+              <div className="hidden lg:block lg:col-span-1" ref={editorRef}>
+                <Card className="p-5 lg:sticky lg:top-4 scroll-mt-4">
+                  {editorBody}
+                </Card>
               </div>
-            )}
-          </Card>
-        </div>
+              <Dialog
+                open={!!selectedDay}
+                onOpenChange={(o) => { if (!o) { setSelectedDay(null); setForm(emptyForm); } }}
+              >
+                <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto lg:hidden">
+                  <DialogHeader>
+                    <DialogTitle>New activity — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
+                  </DialogHeader>
+                  {selectedDay && editorBody}
+                </DialogContent>
+              </Dialog>
+            </>
+          );
+        })()}
       </div>
 
       <Dialog open={hotelDialogOpen} onOpenChange={(o) => { setHotelDialogOpen(o); if (!o) setHotelForm(emptyHotel); }}>
