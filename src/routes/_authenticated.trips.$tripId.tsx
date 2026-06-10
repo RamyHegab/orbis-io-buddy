@@ -559,6 +559,7 @@ function TripPlanner() {
     setEditLegs((countries ?? []).map((c: any) => ({
       id: c.id, country: c.country, start_date: c.start_date, end_date: c.end_date,
     })));
+    setEditObjectives(trip?.objectives ?? "");
     setEditOpen(true);
   };
 
