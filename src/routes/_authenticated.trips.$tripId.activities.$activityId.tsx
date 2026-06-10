@@ -32,7 +32,15 @@ function ActivityDetail() {
   const { data: activity } = useQuery({
     queryKey: ["activity", activityId],
     queryFn: async () => {
-      const { data } = await supabase.from("activities").select("*, agents(trading_name), schools(name, city)").eq("id", activityId).maybeSingle();
+      const { data } = await supabase
+        .from("activities")
+        .select(`*,
+          agents(id, trading_name),
+          schools(id, name, city, country, address, primary_contact_name, primary_contact_position, primary_contact_email, primary_contact_phone, general_email, general_phone),
+          agent_branches(id, branch_name, city, country, address, contact_first_name, contact_last_name, contact_position, contact_email, contact_phone)
+        `)
+        .eq("id", activityId)
+        .maybeSingle();
       return data;
     },
   });
