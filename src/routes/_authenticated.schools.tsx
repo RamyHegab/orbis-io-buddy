@@ -65,6 +65,7 @@ const EMPTY_FORM: FormState = {
 
 function SchoolsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
