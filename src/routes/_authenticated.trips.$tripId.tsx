@@ -110,12 +110,21 @@ function TripPlanner() {
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const [isLgUp, setIsLgUp] = useState(false);
 
   useEffect(() => {
-    if (selectedDay && editorRef.current) {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsLgUp(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (selectedDay && isLgUp && editorRef.current) {
       editorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [selectedDay]);
+  }, [selectedDay, isLgUp]);
 
 
 
