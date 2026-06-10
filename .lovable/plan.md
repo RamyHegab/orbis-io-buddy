@@ -1,47 +1,69 @@
 ## Goal
 
-Make the `schools` table mirror the fields in your Notion "School contact form" so what users capture in the app matches what your team already collects.
+Add **hotels as multi-day stays** that show on every day they cover. Entry point is an "Add hotel" button on each day card (greyed out when that day is already covered by another stay). Hotels also surface in the daily itinerary report and the cost summary.
 
-## Form fields → columns
+## Data model
 
-| Notion form field | Column | Type |
-|---|---|---|
-| School name | `name` (exists) | text |
-| City | `city` (exists) | text |
-| Address | `address` *(new)* | text |
-| General E-Mail address | `general_email` *(renamed from `email`)* | text |
-| General contact number | `general_phone` *(renamed from `phone`)* | text |
-| Primary contact person | `primary_contact_name` *(renamed from `contact_name`)* | text |
-| Position | `primary_contact_position` *(new)* | text |
-| Primary contact email | `primary_contact_email` *(new)* | text |
-| Primary contact phone | `primary_contact_phone` *(new)* | text |
-| Secondary contact person | `secondary_contact_name` *(new)* | text |
-| Secondary contact email | `secondary_contact_email` *(new)* | text |
-| Secondary contact phone | `secondary_contact_phone` *(new)* | text |
-| Campus picture (upload) | `campus_image_url` *(new)* | text (public URL) |
+New table `trip_hotels`:
+- `trip_id` (FK → trips, cascade delete)
+- `name` (text, required)
+- `map_url` (text — the Google Maps hyperlink wrapped on the name)
+- `address` (text, optional — fallback for the embedded map preview)
+- `check_in_date`, `check_out_date` (date, required; check_out > check_in)
+- `check_in_time`, `check_out_time` (time, optional)
+- `cost` (numeric), `cost_currency` (text, default 'GBP')
+- `notes` (text, optional)
+- `id`, `user_id`, `created_at`, `updated_at`
+- RLS scoped to `auth.uid() = user_id`, GRANT to authenticated + service_role, `update_updated_at_column` trigger
 
-Kept from existing schema: `country`, `level`, `notes`, `status`, `notion_page_id`, `properties`, `last_synced_at`, plus standard id/user_id/timestamps. `country` stays nullable (form has no country field — we'll infer from city when needed).
+The existing `hotel` activity type is removed from the picker (`ACTIVITY_TYPES`) for new entries; legacy rows still render.
 
-## Storage
+## UI — `src/routes/_authenticated.trips.$tripId.tsx`
 
-Create a public `school-campuses` storage bucket so the campus image upload works from the in-app form, with RLS allowing authenticated users to insert/update their own files and public read.
+### Day card
 
-## Migration steps (single migration)
+Header gets a second button next to **Add**:
 
-1. `ALTER TABLE public.schools`:
-   - rename `email` → `general_email`, `phone` → `general_phone`, `contact_name` → `primary_contact_name`
-   - add new columns above
-2. Create `school-campuses` bucket + storage policies.
+```text
+[ + Add ]   [ 🏨 Add hotel ]
+```
 
-Existing rows keep their data through the renames; new columns default to NULL.
+Rules:
+- If a hotel covers this day (`check_in_date ≤ day < check_out_date`):
+  - "Add hotel" button is **greyed out / disabled** with tooltip "Covered by {hotel name}".
+  - A pinned row appears at the top of the day's activity list:
+    `🏨 {hotel name as hyperlink to map_url} · check-in 14:00` on the check-in day,
+    `· check-out 11:00` on the check-out day, plain "Staying at …" in between. Clicking opens the edit dialog.
+- If no hotel covers this day: "Add hotel" opens the hotel dialog with `check_in_date` prefilled to that day and `check_out_date` to the next day.
 
-## App updates
+### Hotel dialog
 
-- **Schools page** (`_authenticated.schools.tsx`): replace the current generic create/edit form with one that mirrors the Notion form layout — sections "School", "General contact", "Primary contact", "Secondary contact", "Campus image" (upload to the new bucket).
-- **Notion sync** (`notion-sync.functions.ts`): map matching Notion property names into the new columns; leave unrecognized props in the `properties` JSONB bag as today.
-- **Generated types**: regenerated after migration; afterwards, update the few places that read `school.email` / `school.phone` / `school.contact_name`.
+Fields: Hotel name · Google Maps link · Address (optional) · Check-in date + time · Check-out date + time · Cost + currency (reuse `CostInput`) · Notes.
+- Validation: name + check-in + check-out (out > in). Dates may sit outside the trip range; we just warn inline.
+- Overlap check on save: if the new range overlaps an existing stay (other than the one being edited), block with toast "Overlaps {hotel name} ({dates})".
+- Embedded map preview using `https://maps.google.com/maps?q={encodeURIComponent(address || name)}&output=embed`.
+- Edit dialog reuses the same form; includes a Delete button.
+
+### Cost summary card
+
+`Hotels` total sums `trip_hotels.cost` per currency (replacing the current hotel-activity sum). Travel / Events / Total unchanged otherwise.
+
+## Report — `src/lib/trip-report.functions.ts`
+
+- Fetch `trip_hotels` alongside activities.
+- Daily breakdown: prefix each day with a `Staying at {name} ({map_url})` line when a stay covers it (with check-in/out time on boundary days).
+- Add an **Accommodation** section listing each stay (name, dates, nights, cost, link).
+- Cost totals: pull hotel totals from `trip_hotels`.
+
+## Technical notes
+
+- New query key `["trip-hotels", tripId]`; invalidate after add/edit/delete and after trip date edits.
+- All reads/writes via the browser supabase client with RLS.
+- Helper `hotelForDay(date)` returns the covering stay for a given day — used by the day card chip and the "Add hotel" disabled state.
+- Migration runs `CREATE TABLE … GRANT … ENABLE RLS … CREATE POLICY …` + updated-at trigger in one file.
 
 ## Out of scope
 
-- No changes to agents, branches, trips, or activities.
-- No live Notion form → DB webhook (sync stays one-way pull from the Notion Schools DB you already linked).
+- Per-night cost split.
+- Auto-linking a hotel to its arrival travel activity.
+- Multi-room / guest tracking.
