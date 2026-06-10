@@ -89,7 +89,7 @@ function InboxPage() {
                       </a>
                     )}
                   </div>
-                  <pre className="text-xs bg-muted/40 p-2 rounded overflow-x-auto">{JSON.stringify(s.payload, null, 2)}</pre>
+                  <SubmissionSummary type={s.type} payload={s.payload} />
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button size="sm" onClick={() => approve.mutate(s)} disabled={approve.isPending}><Check className="h-4 w-4 mr-1" /> Approve</Button>
