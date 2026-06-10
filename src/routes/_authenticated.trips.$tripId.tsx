@@ -213,6 +213,12 @@ function TripPlanner() {
   const create = useMutation({
     mutationFn: async () => {
       if (!user || !selectedDay) throw new Error("Missing fields");
+      if (trip && (selectedDay < trip.start_date || selectedDay > trip.end_date)) {
+        throw new Error(`Date must be within trip range (${trip.start_date} → ${trip.end_date})`);
+      }
+      if (form.end_date && trip && (form.end_date < trip.start_date || form.end_date > trip.end_date)) {
+        throw new Error(`End date must be within trip range (${trip.start_date} → ${trip.end_date})`);
+      }
       const payload: any = {
         trip_id: tripId,
         user_id: user.id,
