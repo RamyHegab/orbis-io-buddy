@@ -617,7 +617,7 @@ function defaultTitle(f: FormState, branches: any, schools: any, agents: any): s
 
 function isFormValid(f: FormState): boolean {
   switch (f.type) {
-    case "travel": return !!f.transport_mode;
+    case "travel": return !!f.transport_mode && !!f.from_city && !!f.to_city;
     case "agent_visit": return !!f.branch_id;
     case "school_visit": return !!f.school_id;
     case "recruitment_event": return !!f.title;
