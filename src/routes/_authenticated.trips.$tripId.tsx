@@ -1123,14 +1123,22 @@ function defaultTitle(f: FormState, branches: any, schools: any, agents: any): s
 }
 
 function isFormValid(f: FormState): boolean {
+  return validateForm(f) === null;
+}
+
+function validateForm(f: FormState): string | null {
   switch (f.type) {
-    case "travel": return !!f.transport_mode && !!f.from_city && !!f.to_city;
-    case "agent_visit": return !!f.branch_id;
-    case "school_visit": return !!f.school_id;
-    case "recruitment_event": return !!f.title;
-    case "hotel": return !!f.title;
-    case "resting_day": return !!f.resting_type;
-    case "other": return !!f.title;
-    default: return false;
+    case "travel":
+      if (!f.transport_mode) return "Pick a transport mode.";
+      if (!f.from_city) return "Enter the departure city.";
+      if (!f.to_city) return "Enter the arrival city.";
+      return null;
+    case "agent_visit": return f.branch_id ? null : "Pick an agent branch to visit.";
+    case "school_visit": return f.school_id ? null : "Pick a school to visit.";
+    case "recruitment_event": return f.title ? null : "Enter an event title.";
+    case "hotel": return f.title ? null : "Enter the hotel name.";
+    case "resting_day": return f.resting_type ? null : "Pick a reason for the resting day.";
+    case "other": return f.title ? null : "Enter a title for the activity.";
+    default: return "Pick an activity type.";
   }
 }
