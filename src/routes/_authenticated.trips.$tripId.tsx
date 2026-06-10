@@ -75,6 +75,28 @@ const emptyForm: FormState = {
   resting_type: "", description: "", notes: "",
 };
 
+type HotelForm = {
+  id?: string;
+  name: string;
+  map_url: string;
+  address: string;
+  check_in_date: string;
+  check_out_date: string;
+  check_in_time: string;
+  check_out_time: string;
+  cost: string;
+  cost_currency: string;
+  notes: string;
+};
+
+const emptyHotel: HotelForm = {
+  name: "", map_url: "", address: "",
+  check_in_date: "", check_out_date: "",
+  check_in_time: "", check_out_time: "",
+  cost: "", cost_currency: "GBP", notes: "",
+};
+
+
 
 function TripPlanner() {
   const { tripId } = Route.useParams();
