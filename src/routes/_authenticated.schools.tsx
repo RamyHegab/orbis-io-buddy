@@ -103,8 +103,38 @@ function SchoolsPage() {
         title="Schools"
         description="Partner and prospect schools by country and city."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New school</Button></DialogTrigger>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Dialog open={syncOpen} onOpenChange={(o) => { setSyncOpen(o); if (o) refetchDbs(); }}>
+                <DialogTrigger asChild>
+                  <Button variant="outline"><RefreshCw className="h-4 w-4 mr-1" /> Sync from Notion</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Sync schools from Notion</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Make sure the Schools database is shared with the Notion integration. Then pick it below.
+                    </p>
+                    <div>
+                      <Label>Database</Label>
+                      <Select value={selectedDb} onValueChange={setSelectedDb}>
+                        <SelectTrigger><SelectValue placeholder="Pick a database" /></SelectTrigger>
+                        <SelectContent>
+                          {(notionDbs ?? []).map((d: any) => (
+                            <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full" disabled={!selectedDb || runSync.isPending} onClick={() => runSync.mutate()}>
+                      {runSync.isPending ? "Syncing…" : "Sync now"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New school</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>New school</DialogTitle></DialogHeader>
               <div className="space-y-3">
