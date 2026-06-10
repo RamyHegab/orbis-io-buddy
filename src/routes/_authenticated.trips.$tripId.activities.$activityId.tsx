@@ -230,6 +230,10 @@ function ActivityDetail() {
   );
 }
 
+type PreviewTarget =
+  | { kind: "agent"; agentId: string | null; branchId: string }
+  | { kind: "school"; schoolId: string };
+
 function ContactCard({
   title,
   contactName,
@@ -237,6 +241,7 @@ function ContactCard({
   email,
   phone,
   address,
+  preview,
   directoryLink,
 }: {
   title: string;
@@ -245,20 +250,27 @@ function ContactCard({
   email?: string | null;
   phone?: string | null;
   address?: string | null;
+  preview?: PreviewTarget;
   directoryLink: { to: string; params: any; label: string } | null;
 }) {
+  const [open, setOpen] = useState(false);
   const hasContact = contactName || email || phone || address;
   return (
     <Card className="p-5 mb-6">
       <div className="flex items-start justify-between gap-3 mb-3">
         <h3 className="font-semibold">{title}</h3>
-        {directoryLink && (
-          <Link to={directoryLink.to as any} params={directoryLink.params}>
-            <Button size="sm" variant="outline">
-              <ExternalLink className="h-3.5 w-3.5 mr-1" /> {directoryLink.label}
+        <div className="flex gap-2">
+          {preview && (
+            <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+              <ExternalLink className="h-3.5 w-3.5 mr-1" /> Preview
             </Button>
-          </Link>
-        )}
+          )}
+          {directoryLink && (
+            <Link to={directoryLink.to as any} params={directoryLink.params}>
+              <Button size="sm" variant="ghost">{directoryLink.label}</Button>
+            </Link>
+          )}
+        </div>
       </div>
       {hasContact ? (
         <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -293,7 +305,138 @@ function ContactCard({
       ) : (
         <p className="text-sm text-muted-foreground">Not provided.{directoryLink && " Open the directory to add contact details."}</p>
       )}
+      {preview && (
+        <DirectoryPreviewModal open={open} onOpenChange={setOpen} target={preview} directoryLink={directoryLink} />
+      )}
     </Card>
+  );
+}
+
+function DirectoryPreviewModal({
+  open,
+  onOpenChange,
+  target,
+  directoryLink,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  target: PreviewTarget;
+  directoryLink: { to: string; params: any; label: string } | null;
+}) {
+  const { data, isLoading } = useQuery({
+    enabled: open,
+    queryKey: ["dir-preview", target],
+    queryFn: async () => {
+      if (target.kind === "agent") {
+        const [agentRes, branchRes, activitiesRes] = await Promise.all([
+          target.agentId
+            ? supabase.from("agents").select("*").eq("id", target.agentId).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+          supabase.from("agent_branches").select("*").eq("id", target.branchId).maybeSingle(),
+          supabase
+            .from("activities")
+            .select("id, title, day_date, notes, trip_id")
+            .eq("agent_branch_id", target.branchId)
+            .order("day_date", { ascending: false })
+            .limit(5),
+        ]);
+        return { kind: "agent" as const, agent: agentRes.data, branch: branchRes.data, activities: activitiesRes.data ?? [] };
+      }
+      const [schoolRes, activitiesRes] = await Promise.all([
+        supabase.from("schools").select("*").eq("id", target.schoolId).maybeSingle(),
+        supabase
+          .from("activities")
+          .select("id, title, day_date, notes, trip_id")
+          .eq("school_id", target.schoolId)
+          .order("day_date", { ascending: false })
+          .limit(5),
+      ]);
+      return { kind: "school" as const, school: schoolRes.data, activities: activitiesRes.data ?? [] };
+    },
+  });
+
+  const heading = data?.kind === "agent"
+    ? `${data.agent?.trading_name ?? "Agent"} — ${data.branch?.branch_name ?? "Branch"}`
+    : data?.kind === "school"
+      ? data.school?.name ?? "School"
+      : "Directory preview";
+
+  const detailLines: Array<[string, string | null | undefined]> = [];
+  if (data?.kind === "agent" && data.branch) {
+    const b = data.branch as any;
+    detailLines.push(
+      ["Contact", [b.contact_first_name, b.contact_last_name].filter(Boolean).join(" ") || null],
+      ["Position", b.contact_position],
+      ["Email", b.contact_email],
+      ["Phone", b.contact_phone],
+      ["Address", [b.address, b.city, b.country].filter(Boolean).join(", ") || null],
+    );
+  } else if (data?.kind === "school" && data.school) {
+    const s = data.school as any;
+    detailLines.push(
+      ["Primary contact", s.primary_contact_name],
+      ["Position", s.primary_contact_position],
+      ["Email", s.primary_contact_email || s.general_email],
+      ["Phone", s.primary_contact_phone || s.general_phone],
+      ["Address", [s.address, s.city, s.country].filter(Boolean).join(", ") || null],
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>{heading}</DialogTitle></DialogHeader>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-[120px_1fr] gap-y-1.5 gap-x-3">
+              {detailLines.map(([label, value]) => (
+                <div key={label} className="contents">
+                  <div className="text-muted-foreground">{label}</div>
+                  <div className={value ? "" : "text-muted-foreground italic"}>
+                    {label === "Email" && value ? (
+                      <a href={`mailto:${value}`} className="text-primary hover:underline break-all">{value}</a>
+                    ) : label === "Phone" && value ? (
+                      <a href={`tel:${value}`} className="text-primary hover:underline">{value}</a>
+                    ) : (
+                      value || "Not provided"
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Recent visits</h4>
+              {data && data.activities.length > 0 ? (
+                <ul className="space-y-2">
+                  {data.activities.map((a: any) => (
+                    <li key={a.id} className="rounded-md border p-2">
+                      <div className="flex justify-between gap-2">
+                        <span className="font-medium">{a.title}</span>
+                        <span className="text-xs text-muted-foreground">{fmtDate(a.day_date)}</span>
+                      </div>
+                      {a.notes && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-3">{a.notes}</p>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">No previous visits recorded.</p>
+              )}
+            </div>
+            {directoryLink && (
+              <div className="pt-2 border-t">
+                <Link to={directoryLink.to as any} params={directoryLink.params}>
+                  <Button size="sm" variant="outline" className="w-full">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1" /> {directoryLink.label}
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
