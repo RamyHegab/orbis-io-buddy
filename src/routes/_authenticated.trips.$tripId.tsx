@@ -1026,17 +1026,19 @@ function TripPlanner() {
                   {editorBody}
                 </Card>
               </div>
-              <Dialog
-                open={!!selectedDay}
-                onOpenChange={(o) => { if (!o) { setSelectedDay(null); setForm(emptyForm); } }}
-              >
-                <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto lg:hidden">
-                  <DialogHeader>
-                    <DialogTitle>New activity — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
-                  </DialogHeader>
-                  {selectedDay && editorBody}
-                </DialogContent>
-              </Dialog>
+              {!isLgUp && (
+                <Dialog
+                  open={!!selectedDay}
+                  onOpenChange={(o) => { if (!o) { setSelectedDay(null); setForm(emptyForm); } }}
+                >
+                  <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>New activity — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
+                    </DialogHeader>
+                    {selectedDay && editorBody}
+                  </DialogContent>
+                </Dialog>
+              )}
             </>
           );
         })()}
