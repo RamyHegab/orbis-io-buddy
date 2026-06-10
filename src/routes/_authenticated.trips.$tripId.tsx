@@ -407,7 +407,16 @@ function TripPlanner() {
                         <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <div><Label>From → To</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="London → Bangkok" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                      <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
+                    </div>
+                    {form.transport_mode === "Air travel" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
+                        <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
                       <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
