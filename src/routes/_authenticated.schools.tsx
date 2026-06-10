@@ -30,10 +30,29 @@ const LEVELS = [
 
 function SchoolsPage() {
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [selectedDb, setSelectedDb] = useState<string>("");
   const [filter, setFilter] = useState("");
   const [form, setForm] = useState({ name: "", country: "", city: "", level: "high_school", contact_name: "", email: "", phone: "", notes: "" });
+  const listDbs = useServerFn(listNotionDatabases);
+  const sync = useServerFn(syncSchoolsFromNotion);
+  const { data: notionDbs, refetch: refetchDbs } = useQuery({
+    queryKey: ["notion-dbs"],
+    queryFn: () => listDbs(),
+    enabled: false,
+  });
+  const runSync = useMutation({
+    mutationFn: () => sync({ data: { databaseId: selectedDb } }),
+    onSuccess: (r: any) => {
+      toast.success(`Synced — imported ${r.imported}, updated ${r.updated}`);
+      setSyncOpen(false);
+      qc.invalidateQueries({ queryKey: ["schools"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const { data: schools } = useQuery({
     queryKey: ["schools"],
