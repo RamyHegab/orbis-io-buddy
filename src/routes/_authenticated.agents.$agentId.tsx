@@ -265,9 +265,24 @@ function AgentDetail() {
                     {b.contact_email && <div className="text-xs text-muted-foreground">{b.contact_email}</div>}
                     {b.contact_phone && <div className="text-xs text-muted-foreground">{b.contact_phone}</div>}
                   </div>
-                  <button onClick={() => deleteBranch.mutate(b.id)} className="text-muted-foreground hover:text-destructive shrink-0">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <button onClick={() => deleteBranch.mutate(b.id)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <AddToItineraryButton
+                      source="agent_branch"
+                      id={b.id}
+                      agentId={agentId}
+                      name={b.branch_name || [b.city, b.country].filter(Boolean).join(", ")}
+                      address={b.address}
+                      formatted_address={b.formatted_address}
+                      place_id={b.place_id}
+                      lat={b.lat != null ? Number(b.lat) : null}
+                      lng={b.lng != null ? Number(b.lng) : null}
+                      size="icon"
+                      variant="ghost"
+                    />
+                  </div>
                 </div>
               </Card>
             );
