@@ -91,20 +91,14 @@ function AuthPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+              {submitting ? "Please wait…" : "Sign in"}
             </Button>
           </form>
 
-          <p className="text-sm text-center text-muted-foreground mt-4">
-            {mode === "signin" ? "New here?" : "Already have an account?"}{" "}
-            <button
-              type="button"
-              className="text-primary font-medium hover:underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            >
-              {mode === "signin" ? "Create an account" : "Sign in"}
-            </button>
+          <p className="text-xs text-center text-muted-foreground mt-4">
+            Access is invite-only. Contact your administrator to request an account.
           </p>
+
         </Card>
       </div>
     </div>
