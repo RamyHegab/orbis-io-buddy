@@ -1131,16 +1131,23 @@ function TripPlanner() {
               {validationMessage && (
                 <p className="text-xs text-muted-foreground">{validationMessage}</p>
               )}
-              <Button
-                onClick={() => {
-                  if (validationMessage) { toast.error(validationMessage); return; }
-                  create.mutate();
-                }}
-                disabled={create.isPending}
-                className="w-full"
-              >
-                Add activity
-              </Button>
+              {(() => {
+                const outOfRange =
+                  (selectedDay && (selectedDay < trip.start_date || selectedDay > trip.end_date)) ||
+                  (form.end_date && (form.end_date < trip.start_date || form.end_date > trip.end_date));
+                return (
+                  <Button
+                    onClick={() => {
+                      if (validationMessage) { toast.error(validationMessage); return; }
+                      create.mutate();
+                    }}
+                    disabled={create.isPending || !!outOfRange}
+                    className="w-full"
+                  >
+                    {editingActivityId ? "Save changes" : "Add activity"}
+                  </Button>
+                );
+              })()}
             </div>
           );
 
