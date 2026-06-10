@@ -557,6 +557,10 @@ function TripPlanner() {
       notes: a.notes ?? "",
       objectives: a.objectives ?? "",
       visit_notes: a.visit_notes ?? "",
+      place_id: a.place_id ?? "",
+      lat: a.lat != null ? Number(a.lat) : null,
+      lng: a.lng != null ? Number(a.lng) : null,
+      formatted_address: a.formatted_address ?? "",
     });
   };
 
