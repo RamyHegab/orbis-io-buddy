@@ -178,6 +178,49 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const repeatPrevious = useMutation({
+    mutationFn: async (targetDay: string) => {
+      if (!user) throw new Error("Not signed in");
+      const prev = format(addDays(parseISO(targetDay), -1), "yyyy-MM-dd");
+      const src = (activities ?? []).filter((a: any) => a.day_date === prev && a.type === "recruitment_event");
+      if (src.length === 0) throw new Error("No recruitment events on the previous day");
+      const rows = src.map((a: any) => ({
+        trip_id: tripId, user_id: user.id, type: a.type, day_date: targetDay,
+        title: a.title, start_time: a.start_time, end_time: a.end_time,
+        location: a.location, agent_id: a.agent_id, branch_id: a.branch_id,
+        school_id: a.school_id, cost: a.cost, cost_currency: a.cost_currency,
+        description: a.description, notes: a.notes,
+      }));
+      const { error } = await supabase.from("activities").insert(rows);
+      if (error) throw error;
+      return src.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`Repeated ${n} event${n > 1 ? "s" : ""} from previous day`);
+      qc.invalidateQueries({ queryKey: ["activities", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const costTotals = useMemo(() => {
+    const groups: Record<string, Record<string, number>> = { travel: {}, hotel: {}, recruitment_event: {}, total: {} };
+    for (const a of activities ?? []) {
+      if (!a.cost) continue;
+      const cur = a.cost_currency || "GBP";
+      const amount = Number(a.cost);
+      groups.total[cur] = (groups.total[cur] ?? 0) + amount;
+      if (groups[a.type]) groups[a.type][cur] = (groups[a.type][cur] ?? 0) + amount;
+    }
+    const fmt = (m: Record<string, number>) =>
+      Object.entries(m).map(([cur, v]) => `${cur} ${v.toFixed(2)}`).join(" · ") || "—";
+    return {
+      travel: fmt(groups.travel),
+      hotel: fmt(groups.hotel),
+      events: fmt(groups.recruitment_event),
+      total: fmt(groups.total),
+    };
+  }, [activities]);
+
 
   const saveEdit = useMutation({
     mutationFn: async () => {
