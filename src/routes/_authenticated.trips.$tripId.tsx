@@ -544,6 +544,8 @@ function TripPlanner() {
       resting_type: a.resting_type ?? "",
       description: a.description ?? "",
       notes: a.notes ?? "",
+      objectives: a.objectives ?? "",
+      visit_notes: a.visit_notes ?? "",
     });
   };
 
