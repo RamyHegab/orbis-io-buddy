@@ -38,8 +38,8 @@ function buildTitle(legs: Leg[]): string {
 function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "upcoming" {
   const today = format(new Date(), "yyyy-MM-dd");
   if (t.end_date < today) return "past";
-  if (t.start_date <= today && today <= t.end_date) return "in_progress";
-  return "upcoming";
+  if (t.status === "confirmed") return "upcoming";
+  return "in_progress";
 }
 
 function TripsPage() {
