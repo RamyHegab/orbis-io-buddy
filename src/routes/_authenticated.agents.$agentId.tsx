@@ -18,6 +18,7 @@ import { MapPreview } from "@/components/map-preview";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
 import { ShareIntakeLink } from "@/components/share-intake-link";
+import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
@@ -188,6 +189,7 @@ function AgentDetail() {
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-lg font-semibold">Branches</h2>
         <div className="flex gap-2 flex-wrap">
+          <DiscoverBranchesButton agentId={agentId} />
           <ImportListDialog type="agent_branch" agentId={agentId} />
           <ShareIntakeLink type="agent_branch" agentId={agentId} label="Share branch form" />
           <Dialog open={open} onOpenChange={setOpen}>

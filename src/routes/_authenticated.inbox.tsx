@@ -60,10 +60,16 @@ function InboxPage() {
             <Card key={s.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <Badge variant="outline" className="capitalize">{s.type.replace("_", " ")}</Badge>
+                    {s.source === "auto_discovery" && <Badge variant="secondary">Auto-discovered</Badge>}
                     <span className="text-xs text-muted-foreground">{fmtDate(s.created_at)}</span>
                     {s.submitter_name && <span className="text-xs">from <strong>{s.submitter_name}</strong>{s.submitter_email ? ` (${s.submitter_email})` : ""}</span>}
+                    {s.source_url && (
+                      <a href={s.source_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate max-w-[260px]">
+                        source ↗
+                      </a>
+                    )}
                   </div>
                   <pre className="text-xs bg-muted/40 p-2 rounded overflow-x-auto">{JSON.stringify(s.payload, null, 2)}</pre>
                 </div>
