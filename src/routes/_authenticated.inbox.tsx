@@ -103,3 +103,43 @@ function InboxPage() {
     </PageContainer>
   );
 }
+
+const LABELS: Record<string, string> = {
+  name: "Name", trading_name: "Name", legal_name: "Legal name", branch_name: "Branch",
+  city: "City", country: "Country", address: "Address", formatted_address: "Address",
+  level: "Level", website: "Website", hq_country: "HQ country", hq_city: "HQ city", hq_address: "HQ address",
+  general_email: "General email", general_phone: "General phone",
+  primary_contact_name: "Primary contact", primary_contact_position: "Position",
+  primary_contact_email: "Email", primary_contact_phone: "Phone",
+  secondary_contact_name: "Secondary contact", secondary_contact_email: "Secondary email", secondary_contact_phone: "Secondary phone",
+  contact_first_name: "Contact first name", contact_last_name: "Contact last name",
+  contact_position: "Position", contact_email: "Contact email", contact_phone: "Contact phone",
+  in_country_trading_name: "In-country trading name", agency_name: "Agency name",
+  notes: "Notes", confidence: "Confidence",
+};
+const HIDDEN = new Set(["place_id", "lat", "lng", "campus_image_url"]);
+
+function SubmissionSummary({ type, payload }: { type: string; payload: any }) {
+  if (!payload || typeof payload !== "object") return null;
+  const entries = Object.entries(payload).filter(([k, v]) => !HIDDEN.has(k) && v !== null && v !== undefined && v !== "");
+  if (entries.length === 0) return <div className="text-sm text-muted-foreground">No details.</div>;
+  const title = payload.branch_name || payload.name || payload.trading_name || (type === "agent_branch" ? "Branch" : "");
+  return (
+    <div className="text-sm space-y-1">
+      {title && <div className="font-medium">{title}</div>}
+      <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1">
+        {entries.map(([k, v]) => {
+          if (k === "branch_name" || k === "name" || k === "trading_name") return null;
+          const label = LABELS[k] ?? k.replace(/_/g, " ");
+          const val = k === "confidence" && typeof v === "number" ? `${Math.round(v * 100)}%` : String(v);
+          return (
+            <div key={k} className="contents">
+              <dt className="text-muted-foreground capitalize">{label}</dt>
+              <dd className="break-words">{val}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
+  );
+}
