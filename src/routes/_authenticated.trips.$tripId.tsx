@@ -752,6 +752,7 @@ function isFormValid(f: FormState): boolean {
     case "agent_visit": return !!f.branch_id;
     case "school_visit": return !!f.school_id;
     case "recruitment_event": return !!f.title;
+    case "hotel": return !!f.title;
     case "resting_day": return !!f.resting_type;
     case "other": return !!f.title;
     default: return false;
