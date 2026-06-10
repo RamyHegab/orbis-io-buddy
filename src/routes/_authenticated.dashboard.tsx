@@ -59,7 +59,7 @@ function Dashboard() {
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from("activities")
-        .select("*, agents(name), schools(name)")
+        .select("*, agents(trading_name), schools(name)")
         .eq("day_date", today)
         .order("start_time");
       return data ?? [];

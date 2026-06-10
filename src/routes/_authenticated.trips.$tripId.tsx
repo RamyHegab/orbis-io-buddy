@@ -53,14 +53,14 @@ function TripPlanner() {
   const { data: activities } = useQuery({
     queryKey: ["activities", tripId],
     queryFn: async () => {
-      const { data } = await supabase.from("activities").select("*, agents(name), schools(name)").eq("trip_id", tripId).order("day_date").order("start_time");
+      const { data } = await supabase.from("activities").select("*, agents(trading_name), schools(name)").eq("trip_id", tripId).order("day_date").order("start_time");
       return data ?? [];
     },
   });
 
   const { data: agents } = useQuery({
     queryKey: ["agents-list"],
-    queryFn: async () => (await supabase.from("agents").select("id, name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("agents").select("id, trading_name").order("trading_name")).data ?? [],
   });
 
   const { data: schools } = useQuery({
@@ -166,7 +166,7 @@ function TripPlanner() {
                           <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
                           <div className="text-xs text-muted-foreground">
                             {ACTIVITY_TYPE_LABELS[a.type]}
-                            {a.agents?.name && ` • ${a.agents.name}`}
+                            {a.agents?.trading_name && ` • ${a.agents.trading_name}`}
                             {a.schools?.name && ` • ${a.schools.name}`}
                             {a.location && ` • ${a.location}`}
                           </div>
@@ -205,7 +205,7 @@ function TripPlanner() {
                 <Label>Agent</Label>
                 <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Pick an agent" /></SelectTrigger>
-                  <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{agents?.map((a) => <SelectItem key={a.id} value={a.id}>{a.trading_name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             )}
