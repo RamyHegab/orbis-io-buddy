@@ -153,8 +153,17 @@ function TripPlanner() {
     const start = parseISO(trip.start_date);
     const end = parseISO(trip.end_date);
     const n = differenceInDays(end, start) + 1;
+    if (!Number.isFinite(n) || n < 1 || n > 365) return [];
     return Array.from({ length: n }, (_, i) => addDays(start, i));
   }, [trip]);
+
+  const datesInvalid = !!trip && (() => {
+    const s = parseISO(trip.start_date);
+    const e = parseISO(trip.end_date);
+    const n = differenceInDays(e, s) + 1;
+    return !Number.isFinite(n) || n < 1 || n > 365 ||
+      s.getFullYear() < 2000 || e.getFullYear() < 2000;
+  })();
 
   const countryForDay = (d: Date): string | null => {
     if (!countries) return null;
