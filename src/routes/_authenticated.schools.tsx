@@ -18,6 +18,7 @@ import { listNotionDatabases, syncSchoolsFromNotion } from "@/lib/notion-sync.fu
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { MapPreview } from "@/components/map-preview";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 
 export const Route = createFileRoute("/_authenticated/schools")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
