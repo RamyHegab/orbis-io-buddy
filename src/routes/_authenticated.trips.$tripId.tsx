@@ -989,7 +989,17 @@ function TripPlanner() {
                   </>
                 )}
 
-                <Button onClick={() => create.mutate()} disabled={!canSubmit || create.isPending} className="w-full">
+                {validationMessage && (
+                  <p className="text-xs text-muted-foreground">{validationMessage}</p>
+                )}
+                <Button
+                  onClick={() => {
+                    if (validationMessage) { toast.error(validationMessage); return; }
+                    create.mutate();
+                  }}
+                  disabled={create.isPending}
+                  className="w-full"
+                >
                   Add activity
                 </Button>
               </div>
