@@ -827,7 +827,7 @@ function TripPlanner() {
                     <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
                     <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
                   </div>
-                  <div><Label>Arrival date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  <div><Label>Arrival date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
                   {form.transport_mode === "Air travel" && (
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>Airline</Label><Input value={form.airline} onChange={(e) => setForm({ ...form, airline: e.target.value })} /></div>
