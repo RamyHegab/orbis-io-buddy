@@ -358,55 +358,79 @@ export type Database = {
       }
       schools: {
         Row: {
+          address: string | null
+          campus_image_url: string | null
           city: string
-          contact_name: string | null
           country: string
           created_at: string
-          email: string | null
+          general_email: string | null
+          general_phone: string | null
           id: string
           last_synced_at: string | null
           level: Database["public"]["Enums"]["school_level"]
           name: string
           notes: string | null
           notion_page_id: string | null
-          phone: string | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          primary_contact_position: string | null
           properties: Json
+          secondary_contact_email: string | null
+          secondary_contact_name: string | null
+          secondary_contact_phone: string | null
           status: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
+          campus_image_url?: string | null
           city: string
-          contact_name?: string | null
           country: string
           created_at?: string
-          email?: string | null
+          general_email?: string | null
+          general_phone?: string | null
           id?: string
           last_synced_at?: string | null
           level?: Database["public"]["Enums"]["school_level"]
           name: string
           notes?: string | null
           notion_page_id?: string | null
-          phone?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_position?: string | null
           properties?: Json
+          secondary_contact_email?: string | null
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
           status?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
+          campus_image_url?: string | null
           city?: string
-          contact_name?: string | null
           country?: string
           created_at?: string
-          email?: string | null
+          general_email?: string | null
+          general_phone?: string | null
           id?: string
           last_synced_at?: string | null
           level?: Database["public"]["Enums"]["school_level"]
           name?: string
           notes?: string | null
           notion_page_id?: string | null
-          phone?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_position?: string | null
           properties?: Json
+          secondary_contact_email?: string | null
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string
