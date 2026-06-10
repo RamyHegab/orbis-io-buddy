@@ -213,6 +213,12 @@ function TripPlanner() {
   const create = useMutation({
     mutationFn: async () => {
       if (!user || !selectedDay) throw new Error("Missing fields");
+      if (trip && (selectedDay < trip.start_date || selectedDay > trip.end_date)) {
+        throw new Error(`Date must be within trip range (${trip.start_date} → ${trip.end_date})`);
+      }
+      if (form.end_date && trip && (form.end_date < trip.start_date || form.end_date > trip.end_date)) {
+        throw new Error(`End date must be within trip range (${trip.start_date} → ${trip.end_date})`);
+      }
       const payload: any = {
         trip_id: tripId,
         user_id: user.id,
@@ -306,6 +312,9 @@ function TripPlanner() {
       if (!h.name.trim()) throw new Error("Hotel name is required");
       if (!h.check_in_date || !h.check_out_date) throw new Error("Check-in and check-out dates are required");
       if (h.check_out_date < h.check_in_date) throw new Error("Check-out date must be on or after check-in");
+      if (trip && (h.check_in_date < trip.start_date || h.check_in_date > trip.end_date || h.check_out_date < trip.start_date || h.check_out_date > trip.end_date)) {
+        throw new Error(`Hotel dates must be within trip range (${trip.start_date} → ${trip.end_date})`);
+      }
       const overlap = (hotels ?? []).find((other: any) => {
         if (h.id && other.id === h.id) return false;
         return !(h.check_out_date < other.check_in_date || h.check_in_date > other.check_out_date);
@@ -818,7 +827,7 @@ function TripPlanner() {
                     <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
                     <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
                   </div>
-                  <div><Label>Arrival date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  <div><Label>Arrival date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
                   {form.transport_mode === "Air travel" && (
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>Airline</Label><Input value={form.airline} onChange={(e) => setForm({ ...form, airline: e.target.value })} /></div>
@@ -961,7 +970,7 @@ function TripPlanner() {
                     <div><Label>Check-in time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
                     <div><Label>Check-out time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
                   </div>
-                  <div><Label>Check-out date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+                  <div><Label>Check-out date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
                   <CostInput form={form} setForm={setForm} />
                 </>
               )}
@@ -1094,11 +1103,11 @@ function TripPlanner() {
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Check-in date</Label><Input type="date" value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
+              <div><Label>Check-in date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
               <div><Label>Check-in time</Label><Input type="time" value={hotelForm.check_in_time} onChange={(e) => setHotelForm({ ...hotelForm, check_in_time: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Check-out date</Label><Input type="date" value={hotelForm.check_out_date} onChange={(e) => setHotelForm({ ...hotelForm, check_out_date: e.target.value })} /></div>
+              <div><Label>Check-out date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={hotelForm.check_out_date} onChange={(e) => setHotelForm({ ...hotelForm, check_out_date: e.target.value })} /></div>
               <div><Label>Check-out time</Label><Input type="time" value={hotelForm.check_out_time} onChange={(e) => setHotelForm({ ...hotelForm, check_out_time: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-[1fr_120px] gap-3">
