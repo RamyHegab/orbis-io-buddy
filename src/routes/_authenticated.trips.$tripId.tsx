@@ -153,8 +153,17 @@ function TripPlanner() {
     const start = parseISO(trip.start_date);
     const end = parseISO(trip.end_date);
     const n = differenceInDays(end, start) + 1;
+    if (!Number.isFinite(n) || n < 1 || n > 365) return [];
     return Array.from({ length: n }, (_, i) => addDays(start, i));
   }, [trip]);
+
+  const datesInvalid = !!trip && (() => {
+    const s = parseISO(trip.start_date);
+    const e = parseISO(trip.end_date);
+    const n = differenceInDays(e, s) + 1;
+    return !Number.isFinite(n) || n < 1 || n > 365 ||
+      s.getFullYear() < 2000 || e.getFullYear() < 2000;
+  })();
 
   const countryForDay = (d: Date): string | null => {
     if (!countries) return null;
@@ -359,6 +368,8 @@ function TripPlanner() {
     mutationFn: async () => {
       const valid = editLegs.filter((l) => l.country && l.start_date && l.end_date);
       if (valid.length === 0) throw new Error("Add at least one country");
+      const badYear = valid.find((l) => Number(l.start_date.slice(0, 4)) < 2000 || Number(l.end_date.slice(0, 4)) < 2000);
+      if (badYear) throw new Error(`Dates need a 4-digit year (e.g. 2026), got ${badYear.start_date} → ${badYear.end_date}`);
       const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
       const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
       const countries = valid.map((l) => l.country);
@@ -552,6 +563,16 @@ function TripPlanner() {
         <div><div className="text-xs text-muted-foreground">Events</div><div className="font-semibold">{costTotals.events}</div></div>
         <div><div className="text-xs text-muted-foreground">Total</div><div className="font-semibold text-primary">{costTotals.total}</div></div>
       </Card>
+
+      {datesInvalid && (
+        <Card className="p-4 mb-4 border-destructive bg-destructive/10">
+          <div className="font-semibold text-destructive mb-1">Trip dates look invalid</div>
+          <p className="text-sm text-muted-foreground mb-3">
+            The start or end date isn't a valid 4-digit year (got {trip.start_date} → {trip.end_date}).
+            Click "Edit trip" above to correct the dates — likely you typed "26" instead of "2026".
+          </p>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
