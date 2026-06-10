@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2, Copy, Hotel as HotelIcon } from "lucide-react";
+import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2, Save, CheckCircle2, Copy, Hotel as HotelIcon, MapPin } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -20,6 +20,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId")({
   component: TripPlanner,
@@ -67,6 +69,10 @@ type FormState = {
   notes: string;
   objectives: string;
   visit_notes: string;
+  place_id: string;
+  lat: number | null;
+  lng: number | null;
+  formatted_address: string;
 };
 
 const emptyForm: FormState = {
@@ -75,6 +81,7 @@ const emptyForm: FormState = {
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
   resting_type: "", description: "", notes: "", objectives: "", visit_notes: "",
+  place_id: "", lat: null, lng: null, formatted_address: "",
 };
 
 type HotelForm = {
@@ -144,7 +151,7 @@ function TripPlanner() {
 
   const { data: activities } = useQuery({
     queryKey: ["activities", tripId],
-    queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name, address, primary_contact_name, primary_contact_position, primary_contact_email, primary_contact_phone, general_email, general_phone), agent_branches(branch_name, city, address, contact_first_name, contact_last_name, contact_position, contact_email, contact_phone)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
+    queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name, address, lat, lng, place_id, formatted_address, primary_contact_name, primary_contact_position, primary_contact_email, primary_contact_phone, general_email, general_phone), agent_branches(branch_name, city, address, lat, lng, place_id, formatted_address, contact_first_name, contact_last_name, contact_position, contact_email, contact_phone)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
   });
 
   const { data: hotels } = useQuery({
@@ -247,6 +254,10 @@ function TripPlanner() {
         notes: form.notes || null,
         objectives: form.objectives || null,
         visit_notes: form.visit_notes || null,
+        place_id: form.place_id || null,
+        lat: form.lat,
+        lng: form.lng,
+        formatted_address: form.formatted_address || null,
       };
       if (editingActivityId) {
         const { error } = await supabase.from("activities").update(payload).eq("id", editingActivityId);
@@ -551,6 +562,10 @@ function TripPlanner() {
       notes: a.notes ?? "",
       objectives: a.objectives ?? "",
       visit_notes: a.visit_notes ?? "",
+      place_id: a.place_id ?? "",
+      lat: a.lat != null ? Number(a.lat) : null,
+      lng: a.lng != null ? Number(a.lng) : null,
+      formatted_address: a.formatted_address ?? "",
     });
   };
 
@@ -887,6 +902,19 @@ function TripPlanner() {
                                 </>
                               )}
                               {a.location && ` • ${a.location}`}
+                              {(() => {
+                                const u = mapsSearchUrl({
+                                  query: a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address,
+                                  placeId: a.place_id ?? a.agent_branches?.place_id ?? a.schools?.place_id,
+                                  lat: a.lat ?? a.agent_branches?.lat ?? a.schools?.lat,
+                                  lng: a.lng ?? a.agent_branches?.lng ?? a.schools?.lng,
+                                });
+                                return u ? (
+                                  <a href={u} target="_blank" rel="noreferrer" className="ml-1 inline-flex items-center underline hover:text-primary" title="Open in Google Maps">
+                                    <MapPin className="h-3 w-3" />
+                                  </a>
+                                ) : null;
+                              })()}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
@@ -1063,47 +1091,25 @@ function TripPlanner() {
               {form.type === "recruitment_event" && (
                 <>
                   <div><Label>Event title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Spring Education Fair 2026" /></div>
-                  <div>
-                    <Label>Venue</Label>
-                    <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hilton Conference Centre" />
-                  </div>
-                  <div>
-                    <Label>Google Maps link</Label>
-                    <Input
-                      value={form.map_url}
-                      onChange={(e) => setForm({ ...form, map_url: e.target.value })}
-                      placeholder="Paste the Google Maps URL for the venue"
-                    />
-                    {!form.map_url && form.location && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.location)}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-primary underline mt-1 inline-block"
-                      >
-                        Find "{form.location}" on Google Maps →
-                      </a>
-                    )}
-                    {form.map_url && (
-                      <>
-                        <a
-                          href={form.map_url}
-                          target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-primary underline mt-1 inline-block"
-                        >
-                          Open saved location ↗
-                        </a>
-                        <div className="mt-2 rounded-md overflow-hidden border">
-                          <iframe
-                            title="Venue map"
-                            src={`https://maps.google.com/maps?q=${encodeURIComponent(form.location || form.map_url)}&output=embed`}
-                            className="w-full h-48 border-0"
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  <AddressAutocomplete
+                    label="Venue"
+                    placeholder="Hilton Conference Centre, address…"
+                    value={{
+                      address: form.location,
+                      place_id: form.place_id || null,
+                      lat: form.lat,
+                      lng: form.lng,
+                      formatted_address: form.formatted_address || null,
+                    }}
+                    onChange={(v) => setForm({
+                      ...form,
+                      location: v.address,
+                      place_id: v.place_id ?? "",
+                      lat: v.lat,
+                      lng: v.lng,
+                      formatted_address: v.formatted_address ?? "",
+                    })}
+                  />
                   <TimeRange form={form} setForm={setForm} />
                   <div>
                     <Label>Linked agent</Label>

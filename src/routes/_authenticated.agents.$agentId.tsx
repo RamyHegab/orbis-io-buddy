@@ -13,6 +13,9 @@ import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar } 
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { MapPreview } from "@/components/map-preview";
+import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
@@ -29,6 +32,10 @@ function AgentDetail() {
     city: "",
     country: "",
     address: "",
+    place_id: "" as string | null,
+    lat: null as number | null,
+    lng: null as number | null,
+    formatted_address: "" as string | null,
     contact_first_name: "",
     contact_last_name: "",
     contact_email: "",
@@ -69,6 +76,7 @@ function AgentDetail() {
       setOpen(false);
       setBranchForm({
         branch_name: "", city: "", country: "", address: "",
+        place_id: "", lat: null, lng: null, formatted_address: "",
         contact_first_name: "", contact_last_name: "", contact_email: "",
         contact_position: "", contact_phone: "", in_country_trading_name: "", agency_name: "",
       });
@@ -178,7 +186,25 @@ function AgentDetail() {
                 <div><Label>City</Label><Input value={branchForm.city} onChange={(e) => setBranchForm({ ...branchForm, city: e.target.value })} /></div>
                 <div><Label>Country</Label><Input value={branchForm.country} onChange={(e) => setBranchForm({ ...branchForm, country: e.target.value })} /></div>
               </div>
-              <div><Label>Address / Maps URL</Label><Input value={branchForm.address} onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })} /></div>
+              <AddressAutocomplete
+                label="Address"
+                placeholder="Street, city, country"
+                value={{
+                  address: branchForm.address,
+                  place_id: branchForm.place_id,
+                  lat: branchForm.lat,
+                  lng: branchForm.lng,
+                  formatted_address: branchForm.formatted_address,
+                }}
+                onChange={(v) => setBranchForm({
+                  ...branchForm,
+                  address: v.address,
+                  place_id: v.place_id,
+                  lat: v.lat,
+                  lng: v.lng,
+                  formatted_address: v.formatted_address,
+                })}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Agency name</Label><Input value={branchForm.agency_name} onChange={(e) => setBranchForm({ ...branchForm, agency_name: e.target.value })} /></div>
                 <div><Label>In-country trading name</Label><Input value={branchForm.in_country_trading_name} onChange={(e) => setBranchForm({ ...branchForm, in_country_trading_name: e.target.value })} /></div>
@@ -214,11 +240,18 @@ function AgentDetail() {
                       <div className="text-xs text-muted-foreground">{[b.city, b.country].filter(Boolean).join(", ")}</div>
                     )}
                     {b.agency_name && <div className="text-xs text-muted-foreground mt-1">{b.agency_name}</div>}
-                    {b.address && (
-                      b.address.startsWith("http")
-                        ? <a href={b.address} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> Map</a>
-                        : <div className="text-xs text-muted-foreground mt-1">{b.address}</div>
-                    )}
+                    {(b.formatted_address || b.address) && (() => {
+                      const url = mapsSearchUrl({ query: b.formatted_address || b.address, placeId: b.place_id, lat: b.lat, lng: b.lng });
+                      return (
+                        <div className="mt-1">
+                          <div className="text-xs text-muted-foreground">{b.formatted_address || b.address}</div>
+                          {url && <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> View on Google Maps</a>}
+                          {(b.lat != null && b.lng != null) && (
+                            <div className="mt-2"><MapPreview lat={Number(b.lat)} lng={Number(b.lng)} height={120} /></div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {contactName && <div className="text-sm mt-2">{contactName}{b.contact_position ? ` — ${b.contact_position}` : ""}</div>}
                     {b.contact_email && <div className="text-xs text-muted-foreground">{b.contact_email}</div>}
                     {b.contact_phone && <div className="text-xs text-muted-foreground">{b.contact_phone}</div>}

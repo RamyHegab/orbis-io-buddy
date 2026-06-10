@@ -27,11 +27,15 @@ export type Database = {
           end_date: string | null
           end_time: string | null
           flight_number: string | null
+          formatted_address: string | null
           id: string
+          lat: number | null
+          lng: number | null
           location: string | null
           map_url: string | null
           notes: string | null
           objectives: string | null
+          place_id: string | null
           resting_type: string | null
           school_id: string | null
           start_time: string | null
@@ -55,11 +59,15 @@ export type Database = {
           end_date?: string | null
           end_time?: string | null
           flight_number?: string | null
+          formatted_address?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           location?: string | null
           map_url?: string | null
           notes?: string | null
           objectives?: string | null
+          place_id?: string | null
           resting_type?: string | null
           school_id?: string | null
           start_time?: string | null
@@ -83,11 +91,15 @@ export type Database = {
           end_date?: string | null
           end_time?: string | null
           flight_number?: string | null
+          formatted_address?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           location?: string | null
           map_url?: string | null
           notes?: string | null
           objectives?: string | null
+          place_id?: string | null
           resting_type?: string | null
           school_id?: string | null
           start_time?: string | null
@@ -176,8 +188,12 @@ export type Database = {
           contact_position: string | null
           country: string | null
           created_at: string
+          formatted_address: string | null
           id: string
           in_country_trading_name: string | null
+          lat: number | null
+          lng: number | null
+          place_id: string | null
           updated_at: string
           user_id: string
         }
@@ -194,8 +210,12 @@ export type Database = {
           contact_position?: string | null
           country?: string | null
           created_at?: string
+          formatted_address?: string | null
           id?: string
           in_country_trading_name?: string | null
+          lat?: number | null
+          lng?: number | null
+          place_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -212,8 +232,12 @@ export type Database = {
           contact_position?: string | null
           country?: string | null
           created_at?: string
+          formatted_address?: string | null
           id?: string
           in_country_trading_name?: string | null
+          lat?: number | null
+          lng?: number | null
+          place_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -396,14 +420,18 @@ export type Database = {
           city: string
           country: string
           created_at: string
+          formatted_address: string | null
           general_email: string | null
           general_phone: string | null
           id: string
           last_synced_at: string | null
+          lat: number | null
           level: Database["public"]["Enums"]["school_level"]
+          lng: number | null
           name: string
           notes: string | null
           notion_page_id: string | null
+          place_id: string | null
           primary_contact_email: string | null
           primary_contact_name: string | null
           primary_contact_phone: string | null
@@ -422,14 +450,18 @@ export type Database = {
           city: string
           country: string
           created_at?: string
+          formatted_address?: string | null
           general_email?: string | null
           general_phone?: string | null
           id?: string
           last_synced_at?: string | null
+          lat?: number | null
           level?: Database["public"]["Enums"]["school_level"]
+          lng?: number | null
           name: string
           notes?: string | null
           notion_page_id?: string | null
+          place_id?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           primary_contact_phone?: string | null
@@ -448,14 +480,18 @@ export type Database = {
           city?: string
           country?: string
           created_at?: string
+          formatted_address?: string | null
           general_email?: string | null
           general_phone?: string | null
           id?: string
           last_synced_at?: string | null
+          lat?: number | null
           level?: Database["public"]["Enums"]["school_level"]
+          lng?: number | null
           name?: string
           notes?: string | null
           notion_page_id?: string | null
+          place_id?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           primary_contact_phone?: string | null

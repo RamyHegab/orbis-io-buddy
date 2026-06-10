@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotionDatabases, syncSchoolsFromNotion } from "@/lib/notion-sync.functions";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 export const Route = createFileRoute("/_authenticated/schools")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
@@ -44,6 +45,10 @@ type FormState = {
   secondary_contact_email: string;
   secondary_contact_phone: string;
   notes: string;
+  place_id: string;
+  lat: number | null;
+  lng: number | null;
+  formatted_address: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -52,6 +57,7 @@ const EMPTY_FORM: FormState = {
   primary_contact_name: "", primary_contact_position: "", primary_contact_email: "", primary_contact_phone: "",
   secondary_contact_name: "", secondary_contact_email: "", secondary_contact_phone: "",
   notes: "",
+  place_id: "", lat: null, lng: null, formatted_address: "",
 };
 
 function SchoolsPage() {
@@ -192,7 +198,25 @@ function SchoolsPage() {
                       <div><Label>City *</Label><Input value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="City of school/branch" /></div>
                       <div><Label>Country</Label><Input value={form.country} onChange={(e) => set("country", e.target.value)} /></div>
                     </div>
-                    <div><Label>Address</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="School address" /></div>
+                    <AddressAutocomplete
+                      label="Address"
+                      placeholder="School address"
+                      value={{
+                        address: form.address,
+                        place_id: form.place_id || null,
+                        lat: form.lat,
+                        lng: form.lng,
+                        formatted_address: form.formatted_address || null,
+                      }}
+                      onChange={(v) => setForm({
+                        ...form,
+                        address: v.address,
+                        place_id: v.place_id ?? "",
+                        lat: v.lat,
+                        lng: v.lng,
+                        formatted_address: v.formatted_address ?? "",
+                      })}
+                    />
                     <div>
                       <Label>Level</Label>
                       <Select value={form.level} onValueChange={(v) => set("level", v)}>
