@@ -562,6 +562,16 @@ function TripPlanner() {
         <div><div className="text-xs text-muted-foreground">Total</div><div className="font-semibold text-primary">{costTotals.total}</div></div>
       </Card>
 
+      {datesInvalid && (
+        <Card className="p-4 mb-4 border-destructive bg-destructive/10">
+          <div className="font-semibold text-destructive mb-1">Trip dates look invalid</div>
+          <p className="text-sm text-muted-foreground mb-3">
+            The start or end date isn't a valid 4-digit year (got {trip.start_date} → {trip.end_date}).
+            Click "Edit trip" above to correct the dates — likely you typed "26" instead of "2026".
+          </p>
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {days.map((d) => {
