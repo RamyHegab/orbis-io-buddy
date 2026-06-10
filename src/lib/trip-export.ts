@@ -4,54 +4,40 @@ import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 
 type Trip = { title: string; start_date: string; end_date: string };
-type SchoolRef = {
-  name?: string;
-  address?: string | null;
-  primary_contact_name?: string | null;
-  primary_contact_position?: string | null;
-  primary_contact_email?: string | null;
-  primary_contact_phone?: string | null;
-  general_email?: string | null;
-  general_phone?: string | null;
-} | null;
-type BranchRef = {
-  branch_name?: string;
-  address?: string | null;
-  contact_first_name?: string | null;
-  contact_last_name?: string | null;
-  contact_position?: string | null;
-  contact_email?: string | null;
-  contact_phone?: string | null;
-} | null;
 type Activity = {
+  id?: string;
   day_date: string; type: string; title: string;
   start_time: string | null; end_time: string | null;
   location: string | null;
-  agents?: { trading_name?: string } | null;
-  schools?: SchoolRef;
-  agent_branches?: BranchRef;
-};
-type Hotel = {
-  name: string;
-  map_url?: string | null;
-  address?: string | null;
-  check_in_date: string;
-  check_out_date: string;
-  check_in_time?: string | null;
-  check_out_time?: string | null;
   cost?: number | string | null;
   cost_currency?: string | null;
-  notes?: string | null;
+  agent_id?: string | null;
+  school_id?: string | null;
+  agents?: { trading_name?: string } | null;
+  schools?: { name?: string } | null;
+  agent_branches?: { branch_name?: string } | null;
+};
+type Hotel = {
+  check_in_date: string;
+  check_out_date: string;
+  cost?: number | string | null;
+  cost_currency?: string | null;
 };
 
-function buildDays(trip: Trip, activities: Activity[], hotels: Hotel[]) {
+function origin(): string {
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
+}
+function agentUrl(id: string) { return `${origin()}/agents/${id}`; }
+function schoolUrl() { return `${origin()}/schools`; }
+
+function buildDays(trip: Trip, activities: Activity[]) {
   const start = parseISO(trip.start_date);
   const n = differenceInDays(parseISO(trip.end_date), start) + 1;
   return Array.from({ length: n }, (_, i) => {
     const d = addDays(start, i);
     const key = format(d, "yyyy-MM-dd");
-    const stay = hotels.find((h) => key >= h.check_in_date && key <= h.check_out_date) ?? null;
-    return { date: d, key, acts: activities.filter((a) => a.day_date === key), stay };
+    return { date: d, key, acts: activities.filter((a) => a.day_date === key) };
   });
 }
 
@@ -64,80 +50,31 @@ function activityRow(a: Activity) {
   return [time, a.title, detail];
 }
 
-type ContactInfo = {
-  source: string;
-  name: string | null;
-  position: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-};
-
-function activityContact(a: Activity): ContactInfo | null {
-  if (a.agent_branches) {
-    const b = a.agent_branches;
-    const name = [b.contact_first_name, b.contact_last_name].filter(Boolean).join(" ") || null;
-    return {
-      source: b.branch_name || "Agent branch",
-      name, position: b.contact_position || null,
-      email: b.contact_email || null, phone: b.contact_phone || null,
-      address: b.address || null,
-    };
+function computeCostTotals(activities: Activity[], hotels: Hotel[]) {
+  const fmt = (m: Record<string, number>) =>
+    Object.entries(m).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") || "—";
+  const travel: Record<string, number> = {};
+  const events: Record<string, number> = {};
+  const hotelTot: Record<string, number> = {};
+  const total: Record<string, number> = {};
+  const bump = (m: Record<string, number>, cur: string, amt: number) => { m[cur] = (m[cur] ?? 0) + amt; };
+  for (const a of activities) {
+    if (a.cost == null || a.cost === "") continue;
+    const cur = a.cost_currency || "GBP";
+    const amt = Number(a.cost);
+    bump(total, cur, amt);
+    if (a.type === "travel") bump(travel, cur, amt);
+    else if (a.type === "recruitment_event") bump(events, cur, amt);
   }
-  if (a.schools) {
-    const s = a.schools;
-    return {
-      source: s.name || "School",
-      name: s.primary_contact_name || null,
-      position: s.primary_contact_position || null,
-      email: s.primary_contact_email || s.general_email || null,
-      phone: s.primary_contact_phone || s.general_phone || null,
-      address: s.address || null,
-    };
-  }
-  return null;
-}
-
-function contactHasAny(c: ContactInfo): boolean {
-  return Boolean(c.name || c.position || c.email || c.phone || c.address);
-}
-
-function hotelDayLabel(stay: Hotel, dayKey: string): string {
-  if (dayKey === stay.check_in_date) {
-    return `Check-in${stay.check_in_time ? ` ${stay.check_in_time.slice(0, 5)}` : ""}`;
-  }
-  if (dayKey === stay.check_out_date) {
-    return `Check-out${stay.check_out_time ? ` ${stay.check_out_time.slice(0, 5)}` : ""}`;
-  }
-  return "Staying overnight";
-}
-
-function hotelCost(h: Hotel): string {
-  if (h.cost == null || h.cost === "") return "";
-  return `${h.cost_currency || "GBP"} ${Number(h.cost).toFixed(2)}`;
-}
-
-function hotelTotals(hotels: Hotel[]) {
-  if (hotels.length === 0) return null;
-  let totalNights = 0;
-  const byCurrency: Record<string, number> = {};
-  let earliest = hotels[0].check_in_date;
-  let latest = hotels[0].check_out_date;
   for (const h of hotels) {
-    const nights = Math.max(1, Math.round((parseISO(h.check_out_date).getTime() - parseISO(h.check_in_date).getTime()) / 86400000));
-    totalNights += nights;
-    if (h.cost != null && h.cost !== "") {
-      const cur = h.cost_currency || "GBP";
-      byCurrency[cur] = (byCurrency[cur] ?? 0) + Number(h.cost);
-    }
-    if (h.check_in_date < earliest) earliest = h.check_in_date;
-    if (h.check_out_date > latest) latest = h.check_out_date;
+    if (h.cost == null || h.cost === "") continue;
+    const cur = h.cost_currency || "GBP";
+    const amt = Number(h.cost);
+    bump(total, cur, amt);
+    bump(hotelTot, cur, amt);
   }
-  const costStr = Object.entries(byCurrency).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") || "—";
-  const range = `${format(parseISO(earliest), "d MMM yyyy")} → ${format(parseISO(latest), "d MMM yyyy")}`;
-  return { totalNights, costStr, range, count: hotels.length };
+  return { travel: fmt(travel), events: fmt(events), hotel: fmt(hotelTot), total: fmt(total) };
 }
-
 
 export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
   const doc = new jsPDF();
@@ -150,65 +87,31 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
 
   let y = 32;
 
-  if (hotels.length > 0) {
-    if (y > 240) { doc.addPage(); y = 20; }
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Accommodation", 14, y);
-    autoTable(doc, {
-      startY: y + 2,
-      head: [["Hotel", "Check-in", "Check-out", "Nights", "Cost", "Map / Address"]],
-      body: hotels.map((h) => {
-        const nights = Math.max(1, Math.round((parseISO(h.check_out_date).getTime() - parseISO(h.check_in_date).getTime()) / 86400000));
-        return [
-          h.name,
-          `${h.check_in_date}${h.check_in_time ? ` ${h.check_in_time.slice(0, 5)}` : ""}`,
-          `${h.check_out_date}${h.check_out_time ? ` ${h.check_out_time.slice(0, 5)}` : ""}`,
-          String(nights),
-          hotelCost(h) || "—",
-          h.map_url || h.address || "—",
-        ];
-      }),
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [240, 240, 240], textColor: 30 },
-      margin: { left: 14, right: 14 },
-    });
-    y = (doc as any).lastAutoTable.finalY + 4;
-    const totals = hotelTotals(hotels);
-    if (totals) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text("Totals:", 14, y + 4);
-      doc.setFont("helvetica", "normal");
-      doc.text(
-        `${totals.count} hotel${totals.count > 1 ? "s" : ""} · ${totals.totalNights} night${totals.totalNights > 1 ? "s" : ""} · ${totals.range} · ${totals.costStr}`,
-        30, y + 4,
-      );
-      y += 10;
-    }
-    y += 4;
-  }
+  const totals = computeCostTotals(activities, hotels);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Cost summary", 14, y);
+  autoTable(doc, {
+    startY: y + 2,
+    head: [["Travel", "Hotels", "Events", "Total"]],
+    body: [[totals.travel, totals.hotel, totals.events, totals.total]],
+    styles: { fontSize: 9, cellPadding: 2 },
+    headStyles: { fillColor: [240, 240, 240], textColor: 30 },
+    margin: { left: 14, right: 14 },
+  });
+  y = (doc as any).lastAutoTable.finalY + 6;
 
-
-  for (const day of buildDays(trip, activities, hotels)) {
+  for (const day of buildDays(trip, activities)) {
     if (y > 260) { doc.addPage(); y = 20; }
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text(format(day.date, "EEEE, d MMMM yyyy"), 14, y);
     y += 4;
-    if (day.stay) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(9);
-      doc.setTextColor(80);
-      doc.text(`Hotel: ${day.stay.name} — ${hotelDayLabel(day.stay, day.key)}`, 14, y + 4);
-      doc.setTextColor(0);
-      y += 8;
-    }
     if (day.acts.length === 0) {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(9);
       doc.setTextColor(140);
-      doc.text(day.stay ? "No other activities" : "No activities", 14, y + 4);
+      doc.text("No activities", 14, y + 4);
       doc.setTextColor(0);
       y += 10;
       continue;
@@ -222,47 +125,29 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 } },
       margin: { left: 14, right: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 4;
+    y = (doc as any).lastAutoTable.finalY + 2;
 
+    // Reference links (require login when opened) — agent/school card hyperlinks
     for (const a of day.acts) {
-      const c = activityContact(a);
-      if (!c) continue;
+      const links: Array<{ label: string; url: string }> = [];
+      if (a.agent_id) {
+        const name = a.agent_branches?.branch_name ?? a.agents?.trading_name ?? "Agent";
+        links.push({ label: `Agent: ${name}`, url: agentUrl(a.agent_id) });
+      }
+      if (a.school_id && a.schools?.name) {
+        links.push({ label: `School: ${a.schools.name}`, url: schoolUrl() });
+      }
+      if (links.length === 0) continue;
       if (y > 270) { doc.addPage(); y = 20; }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(60);
-      doc.text(`Contact — ${c.source}`, 14, y);
-      y += 4;
       doc.setFont("helvetica", "normal");
-      const nameLine = c.name
-        ? `${c.name}${c.position ? ` (${c.position})` : ""}`
-        : "Name: Not provided";
-      doc.text(nameLine, 14, y); y += 4;
-      if (c.email) {
+      doc.setFontSize(9);
+      for (const l of links) {
         doc.setTextColor(20, 80, 200);
-        doc.textWithLink(`Email: ${c.email}`, 14, y, { url: `mailto:${c.email}` });
-        doc.setTextColor(60);
-      } else {
-        doc.text("Email: Not provided", 14, y);
-      }
-      y += 4;
-      if (c.phone) {
-        doc.setTextColor(20, 80, 200);
-        doc.textWithLink(`Phone: ${c.phone}`, 14, y, { url: `tel:${c.phone.replace(/\s+/g, "")}` });
-        doc.setTextColor(60);
-      } else {
-        doc.text("Phone: Not provided", 14, y);
-      }
-      y += 4;
-      if (c.address) {
-        const lines = doc.splitTextToSize(`Address: ${c.address}`, 180);
-        doc.text(lines, 14, y);
-        y += 4 * lines.length;
-      } else {
-        doc.text("Address: Not provided", 14, y); y += 4;
+        doc.textWithLink(l.label, 14, y, { url: l.url });
+        y += 4;
       }
       doc.setTextColor(0);
-      y += 3;
+      y += 2;
     }
     y += 2;
   }
@@ -270,45 +155,26 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
 }
 
 export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
-  const days = buildDays(trip, activities, hotels);
+  const days = buildDays(trip, activities);
+  const totals = computeCostTotals(activities, hotels);
 
-  const totals = hotelTotals(hotels);
-  const hotelsTable = hotels.length === 0 ? "" : `
-    <h2>Accommodation</h2>
-    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
+  const costTable = `
+    <h2>Cost summary</h2>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:16px">
       <tr style="background:#f0f0f0">
-        <th align="left">Hotel</th><th align="left">Check-in</th><th align="left">Check-out</th>
-        <th align="left">Nights</th><th align="left">Cost</th><th align="left">Map / Address</th>
+        <th align="left">Travel</th><th align="left">Hotels</th><th align="left">Events</th><th align="left">Total</th>
       </tr>
-      ${hotels.map((h) => {
-        const nights = Math.max(1, Math.round((parseISO(h.check_out_date).getTime() - parseISO(h.check_in_date).getTime()) / 86400000));
-        const mapCell = h.map_url
-          ? `<a href="${esc(h.map_url)}">${esc(h.map_url)}</a>`
-          : esc(h.address ?? "—");
-        const nameCell = h.map_url
-          ? `<a href="${esc(h.map_url)}">${esc(h.name)}</a>`
-          : esc(h.name);
-        return `<tr>
-          <td>${nameCell}</td>
-          <td>${esc(h.check_in_date)}${h.check_in_time ? ` ${esc(h.check_in_time.slice(0, 5))}` : ""}</td>
-          <td>${esc(h.check_out_date)}${h.check_out_time ? ` ${esc(h.check_out_time.slice(0, 5))}` : ""}</td>
-          <td>${nights}</td>
-          <td>${esc(hotelCost(h) || "—")}</td>
-          <td>${mapCell}</td>
-        </tr>`;
-      }).join("")}
-    </table>
-    ${totals ? `<p style="margin:0 0 16px 0;font-size:13px"><strong>Totals:</strong> ${totals.count} hotel${totals.count > 1 ? "s" : ""} · ${totals.totalNights} night${totals.totalNights > 1 ? "s" : ""} · ${esc(totals.range)} · ${esc(totals.costStr)}</p>` : ""}`;
-
+      <tr>
+        <td>${esc(totals.travel)}</td>
+        <td>${esc(totals.hotel)}</td>
+        <td>${esc(totals.events)}</td>
+        <td><strong>${esc(totals.total)}</strong></td>
+      </tr>
+    </table>`;
 
   const rows = days.map((day) => {
-    const stayLine = day.stay
-      ? `<p style="color:#555;margin:4px 0 8px 0"><strong>Hotel:</strong> ${day.stay.map_url
-          ? `<a href="${esc(day.stay.map_url)}">${esc(day.stay.name)}</a>`
-          : esc(day.stay.name)} — ${esc(hotelDayLabel(day.stay, day.key))}</p>`
-      : "";
     const acts = day.acts.length === 0
-      ? `<p style="color:#888;font-style:italic;margin:4px 0 12px 0">${day.stay ? "No other activities" : "No activities"}</p>`
+      ? `<p style="color:#888;font-style:italic;margin:4px 0 12px 0">No activities</p>`
       : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
           <tr style="background:#f0f0f0"><th align="left">Time</th><th align="left">Activity</th><th align="left">Details</th></tr>
           ${day.acts.map((a) => {
@@ -316,37 +182,26 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
             return `<tr><td>${esc(t)}</td><td>${esc(title)}</td><td>${esc(det)}</td></tr>`;
           }).join("")}
         </table>`;
-    const contacts = day.acts.map((a) => {
-      const c = activityContact(a);
-      if (!c) return "";
-      const nameLine = c.name
-        ? `<strong>${esc(c.name)}</strong>${c.position ? ` <span style="color:#666">(${esc(c.position)})</span>` : ""}`
-        : `<span style="color:#888">Name: Not provided</span>`;
-      const emailLine = c.email
-        ? `Email: <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`
-        : `<span style="color:#888">Email: Not provided</span>`;
-      const phoneLine = c.phone
-        ? `Phone: <a href="tel:${esc(c.phone.replace(/\s+/g, ""))}">${esc(c.phone)}</a>`
-        : `<span style="color:#888">Phone: Not provided</span>`;
-      const addrLine = c.address
-        ? `Address: ${esc(c.address)}`
-        : `<span style="color:#888">Address: Not provided</span>`;
-      return `<div style="margin:4px 0 10px 0;padding:6px 8px;border-left:3px solid #ccc;font-size:12px">
-        <div style="color:#444;margin-bottom:2px"><em>Contact — ${esc(c.source)}</em></div>
-        <div>${nameLine}</div>
-        <div>${emailLine}</div>
-        <div>${phoneLine}</div>
-        <div>${addrLine}</div>
-      </div>`;
+    const refs = day.acts.map((a) => {
+      const items: string[] = [];
+      if (a.agent_id) {
+        const name = a.agent_branches?.branch_name ?? a.agents?.trading_name ?? "Agent";
+        items.push(`<a href="${esc(agentUrl(a.agent_id))}">Agent: ${esc(name)}</a>`);
+      }
+      if (a.school_id && a.schools?.name) {
+        items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
+      }
+      if (items.length === 0) return "";
+      return `<div style="margin:2px 0 8px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`;
     }).join("");
-    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${stayLine}${acts}${contacts}`;
+    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
   }).join("");
 
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(trip.title)}</title></head>
     <body style="font-family:Calibri,Arial,sans-serif">
       <h1>${esc(trip.title)}</h1>
       <p style="color:#666">${format(parseISO(trip.start_date), "d MMM yyyy")} → ${format(parseISO(trip.end_date), "d MMM yyyy")}</p>
-      ${hotelsTable}
+      ${costTable}
       ${rows}
     </body></html>`;
 
