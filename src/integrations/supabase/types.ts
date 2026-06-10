@@ -17,16 +17,24 @@ export type Database = {
       activities: {
         Row: {
           agent_id: string | null
+          airline: string | null
           branch_id: string | null
+          cost: number | null
+          cost_currency: string | null
           created_at: string
           day_date: string
+          description: string | null
+          end_date: string | null
           end_time: string | null
+          flight_number: string | null
           id: string
           location: string | null
           notes: string | null
+          resting_type: string | null
           school_id: string | null
           start_time: string | null
           title: string
+          transport_mode: string | null
           trip_id: string
           type: Database["public"]["Enums"]["activity_type"]
           updated_at: string
@@ -34,16 +42,24 @@ export type Database = {
         }
         Insert: {
           agent_id?: string | null
+          airline?: string | null
           branch_id?: string | null
+          cost?: number | null
+          cost_currency?: string | null
           created_at?: string
           day_date: string
+          description?: string | null
+          end_date?: string | null
           end_time?: string | null
+          flight_number?: string | null
           id?: string
           location?: string | null
           notes?: string | null
+          resting_type?: string | null
           school_id?: string | null
           start_time?: string | null
           title: string
+          transport_mode?: string | null
           trip_id: string
           type: Database["public"]["Enums"]["activity_type"]
           updated_at?: string
@@ -51,16 +67,24 @@ export type Database = {
         }
         Update: {
           agent_id?: string | null
+          airline?: string | null
           branch_id?: string | null
+          cost?: number | null
+          cost_currency?: string | null
           created_at?: string
           day_date?: string
+          description?: string | null
+          end_date?: string | null
           end_time?: string | null
+          flight_number?: string | null
           id?: string
           location?: string | null
           notes?: string | null
+          resting_type?: string | null
           school_id?: string | null
           start_time?: string | null
           title?: string
+          transport_mode?: string | null
           trip_id?: string
           type?: Database["public"]["Enums"]["activity_type"]
           updated_at?: string
@@ -436,6 +460,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trip_countries: {
+        Row: {
+          country: string
+          created_at: string
+          end_date: string
+          id: string
+          sort_order: number
+          start_date: string
+          trip_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country: string
+          created_at?: string
+          end_date: string
+          id?: string
+          sort_order?: number
+          start_date: string
+          trip_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          sort_order?: number
+          start_date?: string
+          trip_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_countries_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trip_reports: {
         Row: {
