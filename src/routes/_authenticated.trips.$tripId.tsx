@@ -50,6 +50,10 @@ type FormState = {
   branch_id: string;
   school_id: string;
   transport_mode: string;
+  from_city: string;
+  to_city: string;
+  from_country: string;
+  to_country: string;
   airline: string;
   flight_number: string;
   cost: string;
@@ -62,7 +66,8 @@ type FormState = {
 const emptyForm: FormState = {
   type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
   location: "", agent_id: "", branch_id: "", school_id: "",
-  transport_mode: "", airline: "", flight_number: "", cost: "", cost_currency: "GBP",
+  transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
+  airline: "", flight_number: "", cost: "", cost_currency: "GBP",
   resting_type: "", description: "", notes: "",
 };
 
