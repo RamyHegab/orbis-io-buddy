@@ -105,6 +105,7 @@ function TripPlanner() {
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
