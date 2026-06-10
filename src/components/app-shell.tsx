@@ -8,6 +8,8 @@ import {
   GraduationCap,
   Plane,
   FileText,
+  BarChart3,
+  Settings as SettingsIcon,
   LogOut,
   Globe2,
 } from "lucide-react";
@@ -18,6 +20,9 @@ const navItems = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
+  { to: "/forms", label: "Forms", icon: FileText },
+  { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/settings", label: "Settings", icon: SettingsIcon },
   { to: "/templates", label: "Form Templates", icon: FileText, adminOnly: true },
 ];
 
