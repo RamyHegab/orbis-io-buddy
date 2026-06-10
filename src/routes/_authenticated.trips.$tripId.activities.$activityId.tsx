@@ -289,7 +289,7 @@ function ContactCard({
           )}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">No contact details on record. {directoryLink && "Open the directory to add them."}</p>
+        <p className="text-sm text-muted-foreground">Not provided.{directoryLink && " Open the directory to add contact details."}</p>
       )}
     </Card>
   );
