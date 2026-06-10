@@ -75,39 +75,12 @@ export const generateTripReport = createServerFn({ method: "POST" })
     ctx += `- Events: ${fmtTotals(totals.recruitment_event)}\n`;
     ctx += `- Total: ${fmtTotals(totals.total)}\n`;
 
-    if (hotels && hotels.length) {
-      ctx += `\n## Accommodation (${hotels.length})\n`;
-      let totalNights = 0;
-      let earliest = hotels[0].check_in_date;
-      let latest = hotels[0].check_out_date;
-      const hotelByCurrency: Record<string, number> = {};
-      for (const h of hotels) {
-        const nights = Math.max(1, Math.round((new Date(h.check_out_date).getTime() - new Date(h.check_in_date).getTime()) / 86400000));
-        totalNights += nights;
-        if (h.check_in_date < earliest) earliest = h.check_in_date;
-        if (h.check_out_date > latest) latest = h.check_out_date;
-        if (h.cost != null) {
-          const cur = h.cost_currency || "GBP";
-          hotelByCurrency[cur] = (hotelByCurrency[cur] ?? 0) + Number(h.cost);
-        }
-        ctx += `- **${h.name}** — ${h.check_in_date} → ${h.check_out_date} (${nights} night${nights > 1 ? "s" : ""})`;
-        if (h.cost != null) ctx += ` · ${h.cost_currency || "GBP"} ${Number(h.cost).toFixed(2)}`;
-        if (h.map_url) ctx += ` · [Map](${h.map_url})`;
-        if (h.address) ctx += ` · ${h.address}`;
-        ctx += `\n`;
-      }
-      const totalCost = Object.entries(hotelByCurrency).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(", ") || "—";
-      ctx += `\n**Accommodation totals:** ${hotels.length} hotel${hotels.length > 1 ? "s" : ""} · ${totalNights} night${totalNights > 1 ? "s" : ""} · ${earliest} → ${latest} · ${totalCost}\n`;
-    }
-
-
-
     ctx += `\n## Activities (${activities?.length ?? 0})\n`;
     for (const a of activities ?? []) {
       ctx += `\n### ${a.day_date}${a.start_time ? ` ${a.start_time.slice(0, 5)}` : ""} — ${a.title} [${a.type}]\n`;
       if (a.location) ctx += `Location: ${a.location}\n`;
-      if (a.agents) ctx += `Agent: ${a.agents.trading_name}\n`;
-      if (a.schools) ctx += `School: ${a.schools.name} (${a.schools.city}, ${a.schools.country})\n`;
+      if (a.agents && a.agent_id) ctx += `Agent: [${a.agents.trading_name}](/agents/${a.agent_id})\n`;
+      if (a.schools && a.school_id) ctx += `School: [${a.schools.name}](/schools) (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
       if (a.cost != null) ctx += `Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}\n`;
       const cs = commentsByAct[a.id] ?? [];
