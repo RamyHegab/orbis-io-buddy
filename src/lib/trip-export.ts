@@ -60,6 +60,28 @@ function hotelCost(h: Hotel): string {
   return `${h.cost_currency || "GBP"} ${Number(h.cost).toFixed(2)}`;
 }
 
+function hotelTotals(hotels: Hotel[]) {
+  if (hotels.length === 0) return null;
+  let totalNights = 0;
+  const byCurrency: Record<string, number> = {};
+  let earliest = hotels[0].check_in_date;
+  let latest = hotels[0].check_out_date;
+  for (const h of hotels) {
+    const nights = Math.max(1, Math.round((parseISO(h.check_out_date).getTime() - parseISO(h.check_in_date).getTime()) / 86400000));
+    totalNights += nights;
+    if (h.cost != null && h.cost !== "") {
+      const cur = h.cost_currency || "GBP";
+      byCurrency[cur] = (byCurrency[cur] ?? 0) + Number(h.cost);
+    }
+    if (h.check_in_date < earliest) earliest = h.check_in_date;
+    if (h.check_out_date > latest) latest = h.check_out_date;
+  }
+  const costStr = Object.entries(byCurrency).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") || "—";
+  const range = `${format(parseISO(earliest), "d MMM yyyy")} → ${format(parseISO(latest), "d MMM yyyy")}`;
+  return { totalNights, costStr, range, count: hotels.length };
+}
+
+
 export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
   const doc = new jsPDF();
   doc.setFontSize(16);
