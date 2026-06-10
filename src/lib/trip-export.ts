@@ -309,14 +309,37 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       : "";
     const acts = day.acts.length === 0
       ? `<p style="color:#888;font-style:italic;margin:4px 0 12px 0">${day.stay ? "No other activities" : "No activities"}</p>`
-      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:12px">
+      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
           <tr style="background:#f0f0f0"><th align="left">Time</th><th align="left">Activity</th><th align="left">Details</th></tr>
           ${day.acts.map((a) => {
             const [t, title, det] = activityRow(a);
             return `<tr><td>${esc(t)}</td><td>${esc(title)}</td><td>${esc(det)}</td></tr>`;
           }).join("")}
         </table>`;
-    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${stayLine}${acts}`;
+    const contacts = day.acts.map((a) => {
+      const c = activityContact(a);
+      if (!c) return "";
+      const nameLine = c.name
+        ? `<strong>${esc(c.name)}</strong>${c.position ? ` <span style="color:#666">(${esc(c.position)})</span>` : ""}`
+        : `<span style="color:#888">Name: Not provided</span>`;
+      const emailLine = c.email
+        ? `Email: <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`
+        : `<span style="color:#888">Email: Not provided</span>`;
+      const phoneLine = c.phone
+        ? `Phone: <a href="tel:${esc(c.phone.replace(/\s+/g, ""))}">${esc(c.phone)}</a>`
+        : `<span style="color:#888">Phone: Not provided</span>`;
+      const addrLine = c.address
+        ? `Address: ${esc(c.address)}`
+        : `<span style="color:#888">Address: Not provided</span>`;
+      return `<div style="margin:4px 0 10px 0;padding:6px 8px;border-left:3px solid #ccc;font-size:12px">
+        <div style="color:#444;margin-bottom:2px"><em>Contact — ${esc(c.source)}</em></div>
+        <div>${nameLine}</div>
+        <div>${emailLine}</div>
+        <div>${phoneLine}</div>
+        <div>${addrLine}</div>
+      </div>`;
+    }).join("");
+    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${stayLine}${acts}${contacts}`;
   }).join("");
 
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(trip.title)}</title></head>
