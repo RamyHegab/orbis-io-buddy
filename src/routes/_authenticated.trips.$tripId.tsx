@@ -254,11 +254,50 @@ function TripPlanner() {
         <ArrowLeft className="h-4 w-4 mr-1" /> All trips
       </Button>
       <PageHeader
-        title={trip.title}
+        title={
+          <span className="flex items-center gap-2">
+            {trip.title}
+            {trip.status === "confirmed" && (
+              <Badge className="bg-emerald-600 hover:bg-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Confirmed</Badge>
+            )}
+            {trip.status === "active" && <Badge variant="secondary">In progress</Badge>}
+            {trip.status === "planning" && <Badge variant="outline">Draft</Badge>}
+          </span>
+        }
         description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit trip</Button>
+            {trip.status !== "confirmed" ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setStatus.mutate("active")} disabled={setStatus.isPending}>
+                  <Save className="h-4 w-4 mr-1" /> Save as in progress
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" disabled={setStatus.isPending}>
+                      <CheckCircle2 className="h-4 w-4 mr-1" /> Confirm itinerary
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm itinerary?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Marks this itinerary as complete and ready to submit for approval. You can still edit it afterwards.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => setStatus.mutate("confirmed")}>Confirm</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => setStatus.mutate("active")} disabled={setStatus.isPending}>
+                <Pencil className="h-4 w-4 mr-1" /> Reopen for edits
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm"><FileDown className="h-4 w-4 mr-1" /> Export</Button>
