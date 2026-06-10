@@ -91,8 +91,13 @@ export function ImportListDialog({ type, agentId, triggerLabel = "Import list", 
           q = q.eq("agent_id", agentId).eq("branch_name", m.branch_name);
         }
         const { data: existing } = await q.maybeSingle();
-        if (existing) found.push({ index: i, incoming: m, existing, action: "skip" });
-        else fresh.push(m);
+        if (existing) {
+          const fieldChoice: Record<string, "existing" | "incoming"> = {};
+          for (const k of Object.keys(m)) {
+            if (String((existing as any)[k] ?? "") !== String(m[k] ?? "")) fieldChoice[k] = "existing";
+          }
+          found.push({ index: i, incoming: m, existing: existing as any, action: "merge", fieldChoice });
+        } else fresh.push(m);
       }
       setConflicts(found);
       setNewRows(fresh);
@@ -117,7 +122,13 @@ export function ImportListDialog({ type, agentId, triggerLabel = "Import list", 
       for (const c of cs) {
         if (c.action === "skip") { skipped++; continue; }
         if (c.action === "create") { toInsert.push(c.incoming); continue; }
-        const { error } = await supabase.from(tableName as any).update(c.incoming).eq("id", c.existing.id);
+        // merge: only update fields user picked "incoming"
+        const patch: Record<string, any> = {};
+        for (const [k, choice] of Object.entries(c.fieldChoice)) {
+          if (choice === "incoming") patch[k] = c.incoming[k];
+        }
+        if (Object.keys(patch).length === 0) { skipped++; continue; }
+        const { error } = await supabase.from(tableName as any).update(patch).eq("id", c.existing.id);
         if (error) throw error;
         updated++;
       }
