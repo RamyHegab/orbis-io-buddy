@@ -169,6 +169,11 @@ function TripPlanner() {
     return map;
   }, [activities]);
 
+  const hotelForDay = (dayKey: string) => {
+    return (hotels ?? []).find((h: any) => dayKey >= h.check_in_date && dayKey <= h.check_out_date);
+  };
+
+
   const filteredBranches = useMemo(() => {
     if (!branches) return [];
     if (!form.agent_id) return branches;
