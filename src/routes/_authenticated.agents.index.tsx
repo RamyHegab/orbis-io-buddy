@@ -165,33 +165,45 @@ function AgentsPage() {
       {filtered.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((a: any) => (
-            <Link key={a.id} to="/agents/$agentId" params={{ agentId: a.id }}>
-              <Card className="p-5 hover:shadow-md transition-shadow h-full">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shrink-0">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="font-medium truncate">{a.trading_name}</div>
-                      <Badge variant={STATUS_VARIANT[a.status] ?? "outline"} className="text-[10px] uppercase">{a.status}</Badge>
+            <div key={a.id} className="relative">
+              <Link to="/agents/$agentId" params={{ agentId: a.id }}>
+                <Card className="p-5 hover:shadow-md transition-shadow h-full">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shrink-0">
+                      <Building2 className="h-5 w-5" />
                     </div>
-                    {a.legal_name && a.legal_name !== a.trading_name && (
-                      <div className="text-xs text-muted-foreground truncate">{a.legal_name}</div>
-                    )}
-                    {a.hq_country && (
-                      <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3" /> {a.hq_country}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium truncate">{a.trading_name}</div>
+                        <Badge variant={STATUS_VARIANT[a.status] ?? "outline"} className="text-[10px] uppercase">{a.status}</Badge>
                       </div>
-                    )}
-                    <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                      <span>{a.agent_branches?.[0]?.count ?? 0} branches</span>
-                      {a.agreement_end_date && <span>Until {fmtDate(a.agreement_end_date, "MMM yyyy")}</span>}
+                      {a.legal_name && a.legal_name !== a.trading_name && (
+                        <div className="text-xs text-muted-foreground truncate">{a.legal_name}</div>
+                      )}
+                      {a.hq_country && (
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" /> {a.hq_country}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                        <span>{a.agent_branches?.[0]?.count ?? 0} branches</span>
+                        {a.agreement_end_date && <span>Until {fmtDate(a.agreement_end_date, "MMM yyyy")}</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            </Link>
+                </Card>
+              </Link>
+              <div className="absolute top-3 right-3">
+                <AddToItineraryButton
+                  source="agent"
+                  id={a.id}
+                  name={a.trading_name}
+                  address={a.hq_address}
+                  size="icon"
+                  variant="ghost"
+                />
+              </div>
+            </div>
           ))}
         </div>
       ) : (
