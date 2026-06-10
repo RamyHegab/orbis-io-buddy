@@ -1103,11 +1103,11 @@ function TripPlanner() {
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Check-in date</Label><Input type="date" value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
+              <div><Label>Check-in date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
               <div><Label>Check-in time</Label><Input type="time" value={hotelForm.check_in_time} onChange={(e) => setHotelForm({ ...hotelForm, check_in_time: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Check-out date</Label><Input type="date" value={hotelForm.check_out_date} onChange={(e) => setHotelForm({ ...hotelForm, check_out_date: e.target.value })} /></div>
+              <div><Label>Check-out date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={hotelForm.check_out_date} onChange={(e) => setHotelForm({ ...hotelForm, check_out_date: e.target.value })} /></div>
               <div><Label>Check-out time</Label><Input type="time" value={hotelForm.check_out_time} onChange={(e) => setHotelForm({ ...hotelForm, check_out_time: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-[1fr_120px] gap-3">
