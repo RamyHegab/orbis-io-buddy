@@ -740,6 +740,7 @@ function defaultTitle(f: FormState, branches: any, schools: any, agents: any): s
       return s ? `Visit ${s.name}` : "School visit";
     }
     case "recruitment_event": return "Recruitment event";
+    case "hotel": return f.title || "Hotel stay";
     case "resting_day": return RESTING_TYPES.find((r) => r.value === f.resting_type)?.label ?? "Resting day";
     default: return "Activity";
   }
