@@ -18,6 +18,7 @@ import { listNotionDatabases, syncSchoolsFromNotion } from "@/lib/notion-sync.fu
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { MapPreview } from "@/components/map-preview";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 
 export const Route = createFileRoute("/_authenticated/schools")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
@@ -335,9 +336,23 @@ function SchoolsPage() {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <AddToItineraryButton
+                          source="school"
+                          id={s.id}
+                          name={s.name}
+                          address={s.address}
+                          formatted_address={s.formatted_address}
+                          place_id={s.place_id}
+                          lat={s.lat != null ? Number(s.lat) : null}
+                          lng={s.lng != null ? Number(s.lng) : null}
+                          size="icon"
+                          variant="ghost"
+                        />
+                      </div>
                     </div>
                     {(s.lat != null && s.lng != null) || s.place_id ? (
                       <div className="mt-3">

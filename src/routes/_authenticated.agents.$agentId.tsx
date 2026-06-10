@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { MapPreview } from "@/components/map-preview";
+import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
@@ -115,9 +116,17 @@ function AgentDetail() {
         title={agent.trading_name}
         description={agent.legal_name ?? undefined}
         actions={
-          <Button variant="outline" size="sm" onClick={() => confirm("Delete this agent?") && deleteAgent.mutate()}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <AddToItineraryButton
+              source="agent"
+              id={agent.id}
+              name={agent.trading_name}
+              address={agent.hq_address}
+            />
+            <Button variant="outline" size="sm" onClick={() => confirm("Delete this agent?") && deleteAgent.mutate()}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         }
       />
 
@@ -256,9 +265,24 @@ function AgentDetail() {
                     {b.contact_email && <div className="text-xs text-muted-foreground">{b.contact_email}</div>}
                     {b.contact_phone && <div className="text-xs text-muted-foreground">{b.contact_phone}</div>}
                   </div>
-                  <button onClick={() => deleteBranch.mutate(b.id)} className="text-muted-foreground hover:text-destructive shrink-0">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <button onClick={() => deleteBranch.mutate(b.id)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <AddToItineraryButton
+                      source="agent_branch"
+                      id={b.id}
+                      agentId={agentId}
+                      name={b.branch_name || [b.city, b.country].filter(Boolean).join(", ")}
+                      address={b.address}
+                      formatted_address={b.formatted_address}
+                      place_id={b.place_id}
+                      lat={b.lat != null ? Number(b.lat) : null}
+                      lng={b.lng != null ? Number(b.lng) : null}
+                      size="icon"
+                      variant="ghost"
+                    />
+                  </div>
                 </div>
               </Card>
             );

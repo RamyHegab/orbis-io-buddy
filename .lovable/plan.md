@@ -1,21 +1,34 @@
-## Finish the deferred Google Maps work
+## Add to itinerary from agents/schools
 
-Two remaining items from the previous turn:
+Add a single reusable button + dialog so users can drop an agent, agent branch, or school straight onto a trip day from any list/detail card.
 
-### 1. Add Google Maps links to itinerary exports
-Edit `src/lib/trip-export.ts` so every activity row with a location renders a "View on Google Maps" hyperlink, using the same precedence as the in-app itinerary:
-- `place_id` → `https://www.google.com/maps/search/?api=1&query=<addr>&query_place_id=<id>`
-- else `lat`/`lng` → `query=<lat>,<lng>`
-- else `formatted_address` / `location` / joined agent branch / school address → `query=<encoded address>`
+### New component
+`src/components/add-to-itinerary-button.tsx`
+- Props: `{ source: "agent" | "agent_branch" | "school", id, name, address?, lat?, lng?, place_id?, formatted_address?, agentId? (for branches) }`
+- Renders a small "Add to itinerary" icon button (`CalendarPlus`) that opens a dialog.
 
-Apply to:
-- **PDF export** — append a clickable link line under the venue/agent/school address for each activity.
-- **Word (.docx) export** — same, using `ExternalHyperlink` so it's clickable in Word.
+### Dialog contents
+1. **Trip select** — `useQuery(["trips","upcoming"])` → `supabase.from("trips").select("id,title,start_date,end_date").gte("end_date", today).order("start_date")`.
+2. **Day picker** — appears once a trip is chosen. Use shadcn Calendar in `single` mode with `disabled={{ before: trip.start_date, after: trip.end_date }}` so the user can only pick valid days. Also shows the date range as helper text.
+3. **Save** button.
 
-Also pull the new `place_id` / `formatted_address` / `lat` / `lng` fields for `agent_branches` and `schools` in the trip-data query feeding the export, if not already selected.
+### Save logic
+Insert into `activities` with:
+- `trip_id`, `user_id: auth.uid()`, `day_date`, `start_time: null`, `end_time: null`.
+- `type`: `"agent_visit"` for agent/branch, `"school_visit"` for school.
+- `title`: agent trading name / branch name / school name.
+- For `agent` or `agent_branch`: `agent_id` (parent agent), `branch_id` if source is branch.
+- For `school`: `school_id`.
+- Copy location columns when present: `location` (address), `formatted_address`, `place_id`, `lat`, `lng` — same fields the activity editor saves.
 
-### 2. Mini-map preview on Schools list cards
-In `src/routes/_authenticated.schools.tsx`, render `<MapPreview>` (≈120px tall) inside each school card when the school has `lat`/`lng` (or `place_id`), matching the agent-branch card treatment. Add a small "Open in Maps" icon-link next to the address.
+After insert: invalidate `["activities", trip_id]`, toast "Added to <trip title>", close dialog, offer a "View trip" link via toast action.
+
+### Where the button gets wired in
+- **`src/routes/_authenticated.agents.index.tsx`** — on each agent card row.
+- **`src/routes/_authenticated.agents.$agentId.tsx`** — on the agent header AND on each branch card (branch passes `source="agent_branch"`).
+- **`src/routes/_authenticated.schools.tsx`** — on each school card.
 
 ### Out of scope
-No schema changes, no new components, no other surfaces touched.
+- No multi-select / bulk add (per user choice).
+- No time picker (per user choice — time stays blank, user fills it later in the trip view).
+- No schema changes — `activities` already has all the columns we need.
