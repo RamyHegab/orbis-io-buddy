@@ -117,6 +117,18 @@ function ActivityDetail() {
           {activity.schools?.name && <Badge variant="secondary">School: {activity.schools.name}</Badge>}
         </div>
         {activity.notes && <p className="text-sm whitespace-pre-wrap">{activity.notes}</p>}
+        {activity.objectives && (
+          <div className="mt-3">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Objectives</div>
+            <p className="text-sm whitespace-pre-wrap">{activity.objectives}</p>
+          </div>
+        )}
+        {activity.visit_notes && (
+          <div className="mt-3">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notes during visit</div>
+            <p className="text-sm whitespace-pre-wrap">{activity.visit_notes}</p>
+          </div>
+        )}
       </Card>
 
       {(activity.type === "agent_visit" && activity.agent_branches) && (
