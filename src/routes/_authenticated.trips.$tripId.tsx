@@ -315,6 +315,7 @@ function TripPlanner() {
       if (trip && (h.check_in_date < trip.start_date || h.check_in_date > trip.end_date || h.check_out_date < trip.start_date || h.check_out_date > trip.end_date)) {
         throw new Error(`Hotel dates must be within trip range (${trip.start_date} → ${trip.end_date})`);
       }
+      const overlap = (hotels ?? []).find((other: any) => {
         if (h.id && other.id === h.id) return false;
         return !(h.check_out_date < other.check_in_date || h.check_in_date > other.check_out_date);
       });
