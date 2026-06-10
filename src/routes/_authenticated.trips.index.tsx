@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Plane, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,6 +33,13 @@ function buildTitle(legs: Leg[]): string {
   const min = new Date(Math.min(...starts));
   const max = new Date(Math.max(...ends));
   return `${countries} — ${format(min, "d MMM")} → ${format(max, "d MMM yyyy")}`;
+}
+
+function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "upcoming" {
+  const today = format(new Date(), "yyyy-MM-dd");
+  if (t.end_date < today) return "past";
+  if (t.start_date <= today && today <= t.end_date) return "in_progress";
+  return "upcoming";
 }
 
 function TripsPage() {
@@ -56,11 +65,8 @@ function TripsPage() {
       const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
       const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
       const { data: trip, error } = await supabase.from("trips").insert({
-        title,
-        destinations: valid.map((l) => l.country),
-        start_date: start,
-        end_date: end,
-        user_id: user.id,
+        title, destinations: valid.map((l) => l.country),
+        start_date: start, end_date: end, user_id: user.id,
       }).select("id").single();
       if (error) throw error;
       const rows = valid.map((l, i) => ({
@@ -79,10 +85,74 @@ function TripsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("trips").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Trip deleted"); qc.invalidateQueries({ queryKey: ["trips"] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const updateLeg = (i: number, patch: Partial<Leg>) =>
     setLegs((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
 
   const previewTitle = buildTitle(legs);
+
+  const grouped = useMemo(() => {
+    const g = { past: [] as any[], in_progress: [] as any[], upcoming: [] as any[] };
+    for (const t of trips ?? []) g[bucketOf(t)].push(t);
+    return g;
+  }, [trips]);
+
+  const renderGrid = (list: any[]) =>
+    list.length === 0 ? (
+      <Card className="p-10 text-center text-muted-foreground">No trips in this group.</Card>
+    ) : (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {list.map((t) => (
+          <Card key={t.id} className="p-5 hover:shadow-md transition-shadow h-full relative group">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="icon" variant="ghost"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This permanently removes "{t.title}" and all its activities.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => del.mutate(t.id)}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Link to="/trips/$tripId" params={{ tripId: t.id }} className="block">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                  <Plane className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0 pr-6">
+                  <div className="font-medium truncate">{t.title}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{fmtDate(t.start_date)} → {fmtDate(t.end_date)}</div>
+                  <div className="flex flex-wrap gap-1 mt-3">
+                    {t.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </Card>
+        ))}
+      </div>
+    );
 
   return (
     <PageContainer>
@@ -101,9 +171,7 @@ function TripsPage() {
                   <div className="space-y-2">
                     {legs.map((leg, i) => (
                       <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
-                        <div>
-                          <Input placeholder="Country" value={leg.country} onChange={(e) => updateLeg(i, { country: e.target.value })} />
-                        </div>
+                        <Input placeholder="Country" value={leg.country} onChange={(e) => updateLeg(i, { country: e.target.value })} />
                         <Input type="date" value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
                         <Input type="date" value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
                         <Button type="button" size="icon" variant="ghost" disabled={legs.length === 1} onClick={() => setLegs(legs.filter((_, idx) => idx !== i))}>
@@ -132,31 +200,16 @@ function TripsPage() {
         }
       />
 
-      {trips && trips.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {trips.map((t) => (
-            <Link key={t.id} to="/trips/$tripId" params={{ tripId: t.id }}>
-              <Card className="p-5 hover:shadow-md transition-shadow h-full">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                    <Plane className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{t.title}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{fmtDate(t.start_date)} → {fmtDate(t.end_date)}</div>
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {t.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
-                    </div>
-                    <Badge className="mt-3 capitalize" variant="outline">{t.status}</Badge>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <Card className="p-10 text-center text-muted-foreground">No trips yet. Plan your first recruitment trip.</Card>
-      )}
+      <Tabs defaultValue="in_progress">
+        <TabsList>
+          <TabsTrigger value="in_progress">In progress ({grouped.in_progress.length})</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming confirmed ({grouped.upcoming.length})</TabsTrigger>
+          <TabsTrigger value="past">Past ({grouped.past.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="in_progress" className="mt-4">{renderGrid(grouped.in_progress)}</TabsContent>
+        <TabsContent value="upcoming" className="mt-4">{renderGrid(grouped.upcoming)}</TabsContent>
+        <TabsContent value="past" className="mt-4">{renderGrid(grouped.past)}</TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

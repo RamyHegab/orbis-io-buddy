@@ -10,8 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, ArrowLeft, Sparkles } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, ArrowLeft, Sparkles, Pencil, FileText, FileDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
@@ -69,8 +72,10 @@ function TripPlanner() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
 
   const { data: trip } = useQuery({
     queryKey: ["trip", tripId],
@@ -166,10 +171,56 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const saveEdit = useMutation({
+    mutationFn: async () => {
+      const valid = editLegs.filter((l) => l.country && l.start_date && l.end_date);
+      if (valid.length === 0) throw new Error("Add at least one country");
+      const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
+      const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
+      const countries = valid.map((l) => l.country);
+      const title = `${countries.join(" • ")} — ${format(parseISO(start), "d MMM")} → ${format(parseISO(end), "d MMM yyyy")}`;
+      const { error } = await supabase.from("trips").update({
+        title, destinations: countries, start_date: start, end_date: end,
+      }).eq("id", tripId);
+      if (error) throw error;
+      await supabase.from("trip_countries").delete().eq("trip_id", tripId);
+      const rows = valid.map((l, i) => ({
+        trip_id: tripId, user_id: user!.id, country: l.country,
+        start_date: l.start_date, end_date: l.end_date, sort_order: i,
+      }));
+      const { error: e2 } = await supabase.from("trip_countries").insert(rows);
+      if (e2) throw e2;
+    },
+    onSuccess: () => {
+      toast.success("Trip updated");
+      setEditOpen(false);
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-countries", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteTrip = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("trips").delete().eq("id", tripId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Trip deleted"); navigate({ to: "/trips" }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
     setOpen(true);
+  };
+
+  const openEdit = () => {
+    setEditLegs((countries ?? []).map((c: any) => ({
+      id: c.id, country: c.country, start_date: c.start_date, end_date: c.end_date,
+    })));
+    setEditOpen(true);
   };
 
   if (!trip) return <PageContainer><p className="text-muted-foreground">Loading…</p></PageContainer>;
@@ -185,11 +236,77 @@ function TripPlanner() {
         title={trip.title}
         description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
         actions={
-          <Link to="/trips/$tripId/report" params={{ tripId }}>
-            <Button variant="outline"><Sparkles className="h-4 w-4 mr-1" /> AI Report</Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm"><FileDown className="h-4 w-4 mr-1" /> Export</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportTripPdf(trip, (activities ?? []) as any)}>
+                  <FileText className="h-4 w-4 mr-2" /> PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportTripWord(trip, (activities ?? []) as any)}>
+                  <FileText className="h-4 w-4 mr-2" /> Word (.doc)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link to="/trips/$tripId/report" params={{ tripId }}>
+              <Button variant="outline" size="sm"><Sparkles className="h-4 w-4 mr-1" /> AI Report</Button>
+            </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm"><Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+                  <AlertDialogDescription>This removes the trip and all its activities.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => deleteTrip.mutate()}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         }
       />
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>Edit trip</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Label>Countries & dates</Label>
+            <p className="text-xs text-muted-foreground">The title is generated from countries and dates.</p>
+            <div className="space-y-2">
+              {editLegs.map((leg, i) => (
+                <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+                  <Input placeholder="Country" value={leg.country}
+                    onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, country: e.target.value } : l))} />
+                  <Input type="date" value={leg.start_date}
+                    onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, start_date: e.target.value } : l))} />
+                  <Input type="date" value={leg.end_date}
+                    onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, end_date: e.target.value } : l))} />
+                  <Button type="button" size="icon" variant="ghost" disabled={editLegs.length === 1}
+                    onClick={() => setEditLegs(editLegs.filter((_, idx) => idx !== i))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button type="button" size="sm" variant="outline"
+              onClick={() => setEditLegs([...editLegs, { country: "", start_date: "", end_date: "" }])}>
+              <Plus className="h-4 w-4 mr-1" /> Add country
+            </Button>
+            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending} className="w-full">Save</Button>
+            <p className="text-xs text-muted-foreground">
+              Changing dates may leave existing activities outside the new range — they'll stop appearing in the calendar.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <div className="space-y-4">
         {days.map((d) => {
