@@ -85,6 +85,7 @@ function TripsPage() {
       toast.success("Trip created");
       setOpen(false);
       setLegs([{ country: "", start_date: "", end_date: "" }]);
+      setObjectives("");
       qc.invalidateQueries({ queryKey: ["trips"] });
     },
     onError: (e: any) => toast.error(e.message),
