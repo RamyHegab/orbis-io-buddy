@@ -412,6 +412,13 @@ function TripPlanner() {
       </Dialog>
 
 
+      <Card className="p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        <div><div className="text-xs text-muted-foreground">Travel</div><div className="font-semibold">{costTotals.travel}</div></div>
+        <div><div className="text-xs text-muted-foreground">Hotels</div><div className="font-semibold">{costTotals.hotel}</div></div>
+        <div><div className="text-xs text-muted-foreground">Events</div><div className="font-semibold">{costTotals.events}</div></div>
+        <div><div className="text-xs text-muted-foreground">Total</div><div className="font-semibold text-primary">{costTotals.total}</div></div>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {days.map((d) => {
