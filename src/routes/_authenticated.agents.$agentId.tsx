@@ -116,9 +116,17 @@ function AgentDetail() {
         title={agent.trading_name}
         description={agent.legal_name ?? undefined}
         actions={
-          <Button variant="outline" size="sm" onClick={() => confirm("Delete this agent?") && deleteAgent.mutate()}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <AddToItineraryButton
+              source="agent"
+              id={agent.id}
+              name={agent.trading_name}
+              address={agent.hq_address}
+            />
+            <Button variant="outline" size="sm" onClick={() => confirm("Delete this agent?") && deleteAgent.mutate()}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         }
       />
 
