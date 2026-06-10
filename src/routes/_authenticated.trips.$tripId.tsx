@@ -50,6 +50,10 @@ type FormState = {
   branch_id: string;
   school_id: string;
   transport_mode: string;
+  from_city: string;
+  to_city: string;
+  from_country: string;
+  to_country: string;
   airline: string;
   flight_number: string;
   cost: string;
@@ -62,7 +66,8 @@ type FormState = {
 const emptyForm: FormState = {
   type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
   location: "", agent_id: "", branch_id: "", school_id: "",
-  transport_mode: "", airline: "", flight_number: "", cost: "", cost_currency: "GBP",
+  transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
+  airline: "", flight_number: "", cost: "", cost_currency: "GBP",
   resting_type: "", description: "", notes: "",
 };
 
@@ -402,7 +407,16 @@ function TripPlanner() {
                         <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <div><Label>From → To</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="London → Bangkok" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                      <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
+                    </div>
+                    {form.transport_mode === "Air travel" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
+                        <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>Departure time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
                       <div><Label>Arrival time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
@@ -581,7 +595,12 @@ function CostInput({ form, setForm }: { form: FormState; setForm: (f: FormState)
 
 function defaultTitle(f: FormState, branches: any, schools: any, agents: any): string {
   switch (f.type) {
-    case "travel": return f.transport_mode ? `${f.transport_mode}` : "Travel";
+    case "travel": {
+      const from = [f.from_city, f.transport_mode === "Air travel" ? f.from_country : ""].filter(Boolean).join(", ");
+      const to = [f.to_city, f.transport_mode === "Air travel" ? f.to_country : ""].filter(Boolean).join(", ");
+      if (from && to) return `${from} → ${to}`;
+      return f.transport_mode || "Travel";
+    }
     case "agent_visit": {
       const b = branches?.find((x: any) => x.id === f.branch_id);
       return b ? `Visit ${b.branch_name}` : "Agent visit";
@@ -598,7 +617,7 @@ function defaultTitle(f: FormState, branches: any, schools: any, agents: any): s
 
 function isFormValid(f: FormState): boolean {
   switch (f.type) {
-    case "travel": return !!f.transport_mode;
+    case "travel": return !!f.transport_mode && !!f.from_city && !!f.to_city;
     case "agent_visit": return !!f.branch_id;
     case "school_visit": return !!f.school_id;
     case "recruitment_event": return !!f.title;
