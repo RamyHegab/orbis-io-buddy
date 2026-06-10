@@ -164,12 +164,13 @@ function TripPlanner() {
     },
     onSuccess: () => {
       toast.success("Activity added");
-      setOpen(false);
       setForm(emptyForm);
+      setSelectedDay(null);
       qc.invalidateQueries({ queryKey: ["activities", tripId] });
     },
     onError: (e: any) => toast.error(e.message),
   });
+
 
   const saveEdit = useMutation({
     mutationFn: async () => {
