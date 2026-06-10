@@ -68,6 +68,10 @@ type FormState = {
   notes: string;
   objectives: string;
   visit_notes: string;
+  place_id: string;
+  lat: number | null;
+  lng: number | null;
+  formatted_address: string;
 };
 
 const emptyForm: FormState = {
@@ -76,6 +80,7 @@ const emptyForm: FormState = {
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
   resting_type: "", description: "", notes: "", objectives: "", visit_notes: "",
+  place_id: "", lat: null, lng: null, formatted_address: "",
 };
 
 type HotelForm = {
