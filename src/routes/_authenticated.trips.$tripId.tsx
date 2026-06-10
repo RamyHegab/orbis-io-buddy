@@ -105,6 +105,7 @@ function TripPlanner() {
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
@@ -242,20 +243,39 @@ function TripPlanner() {
         description: form.description || null,
         notes: form.notes || null,
       };
-      const { error } = await supabase.from("activities").insert(payload);
+      if (editingActivityId) {
+        const { error } = await supabase.from("activities").update(payload).eq("id", editingActivityId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("activities").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editingActivityId ? "Activity updated" : "Activity added");
+      setForm(emptyForm);
+      setSelectedDay(null);
+      setEditingActivityId(null);
+      qc.invalidateQueries({ queryKey: ["activities", tripId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteActivity = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("activities").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Activity added");
-      setForm(emptyForm);
-      setSelectedDay(null);
+      toast.success("Activity deleted");
+      if (editingActivityId) { setEditingActivityId(null); setSelectedDay(null); setForm(emptyForm); }
       qc.invalidateQueries({ queryKey: ["activities", tripId] });
     },
     onError: (e: any) => toast.error(e.message),
   });
 
   const repeatPrevious = useMutation({
-    mutationFn: async (targetDay: string) => {
+    mutationFn: async ({ targetDay, includeCost }: { targetDay: string; includeCost: boolean }) => {
       if (!user) throw new Error("Not signed in");
       const prev = format(addDays(parseISO(targetDay), -1), "yyyy-MM-dd");
       const src = (activities ?? []).filter((a: any) => a.day_date === prev && a.type === "recruitment_event");
@@ -264,7 +284,9 @@ function TripPlanner() {
         trip_id: tripId, user_id: user.id, type: a.type, day_date: targetDay,
         title: a.title, start_time: a.start_time, end_time: a.end_time,
         location: a.location, agent_id: a.agent_id, branch_id: a.branch_id,
-        school_id: a.school_id, cost: a.cost, cost_currency: a.cost_currency,
+        school_id: a.school_id,
+        cost: includeCost ? a.cost : null,
+        cost_currency: includeCost ? a.cost_currency : null,
         description: a.description, notes: a.notes,
       }));
       const { error } = await supabase.from("activities").insert(rows);
@@ -489,8 +511,38 @@ function TripPlanner() {
 
 
   const openForDay = (d: Date) => {
+    setEditingActivityId(null);
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
+  };
+
+  const openEditActivity = (a: any) => {
+    setEditingActivityId(a.id);
+    setSelectedDay(a.day_date);
+    setForm({
+      type: a.type ?? "school_visit",
+      title: a.title ?? "",
+      start_time: a.start_time ? a.start_time.slice(0, 5) : "",
+      end_time: a.end_time ? a.end_time.slice(0, 5) : "",
+      end_date: a.end_date ?? a.day_date ?? "",
+      location: a.location ?? "",
+      map_url: a.map_url ?? "",
+      agent_id: a.agent_id ?? "",
+      branch_id: a.branch_id ?? "",
+      school_id: a.school_id ?? "",
+      transport_mode: a.transport_mode ?? "",
+      from_city: a.from_city ?? "",
+      to_city: a.to_city ?? "",
+      from_country: a.from_country ?? "",
+      to_country: a.to_country ?? "",
+      airline: a.airline ?? "",
+      flight_number: a.flight_number ?? "",
+      cost: a.cost != null ? String(a.cost) : "",
+      cost_currency: a.cost_currency ?? "GBP",
+      resting_type: a.resting_type ?? "",
+      description: a.description ?? "",
+      notes: a.notes ?? "",
+    });
   };
 
 
@@ -682,9 +734,32 @@ function TripPlanner() {
                   </div>
                   <div className="flex gap-1">
                     {prevHasEvents && !resting && (
-                      <Button size="sm" variant="ghost" onClick={() => repeatPrevious.mutate(key)} disabled={repeatPrevious.isPending} title="Repeat previous day's event(s)">
-                        <Copy className="h-4 w-4 mr-1" /> Repeat previous day
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" disabled={repeatPrevious.isPending} title="Repeat previous day's event(s)">
+                            <Copy className="h-4 w-4 mr-1" /> Repeat previous day
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Repeat previous day's events?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              The previous day's recruitment event(s) had a cost recorded. Was that cost for a single day, or for the whole run of repeated days?
+                              <br /><br />
+                              Choose <strong>Include cost</strong> to copy the same cost onto this day (cost per day). Choose <strong>Skip cost</strong> if the previous day's cost already covers today (cost was for the whole event).
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => repeatPrevious.mutate({ targetDay: key, includeCost: false })}>
+                              Skip cost
+                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => repeatPrevious.mutate({ targetDay: key, includeCost: true })}>
+                              Include cost
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                     <TooltipProvider>
                       <Tooltip>
@@ -747,18 +822,22 @@ function TripPlanner() {
                   <p className="text-sm text-muted-foreground">{stay ? "No other activities scheduled." : "No activities. Click \"Add\" to schedule."}</p>
                 ) : (
                   <div className="space-y-2">
-                    {dayActs.map((a) => (
-                      <Link
-                        key={a.id}
-                        to="/trips/$tripId/activities/$activityId"
-                        params={{ tripId, activityId: a.id }}
-                        className="block"
-                      >
-                        <div className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors hover:bg-muted ${ACTIVITY_TYPE_COLORS[a.type]}`}>
+                    {dayActs.map((a) => {
+                      const isEditingThis = editingActivityId === a.id;
+                      return (
+                        <div
+                          key={a.id}
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors ${ACTIVITY_TYPE_COLORS[a.type]} ${isEditingThis ? "ring-2 ring-primary" : ""}`}
+                        >
                           <div className="text-xs font-mono w-20 shrink-0">
                             {a.start_time ? a.start_time.slice(0, 5) : "—"}
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => openEditActivity(a)}
+                            className="flex-1 min-w-0 text-left hover:opacity-80"
+                            title="Edit activity"
+                          >
                             <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
                             <div className="text-xs text-muted-foreground">
                               {ACTIVITY_TYPE_LABELS[a.type]}
@@ -769,10 +848,37 @@ function TripPlanner() {
                               {a.schools?.name && ` • ${a.schools.name}`}
                               {a.location && ` • ${a.location}`}
                             </div>
+                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditActivity(a)} title="Edit">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Link to="/trips/$tripId/activities/$activityId" params={{ tripId, activityId: a.id }} title="Open details">
+                              <Button size="icon" variant="ghost" className="h-7 w-7">
+                                <FileText className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" title="Delete">
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete activity?</AlertDialogTitle>
+                                  <AlertDialogDescription>This removes "{a.title}" from the itinerary.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteActivity.mutate(a.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </Card>
@@ -791,11 +897,21 @@ function TripPlanner() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-semibold">New activity</div>
+                  <div className="font-semibold">{editingActivityId ? "Edit activity" : "New activity"}</div>
                   <div className="text-xs text-muted-foreground">{fmtDate(selectedDay)}</div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => { setSelectedDay(null); setForm(emptyForm); }}>Cancel</Button>
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedDay(null); setEditingActivityId(null); setForm(emptyForm); }}>Cancel</Button>
               </div>
+              {(() => {
+                const outOfRange =
+                  (selectedDay && (selectedDay < trip.start_date || selectedDay > trip.end_date)) ||
+                  (form.end_date && (form.end_date < trip.start_date || form.end_date > trip.end_date));
+                return outOfRange ? (
+                  <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    Date is outside the trip range ({trip.start_date} → {trip.end_date}). Adjust the date or edit the trip dates.
+                  </div>
+                ) : null;
+              })()}
               <div>
                 <Label>Activity type</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({ ...emptyForm, type: v, end_date: selectedDay ?? "" })}>
@@ -1015,16 +1131,23 @@ function TripPlanner() {
               {validationMessage && (
                 <p className="text-xs text-muted-foreground">{validationMessage}</p>
               )}
-              <Button
-                onClick={() => {
-                  if (validationMessage) { toast.error(validationMessage); return; }
-                  create.mutate();
-                }}
-                disabled={create.isPending}
-                className="w-full"
-              >
-                Add activity
-              </Button>
+              {(() => {
+                const outOfRange =
+                  (selectedDay && (selectedDay < trip.start_date || selectedDay > trip.end_date)) ||
+                  (form.end_date && (form.end_date < trip.start_date || form.end_date > trip.end_date));
+                return (
+                  <Button
+                    onClick={() => {
+                      if (validationMessage) { toast.error(validationMessage); return; }
+                      create.mutate();
+                    }}
+                    disabled={create.isPending || !!outOfRange}
+                    className="w-full"
+                  >
+                    {editingActivityId ? "Save changes" : "Add activity"}
+                  </Button>
+                );
+              })()}
             </div>
           );
 
@@ -1038,11 +1161,11 @@ function TripPlanner() {
               {!isLgUp && (
                 <Dialog
                   open={!!selectedDay}
-                  onOpenChange={(o) => { if (!o) { setSelectedDay(null); setForm(emptyForm); } }}
+                  onOpenChange={(o) => { if (!o) { setSelectedDay(null); setEditingActivityId(null); setForm(emptyForm); } }}
                 >
                   <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>New activity — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
+                      <DialogTitle>{editingActivityId ? "Edit activity" : "New activity"} — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
                     </DialogHeader>
                     {selectedDay && editorBody}
                   </DialogContent>
@@ -1118,16 +1241,37 @@ function TripPlanner() {
               <Label>Notes</Label>
               <Textarea value={hotelForm.notes} onChange={(e) => setHotelForm({ ...hotelForm, notes: e.target.value })} placeholder="Booking ref, room type…" />
             </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={() => saveHotel.mutate()} disabled={saveHotel.isPending} className="flex-1">
-                {hotelForm.id ? "Save changes" : "Add hotel"}
-              </Button>
-              {hotelForm.id && (
-                <Button variant="outline" onClick={() => deleteHotel.mutate(hotelForm.id!)} disabled={deleteHotel.isPending}>
-                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
-                </Button>
-              )}
-            </div>
+            {(() => {
+              const hotelOutOfRange =
+                (hotelForm.check_in_date && (hotelForm.check_in_date < trip.start_date || hotelForm.check_in_date > trip.end_date)) ||
+                (hotelForm.check_out_date && (hotelForm.check_out_date < trip.start_date || hotelForm.check_out_date > trip.end_date));
+              const checkoutBeforeIn = hotelForm.check_in_date && hotelForm.check_out_date && hotelForm.check_out_date < hotelForm.check_in_date;
+              const blocked = !!(hotelOutOfRange || checkoutBeforeIn);
+              return (
+                <>
+                  {hotelOutOfRange && (
+                    <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                      Hotel dates must be within the trip range ({trip.start_date} → {trip.end_date}).
+                    </div>
+                  )}
+                  {checkoutBeforeIn && (
+                    <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                      Check-out must be on or after check-in.
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={() => saveHotel.mutate()} disabled={saveHotel.isPending || blocked} className="flex-1">
+                      {hotelForm.id ? "Save changes" : "Add hotel"}
+                    </Button>
+                    {hotelForm.id && (
+                      <Button variant="outline" onClick={() => deleteHotel.mutate(hotelForm.id!)} disabled={deleteHotel.isPending}>
+                        <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                      </Button>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
