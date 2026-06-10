@@ -141,7 +141,7 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
     });
     y = (doc as any).lastAutoTable.finalY + 2;
 
-    // Reference links (require login when opened) — agent/school card hyperlinks
+    // Per-activity references + objectives + visit notes
     for (const a of day.acts) {
       const links: Array<{ label: string; url: string }> = [];
       if (a.agent_id) {
@@ -151,16 +151,28 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       if (a.school_id && a.schools?.name) {
         links.push({ label: `School: ${a.schools.name}`, url: schoolUrl() });
       }
-      if (links.length === 0) continue;
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.setFont("helvetica", "normal");
+      const hasExtra = links.length || a.objectives || a.visit_notes;
+      if (!hasExtra) continue;
+      if (y > 260) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
+      doc.text(a.title, 14, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
       for (const l of links) {
         doc.setTextColor(20, 80, 200);
         doc.textWithLink(l.label, 14, y, { url: l.url });
         y += 4;
       }
       doc.setTextColor(0);
+      const writeBlock = (label: string, text: string) => {
+        const lines = doc.splitTextToSize(`${label}: ${text}`, 180);
+        if (y + lines.length * 4 > 280) { doc.addPage(); y = 20; }
+        doc.text(lines, 14, y);
+        y += lines.length * 4;
+      };
+      if (a.objectives) writeBlock("Objectives", a.objectives);
+      if (a.visit_notes) writeBlock("Notes during visit", a.visit_notes);
       y += 2;
     }
     y += 2;
