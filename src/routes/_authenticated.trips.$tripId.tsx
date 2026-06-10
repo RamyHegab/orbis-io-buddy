@@ -901,6 +901,19 @@ function TripPlanner() {
                                 </>
                               )}
                               {a.location && ` • ${a.location}`}
+                              {(() => {
+                                const u = mapsSearchUrl({
+                                  query: a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address,
+                                  placeId: a.place_id ?? a.agent_branches?.place_id ?? a.schools?.place_id,
+                                  lat: a.lat ?? a.agent_branches?.lat ?? a.schools?.lat,
+                                  lng: a.lng ?? a.agent_branches?.lng ?? a.schools?.lng,
+                                });
+                                return u ? (
+                                  <a href={u} target="_blank" rel="noreferrer" className="ml-1 inline-flex items-center underline hover:text-primary" title="Open in Google Maps">
+                                    <MapPin className="h-3 w-3" />
+                                  </a>
+                                ) : null;
+                              })()}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
