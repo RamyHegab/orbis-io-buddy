@@ -822,18 +822,22 @@ function TripPlanner() {
                   <p className="text-sm text-muted-foreground">{stay ? "No other activities scheduled." : "No activities. Click \"Add\" to schedule."}</p>
                 ) : (
                   <div className="space-y-2">
-                    {dayActs.map((a) => (
-                      <Link
-                        key={a.id}
-                        to="/trips/$tripId/activities/$activityId"
-                        params={{ tripId, activityId: a.id }}
-                        className="block"
-                      >
-                        <div className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors hover:bg-muted ${ACTIVITY_TYPE_COLORS[a.type]}`}>
+                    {dayActs.map((a) => {
+                      const isEditingThis = editingActivityId === a.id;
+                      return (
+                        <div
+                          key={a.id}
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors ${ACTIVITY_TYPE_COLORS[a.type]} ${isEditingThis ? "ring-2 ring-primary" : ""}`}
+                        >
                           <div className="text-xs font-mono w-20 shrink-0">
                             {a.start_time ? a.start_time.slice(0, 5) : "—"}
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => openEditActivity(a)}
+                            className="flex-1 min-w-0 text-left hover:opacity-80"
+                            title="Edit activity"
+                          >
                             <div className="font-medium text-sm text-foreground truncate">{a.title}</div>
                             <div className="text-xs text-muted-foreground">
                               {ACTIVITY_TYPE_LABELS[a.type]}
@@ -844,10 +848,37 @@ function TripPlanner() {
                               {a.schools?.name && ` • ${a.schools.name}`}
                               {a.location && ` • ${a.location}`}
                             </div>
+                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditActivity(a)} title="Edit">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Link to="/trips/$tripId/activities/$activityId" params={{ tripId, activityId: a.id }} title="Open details">
+                              <Button size="icon" variant="ghost" className="h-7 w-7">
+                                <FileText className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" title="Delete">
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete activity?</AlertDialogTitle>
+                                  <AlertDialogDescription>This removes "{a.title}" from the itinerary.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteActivity.mutate(a.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </Card>
