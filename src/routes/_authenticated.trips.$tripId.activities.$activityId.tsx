@@ -105,7 +105,7 @@ function ActivityDetail() {
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <Badge className={ACTIVITY_TYPE_COLORS[activity.type]}>{ACTIVITY_TYPE_LABELS[activity.type]}</Badge>
           {activity.location && <Badge variant="outline">{activity.location}</Badge>}
-          {activity.agents?.name && <Badge variant="secondary">Agent: {activity.agents.trading_name}</Badge>}
+          {activity.agents?.trading_name && <Badge variant="secondary">Agent: {activity.agents.trading_name}</Badge>}
           {activity.schools?.name && <Badge variant="secondary">School: {activity.schools.name}</Badge>}
         </div>
         {activity.notes && <p className="text-sm whitespace-pre-wrap">{activity.notes}</p>}
