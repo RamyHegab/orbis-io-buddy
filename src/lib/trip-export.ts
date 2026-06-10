@@ -222,7 +222,49 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 } },
       margin: { left: 14, right: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    y = (doc as any).lastAutoTable.finalY + 4;
+
+    for (const a of day.acts) {
+      const c = activityContact(a);
+      if (!c) continue;
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(60);
+      doc.text(`Contact — ${c.source}`, 14, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      const nameLine = c.name
+        ? `${c.name}${c.position ? ` (${c.position})` : ""}`
+        : "Name: Not provided";
+      doc.text(nameLine, 14, y); y += 4;
+      if (c.email) {
+        doc.setTextColor(20, 80, 200);
+        doc.textWithLink(`Email: ${c.email}`, 14, y, { url: `mailto:${c.email}` });
+        doc.setTextColor(60);
+      } else {
+        doc.text("Email: Not provided", 14, y);
+      }
+      y += 4;
+      if (c.phone) {
+        doc.setTextColor(20, 80, 200);
+        doc.textWithLink(`Phone: ${c.phone}`, 14, y, { url: `tel:${c.phone.replace(/\s+/g, "")}` });
+        doc.setTextColor(60);
+      } else {
+        doc.text("Phone: Not provided", 14, y);
+      }
+      y += 4;
+      if (c.address) {
+        const lines = doc.splitTextToSize(`Address: ${c.address}`, 180);
+        doc.text(lines, 14, y);
+        y += 4 * lines.length;
+      } else {
+        doc.text("Address: Not provided", 14, y); y += 4;
+      }
+      doc.setTextColor(0);
+      y += 3;
+    }
+    y += 2;
   }
   doc.save(`${trip.title.replace(/[^\w\s-]/g, "")}.pdf`);
 }
