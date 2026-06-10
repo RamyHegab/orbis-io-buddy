@@ -127,6 +127,12 @@ function TripPlanner() {
     queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name), agent_branches(branch_name, city)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
   });
 
+  const { data: hotels } = useQuery({
+    queryKey: ["trip-hotels", tripId],
+    queryFn: async () => (await supabase.from("trip_hotels").select("*").eq("trip_id", tripId).order("check_in_date")).data ?? [],
+  });
+
+
   const { data: agents } = useQuery({
     queryKey: ["agents-list"],
     queryFn: async () => (await supabase.from("agents").select("id, trading_name").order("trading_name")).data ?? [],
