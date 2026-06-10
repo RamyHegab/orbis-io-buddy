@@ -20,11 +20,14 @@ type Props = {
 
 type Step = "upload" | "map" | "conflicts" | "done";
 
+type RowAction = "skip" | "merge" | "create";
 type Conflict = {
   index: number;
   incoming: Record<string, any>;
   existing: Record<string, any>;
-  action: "skip" | "update" | "create";
+  action: RowAction;
+  // For each field that differs: "existing" keeps DB value, "incoming" replaces with sheet value
+  fieldChoice: Record<string, "existing" | "incoming">;
 };
 
 const SKIP = "__skip__";
