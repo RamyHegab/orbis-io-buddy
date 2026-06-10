@@ -236,6 +236,11 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       if (a.school_id && a.schools?.name) {
         items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
       }
+      const mapUrl = activityMapUrl(a);
+      if (mapUrl) {
+        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        items.push(`<a href="${esc(mapUrl)}">📍 ${esc(addr)}</a>`);
+      }
       const linkLine = items.length
         ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`
         : "";
