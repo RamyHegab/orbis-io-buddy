@@ -781,7 +781,7 @@ function TripPlanner() {
                       </Tooltip>
                     </TooltipProvider>
                     <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
-                      <Plus className="h-4 w-4 mr-1" /> Add
+                      <Plus className="h-4 w-4 mr-1" /> Add activity
                     </Button>
                   </div>
                 </div>
