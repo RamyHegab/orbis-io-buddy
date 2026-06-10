@@ -96,6 +96,10 @@ type HotelForm = {
   cost: string;
   cost_currency: string;
   notes: string;
+  place_id: string;
+  lat: number | null;
+  lng: number | null;
+  formatted_address: string;
 };
 
 const emptyHotel: HotelForm = {
@@ -103,6 +107,7 @@ const emptyHotel: HotelForm = {
   check_in_date: "", check_out_date: "",
   check_in_time: "", check_out_time: "",
   cost: "", cost_currency: "GBP", notes: "",
+  place_id: "", lat: null, lng: null, formatted_address: "",
 };
 
 
