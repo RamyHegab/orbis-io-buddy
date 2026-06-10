@@ -427,6 +427,8 @@ function TripPlanner() {
             const country = countryForDay(d);
             const resting = dayActs.find((a) => a.type === "resting_day");
             const isSelected = selectedDay === key;
+            const prevKey = format(addDays(d, -1), "yyyy-MM-dd");
+            const prevHasEvents = (byDay[prevKey] ?? []).some((a) => a.type === "recruitment_event");
             return (
               <Card key={key} className={`p-5 ${resting ? "bg-muted/40" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -438,9 +440,16 @@ function TripPlanner() {
                       {resting && ` • ${resting.title} (no activities)`}
                     </div>
                   </div>
-                  <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
-                    <Plus className="h-4 w-4 mr-1" /> Add
-                  </Button>
+                  <div className="flex gap-1">
+                    {prevHasEvents && !resting && (
+                      <Button size="sm" variant="ghost" onClick={() => repeatPrevious.mutate(key)} disabled={repeatPrevious.isPending} title="Repeat previous day's event(s)">
+                        <Copy className="h-4 w-4 mr-1" /> Repeat previous day
+                      </Button>
+                    )}
+                    <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
+                      <Plus className="h-4 w-4 mr-1" /> Add
+                    </Button>
+                  </div>
                 </div>
                 {dayActs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No activities. Click "Add" to schedule.</p>
