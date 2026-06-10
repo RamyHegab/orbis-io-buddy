@@ -608,10 +608,17 @@ function TripPlanner() {
           <div className="font-semibold text-destructive mb-1">Trip dates look invalid</div>
           <p className="text-sm text-muted-foreground mb-3">
             The start or end date isn't a valid 4-digit year (got {trip.start_date} → {trip.end_date}).
-            Click "Edit trip" above to correct the dates — likely you typed "26" instead of "2026".
+            We can auto-fix 2-digit years to the 2000s, or you can edit manually.
           </p>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => fixYear.mutate()} disabled={fixYear.isPending}>
+              Fix year (→ {fixDateYear(trip.start_date)} → {fixDateYear(trip.end_date)})
+            </Button>
+            <Button size="sm" variant="outline" onClick={openEdit}>Edit manually</Button>
+          </div>
         </Card>
       )}
+
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
