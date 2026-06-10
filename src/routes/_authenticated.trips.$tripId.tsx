@@ -96,6 +96,10 @@ type HotelForm = {
   cost: string;
   cost_currency: string;
   notes: string;
+  place_id: string;
+  lat: number | null;
+  lng: number | null;
+  formatted_address: string;
 };
 
 const emptyHotel: HotelForm = {
@@ -103,6 +107,7 @@ const emptyHotel: HotelForm = {
   check_in_date: "", check_out_date: "",
   check_in_time: "", check_out_time: "",
   cost: "", cost_currency: "GBP", notes: "",
+  place_id: "", lat: null, lng: null, formatted_address: "",
 };
 
 
@@ -365,6 +370,10 @@ function TripPlanner() {
         name: h.name.trim(),
         map_url: h.map_url || null,
         address: h.address || null,
+        place_id: h.place_id || null,
+        lat: h.lat,
+        lng: h.lng,
+        formatted_address: h.formatted_address || null,
         check_in_date: h.check_in_date,
         check_out_date: h.check_out_date,
         check_in_time: h.check_in_time || null,
@@ -426,6 +435,10 @@ function TripPlanner() {
       cost: h.cost != null ? String(h.cost) : "",
       cost_currency: h.cost_currency ?? "GBP",
       notes: h.notes ?? "",
+      place_id: h.place_id ?? "",
+      lat: h.lat ?? null,
+      lng: h.lng ?? null,
+      formatted_address: h.formatted_address ?? "",
     });
     setHotelDialogOpen(true);
   };
@@ -1248,47 +1261,30 @@ function TripPlanner() {
               <Label>Hotel name</Label>
               <Input value={hotelForm.name} onChange={(e) => setHotelForm({ ...hotelForm, name: e.target.value })} placeholder="Hilton Bangkok" />
             </div>
-            <div>
-              <Label>Google Maps link</Label>
-              <Input
-                value={hotelForm.map_url}
-                onChange={(e) => setHotelForm({ ...hotelForm, map_url: e.target.value })}
-                placeholder="Paste the Google Maps URL"
-              />
-              {!hotelForm.map_url && hotelForm.name && (
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotelForm.name)}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-primary underline mt-1 inline-block"
-                >
-                  Find "{hotelForm.name}" on Google Maps →
-                </a>
-              )}
-              {hotelForm.map_url && (
-                <a
-                  href={hotelForm.map_url}
-                  target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-primary underline mt-1 inline-block"
-                >
-                  Open saved location ↗
-                </a>
-              )}
-            </div>
-            <div>
-              <Label>Address (optional)</Label>
-              <Input value={hotelForm.address} onChange={(e) => setHotelForm({ ...hotelForm, address: e.target.value })} placeholder="Street, city" />
-            </div>
-            {(hotelForm.address || hotelForm.name) && (
-              <div className="rounded-md overflow-hidden border">
-                <iframe
-                  title="Hotel map"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(hotelForm.address || hotelForm.name)}&output=embed`}
-                  className="w-full h-40 border-0"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            )}
+            <AddressAutocomplete
+              label="Hotel address"
+              placeholder="Search for the hotel…"
+              value={{
+                address: hotelForm.address,
+                place_id: hotelForm.place_id || null,
+                lat: hotelForm.lat,
+                lng: hotelForm.lng,
+                formatted_address: hotelForm.formatted_address || null,
+              }}
+              onChange={(v) => setHotelForm({
+                ...hotelForm,
+                address: v.address,
+                place_id: v.place_id ?? "",
+                lat: v.lat,
+                lng: v.lng,
+                formatted_address: v.formatted_address ?? "",
+                map_url: v.place_id
+                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.formatted_address || v.address)}&query_place_id=${encodeURIComponent(v.place_id)}`
+                  : v.lat != null && v.lng != null
+                  ? `https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lng}`
+                  : hotelForm.map_url,
+              })}
+            />
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Check-in date</Label><Input type="date" min={trip.start_date} max={trip.end_date} value={hotelForm.check_in_date} onChange={(e) => setHotelForm({ ...hotelForm, check_in_date: e.target.value })} /></div>
               <div><Label>Check-in time</Label><Input type="time" value={hotelForm.check_in_time} onChange={(e) => setHotelForm({ ...hotelForm, check_in_time: e.target.value })} /></div>
