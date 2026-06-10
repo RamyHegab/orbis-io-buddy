@@ -148,20 +148,25 @@ function TripPlanner() {
     queryFn: async () => (await supabase.from("schools").select("id, name, city").order("name")).data ?? [],
   });
 
-  const days = useMemo(() => {
-    if (!trip) return [];
-    const start = parseISO(trip.start_date);
-    const end = parseISO(trip.end_date);
-    const n = differenceInDays(end, start) + 1;
-    if (!Number.isFinite(n) || n < 1 || n > 365) return [];
-    return Array.from({ length: n }, (_, i) => addDays(start, i));
+  const MAX_DAYS = 120;
+  const dayCount = useMemo(() => {
+    if (!trip) return 0;
+    const n = differenceInDays(parseISO(trip.end_date), parseISO(trip.start_date)) + 1;
+    return Number.isFinite(n) && n > 0 ? n : 0;
   }, [trip]);
+  const daysTruncated = dayCount > MAX_DAYS;
+  const days = useMemo(() => {
+    if (!trip || dayCount < 1) return [];
+    const start = parseISO(trip.start_date);
+    const capped = Math.min(dayCount, MAX_DAYS);
+    return Array.from({ length: capped }, (_, i) => addDays(start, i));
+  }, [trip, dayCount]);
 
   const datesInvalid = !!trip && (() => {
     const s = parseISO(trip.start_date);
     const e = parseISO(trip.end_date);
     const n = differenceInDays(e, s) + 1;
-    return !Number.isFinite(n) || n < 1 || n > 365 ||
+    return !Number.isFinite(n) || n < 1 || n > MAX_DAYS ||
       s.getFullYear() < 2000 || e.getFullYear() < 2000;
   })();
 
@@ -419,6 +424,45 @@ function TripPlanner() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const fixDateYear = (d: string): string => {
+    const m = d.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
+    if (!m) return d;
+    const y = Number(m[1]);
+    if (y >= 2000 && y <= 2099) return d;
+    const corrected = y < 100 ? y + 2000 : 2000 + (y % 100);
+    return `${String(corrected).padStart(4, "0")}-${m[2]}-${m[3]}`;
+  };
+
+  const fixYear = useMutation({
+    mutationFn: async () => {
+      if (!trip) throw new Error("No trip");
+      const newStart = fixDateYear(trip.start_date);
+      const newEnd = fixDateYear(trip.end_date);
+      const { error } = await supabase.from("trips")
+        .update({ start_date: newStart, end_date: newEnd })
+        .eq("id", tripId);
+      if (error) throw error;
+      for (const c of countries ?? []) {
+        const cs = fixDateYear(c.start_date);
+        const ce = fixDateYear(c.end_date);
+        if (cs !== c.start_date || ce !== c.end_date) {
+          const { error: e2 } = await supabase.from("trip_countries")
+            .update({ start_date: cs, end_date: ce })
+            .eq("id", c.id);
+          if (e2) throw e2;
+        }
+      }
+    },
+    onSuccess: () => {
+      toast.success("Trip dates corrected");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-countries", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+
   const openForDay = (d: Date) => {
     setSelectedDay(format(d, "yyyy-MM-dd"));
     setForm({ ...emptyForm, end_date: format(d, "yyyy-MM-dd") });
@@ -533,9 +577,9 @@ function TripPlanner() {
                 <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
                   <Input placeholder="Country" value={leg.country}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, country: e.target.value } : l))} />
-                  <Input type="date" value={leg.start_date}
+                  <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.start_date}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, start_date: e.target.value } : l))} />
-                  <Input type="date" value={leg.end_date}
+                  <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.end_date}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, end_date: e.target.value } : l))} />
                   <Button type="button" size="icon" variant="ghost" disabled={editLegs.length === 1}
                     onClick={() => setEditLegs(editLegs.filter((_, idx) => idx !== i))}>
@@ -569,13 +613,25 @@ function TripPlanner() {
           <div className="font-semibold text-destructive mb-1">Trip dates look invalid</div>
           <p className="text-sm text-muted-foreground mb-3">
             The start or end date isn't a valid 4-digit year (got {trip.start_date} → {trip.end_date}).
-            Click "Edit trip" above to correct the dates — likely you typed "26" instead of "2026".
+            We can auto-fix 2-digit years to the 2000s, or you can edit manually.
           </p>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => fixYear.mutate()} disabled={fixYear.isPending}>
+              Fix year (→ {fixDateYear(trip.start_date)} → {fixDateYear(trip.end_date)})
+            </Button>
+            <Button size="sm" variant="outline" onClick={openEdit}>Edit manually</Button>
+          </div>
         </Card>
       )}
 
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {daysTruncated && (
+            <Card className="p-3 border-amber-500 bg-amber-50 text-sm">
+              Showing the first {MAX_DAYS} of {dayCount} days. Trim the trip date range to see the rest.
+            </Card>
+          )}
           {days.map((d) => {
             const key = format(d, "yyyy-MM-dd");
             const dayActs = byDay[key] ?? [];
