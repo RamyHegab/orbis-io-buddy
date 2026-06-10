@@ -20,6 +20,8 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedFormsRouteImport } from './routes/_authenticated.forms'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated.agents'
+import { Route as AuthenticatedTripsIndexRouteImport } from './routes/_authenticated.trips.index'
+import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated.agents.index'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated.agents.$agentId'
@@ -80,6 +82,17 @@ const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTripsIndexRoute = AuthenticatedTripsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedTripsRoute,
+} as any)
+const AuthenticatedAgentsIndexRoute =
+  AuthenticatedAgentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAgentsRoute,
+  } as any)
 const FormsActivityIdTemplateIdRoute =
   FormsActivityIdTemplateIdRouteImport.update({
     id: '/forms/$activityId/$templateId',
@@ -125,23 +138,25 @@ export interface FileRoutesByFullPath {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/agents/': typeof AuthenticatedAgentsIndexRoute
+  '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/schools': typeof AuthenticatedSchoolsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
-  '/trips': typeof AuthenticatedTripsRouteWithChildren
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/agents': typeof AuthenticatedAgentsIndexRoute
+  '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
@@ -161,6 +176,8 @@ export interface FileRoutesById {
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
+  '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/_authenticated/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
@@ -180,23 +197,25 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/agents/'
+    | '/trips/'
     | '/trips/$tripId/report'
     | '/trips/$tripId/activities/$activityId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/agents'
     | '/dashboard'
     | '/forms'
     | '/reports'
     | '/schools'
     | '/settings'
     | '/templates'
-    | '/trips'
     | '/agents/$agentId'
     | '/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/agents'
+    | '/trips'
     | '/trips/$tripId/report'
     | '/trips/$tripId/activities/$activityId'
   id:
@@ -215,6 +234,8 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/_authenticated/agents/'
+    | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
     | '/_authenticated/trips/$tripId/activities/$activityId'
   fileRoutesById: FileRoutesById
@@ -305,6 +326,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgentsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/trips/': {
+      id: '/_authenticated/trips/'
+      path: '/'
+      fullPath: '/trips/'
+      preLoaderRoute: typeof AuthenticatedTripsIndexRouteImport
+      parentRoute: typeof AuthenticatedTripsRoute
+    }
+    '/_authenticated/agents/': {
+      id: '/_authenticated/agents/'
+      path: '/'
+      fullPath: '/agents/'
+      preLoaderRoute: typeof AuthenticatedAgentsIndexRouteImport
+      parentRoute: typeof AuthenticatedAgentsRoute
+    }
     '/forms/$activityId/$templateId': {
       id: '/forms/$activityId/$templateId'
       path: '/forms/$activityId/$templateId'
@@ -345,10 +380,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAgentsRouteChildren {
   AuthenticatedAgentsAgentIdRoute: typeof AuthenticatedAgentsAgentIdRoute
+  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
 }
 
 const AuthenticatedAgentsRouteChildren: AuthenticatedAgentsRouteChildren = {
   AuthenticatedAgentsAgentIdRoute: AuthenticatedAgentsAgentIdRoute,
+  AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
 }
 
 const AuthenticatedAgentsRouteWithChildren =
@@ -373,10 +410,12 @@ const AuthenticatedTripsTripIdRouteWithChildren =
 
 interface AuthenticatedTripsRouteChildren {
   AuthenticatedTripsTripIdRoute: typeof AuthenticatedTripsTripIdRouteWithChildren
+  AuthenticatedTripsIndexRoute: typeof AuthenticatedTripsIndexRoute
 }
 
 const AuthenticatedTripsRouteChildren: AuthenticatedTripsRouteChildren = {
   AuthenticatedTripsTripIdRoute: AuthenticatedTripsTripIdRouteWithChildren,
+  AuthenticatedTripsIndexRoute: AuthenticatedTripsIndexRoute,
 }
 
 const AuthenticatedTripsRouteWithChildren =
