@@ -17,6 +17,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { seedAirtableData } from "@/lib/seed-airtable.functions";
 import { fmtDate } from "@/lib/format";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
+import { ImportListDialog } from "@/components/import-list-dialog";
+import { ShareIntakeLink } from "@/components/share-intake-link";
 
 export const Route = createFileRoute("/_authenticated/agents/")({
   head: () => ({ meta: [{ title: "Agents — Orbis CRM" }] }),
@@ -105,7 +107,9 @@ function AgentsPage() {
         title="Agents"
         description="Your worldwide recruitment partner network."
         actions={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <ImportListDialog type="agent" />
+            <ShareIntakeLink type="agent" />
             {isAdmin && (!agents || agents.length === 0) && (
               <Button variant="outline" onClick={() => runSeed.mutate()} disabled={runSeed.isPending}>
                 <Database className="h-4 w-4 mr-1" /> Import Airtable data

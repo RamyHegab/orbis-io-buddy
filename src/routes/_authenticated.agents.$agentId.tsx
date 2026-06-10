@@ -16,6 +16,8 @@ import { fmtDate } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { MapPreview } from "@/components/map-preview";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
+import { ImportListDialog } from "@/components/import-list-dialog";
+import { ShareIntakeLink } from "@/components/share-intake-link";
 import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
@@ -183,10 +185,13 @@ function AgentDetail() {
         )}
       </Card>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-lg font-semibold">Branches</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add branch</Button></DialogTrigger>
+        <div className="flex gap-2 flex-wrap">
+          <ImportListDialog type="agent_branch" agentId={agentId} />
+          <ShareIntakeLink type="agent_branch" agentId={agentId} label="Share branch form" />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add branch</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>New branch</DialogTitle></DialogHeader>
             <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
@@ -234,6 +239,7 @@ function AgentDetail() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {branches && branches.length > 0 ? (

@@ -17,11 +17,13 @@ import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedSchoolsRouteImport } from './routes/_authenticated.schools'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
+import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated.inbox'
 import { Route as AuthenticatedFormsRouteImport } from './routes/_authenticated.forms'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated.agents'
 import { Route as AuthenticatedTripsIndexRouteImport } from './routes/_authenticated.trips.index'
 import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated.agents.index'
+import { Route as PublicIntakeTypeRouteImport } from './routes/public.intake.$type'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated.agents.$agentId'
@@ -67,6 +69,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedFormsRoute = AuthenticatedFormsRouteImport.update({
   id: '/forms',
   path: '/forms',
@@ -93,6 +100,11 @@ const AuthenticatedAgentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAgentsRoute,
   } as any)
+const PublicIntakeTypeRoute = PublicIntakeTypeRouteImport.update({
+  id: '/public/intake/$type',
+  path: '/public/intake/$type',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FormsActivityIdTemplateIdRoute =
   FormsActivityIdTemplateIdRouteImport.update({
     id: '/forms/$activityId/$templateId',
@@ -130,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
+  '/inbox': typeof AuthenticatedInboxRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/schools': typeof AuthenticatedSchoolsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -138,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
@@ -148,6 +162,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
+  '/inbox': typeof AuthenticatedInboxRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/schools': typeof AuthenticatedSchoolsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -155,6 +170,7 @@ export interface FileRoutesByTo {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
@@ -168,6 +184,7 @@ export interface FileRoutesById {
   '/_authenticated/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/forms': typeof AuthenticatedFormsRoute
+  '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/schools': typeof AuthenticatedSchoolsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -176,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
@@ -189,6 +207,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/dashboard'
     | '/forms'
+    | '/inbox'
     | '/reports'
     | '/schools'
     | '/settings'
@@ -197,6 +216,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/public/intake/$type'
     | '/agents/'
     | '/trips/'
     | '/trips/$tripId/report'
@@ -207,6 +227,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/forms'
+    | '/inbox'
     | '/reports'
     | '/schools'
     | '/settings'
@@ -214,6 +235,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/public/intake/$type'
     | '/agents'
     | '/trips'
     | '/trips/$tripId/report'
@@ -226,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents'
     | '/_authenticated/dashboard'
     | '/_authenticated/forms'
+    | '/_authenticated/inbox'
     | '/_authenticated/reports'
     | '/_authenticated/schools'
     | '/_authenticated/settings'
@@ -234,6 +257,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/public/intake/$type'
     | '/_authenticated/agents/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
@@ -245,6 +269,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
+  PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/inbox': {
+      id: '/_authenticated/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthenticatedInboxRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/forms': {
       id: '/_authenticated/forms'
       path: '/forms'
@@ -339,6 +371,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/agents/'
       preLoaderRoute: typeof AuthenticatedAgentsIndexRouteImport
       parentRoute: typeof AuthenticatedAgentsRoute
+    }
+    '/public/intake/$type': {
+      id: '/public/intake/$type'
+      path: '/public/intake/$type'
+      fullPath: '/public/intake/$type'
+      preLoaderRoute: typeof PublicIntakeTypeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/forms/$activityId/$templateId': {
       id: '/forms/$activityId/$templateId'
@@ -425,6 +464,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFormsRoute: typeof AuthenticatedFormsRoute
+  AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSchoolsRoute: typeof AuthenticatedSchoolsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -436,6 +476,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsRoute: AuthenticatedAgentsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFormsRoute: AuthenticatedFormsRoute,
+  AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSchoolsRoute: AuthenticatedSchoolsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -452,6 +493,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
+  PublicIntakeTypeRoute: PublicIntakeTypeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
