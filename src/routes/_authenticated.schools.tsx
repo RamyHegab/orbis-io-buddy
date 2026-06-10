@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotionDatabases, syncSchoolsFromNotion } from "@/lib/notion-sync.functions";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 export const Route = createFileRoute("/_authenticated/schools")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
