@@ -151,7 +151,7 @@ function TripPlanner() {
 
   const { data: activities } = useQuery({
     queryKey: ["activities", tripId],
-    queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name, address, primary_contact_name, primary_contact_position, primary_contact_email, primary_contact_phone, general_email, general_phone), agent_branches(branch_name, city, address, contact_first_name, contact_last_name, contact_position, contact_email, contact_phone)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
+    queryFn: async () => (await supabase.from("activities").select("*, agents(trading_name), schools(name, address, lat, lng, place_id, formatted_address, primary_contact_name, primary_contact_position, primary_contact_email, primary_contact_phone, general_email, general_phone), agent_branches(branch_name, city, address, lat, lng, place_id, formatted_address, contact_first_name, contact_last_name, contact_position, contact_email, contact_phone)").eq("trip_id", tripId).order("day_date").order("start_time")).data ?? [],
   });
 
   const { data: hotels } = useQuery({
