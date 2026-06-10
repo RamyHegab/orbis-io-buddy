@@ -434,6 +434,7 @@ function TripPlanner() {
       const title = `${countries.join(" • ")} — ${format(parseISO(start), "d MMM")} → ${format(parseISO(end), "d MMM yyyy")}`;
       const { error } = await supabase.from("trips").update({
         title, destinations: countries, start_date: start, end_date: end,
+        objectives: editObjectives || null,
       }).eq("id", tripId);
       if (error) throw error;
       await supabase.from("trip_countries").delete().eq("trip_id", tripId);
