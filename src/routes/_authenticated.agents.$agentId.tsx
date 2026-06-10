@@ -240,11 +240,18 @@ function AgentDetail() {
                       <div className="text-xs text-muted-foreground">{[b.city, b.country].filter(Boolean).join(", ")}</div>
                     )}
                     {b.agency_name && <div className="text-xs text-muted-foreground mt-1">{b.agency_name}</div>}
-                    {b.address && (
-                      b.address.startsWith("http")
-                        ? <a href={b.address} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> Map</a>
-                        : <div className="text-xs text-muted-foreground mt-1">{b.address}</div>
-                    )}
+                    {(b.formatted_address || b.address) && (() => {
+                      const url = mapsSearchUrl({ query: b.formatted_address || b.address, placeId: b.place_id, lat: b.lat, lng: b.lng });
+                      return (
+                        <div className="mt-1">
+                          <div className="text-xs text-muted-foreground">{b.formatted_address || b.address}</div>
+                          {url && <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> View on Google Maps</a>}
+                          {(b.lat != null && b.lng != null) && (
+                            <div className="mt-2"><MapPreview lat={Number(b.lat)} lng={Number(b.lng)} height={120} /></div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {contactName && <div className="text-sm mt-2">{contactName}{b.contact_position ? ` — ${b.contact_position}` : ""}</div>}
                     {b.contact_email && <div className="text-xs text-muted-foreground">{b.contact_email}</div>}
                     {b.contact_phone && <div className="text-xs text-muted-foreground">{b.contact_phone}</div>}
