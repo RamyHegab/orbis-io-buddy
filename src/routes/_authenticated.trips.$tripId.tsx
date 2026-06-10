@@ -431,6 +431,10 @@ function TripPlanner() {
       cost: h.cost != null ? String(h.cost) : "",
       cost_currency: h.cost_currency ?? "GBP",
       notes: h.notes ?? "",
+      place_id: h.place_id ?? "",
+      lat: h.lat ?? null,
+      lng: h.lng ?? null,
+      formatted_address: h.formatted_address ?? "",
     });
     setHotelDialogOpen(true);
   };
