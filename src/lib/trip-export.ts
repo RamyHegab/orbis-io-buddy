@@ -165,6 +165,11 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       if (a.school_id && a.schools?.name) {
         links.push({ label: `School: ${a.schools.name}`, url: schoolUrl() });
       }
+      const mapUrl = activityMapUrl(a);
+      if (mapUrl) {
+        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        links.push({ label: `📍 ${addr}`, url: mapUrl });
+      }
       const hasExtra = links.length || a.objectives || a.visit_notes;
       if (!hasExtra) continue;
       if (y > 260) { doc.addPage(); y = 20; }
