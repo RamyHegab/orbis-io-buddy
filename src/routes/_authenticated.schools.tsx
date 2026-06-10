@@ -10,12 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, GraduationCap, RefreshCw, Upload } from "lucide-react";
+import { Plus, Trash2, GraduationCap, RefreshCw, Upload, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotionDatabases, syncSchoolsFromNotion } from "@/lib/notion-sync.functions";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { MapPreview } from "@/components/map-preview";
+import { mapsSearchUrl } from "@/lib/google-maps";
 
 export const Route = createFileRoute("/_authenticated/schools")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
@@ -297,7 +299,14 @@ function SchoolsPage() {
                 {country} <span className="text-xs font-normal">({items.length})</span>
               </h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {items.map((s) => (
+                {items.map((s) => {
+                  const mapUrl = mapsSearchUrl({
+                    query: s.formatted_address || s.address || `${s.name} ${s.city}`,
+                    placeId: s.place_id,
+                    lat: s.lat,
+                    lng: s.lng,
+                  });
+                  return (
                   <Card key={s.id} className="p-4">
                     <div className="flex items-start gap-3">
                       {s.campus_image_url ? (
@@ -310,6 +319,16 @@ function SchoolsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{s.name}</div>
                         <div className="text-xs text-muted-foreground">{s.city} • {LEVELS.find((l) => l.value === s.level)?.label}</div>
+                        {(s.formatted_address || s.address) && (
+                          <div className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+                            <span className="truncate">{s.formatted_address || s.address}</span>
+                            {mapUrl && (
+                              <a href={mapUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline shrink-0" title="Open in Google Maps">
+                                <MapPin className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        )}
                         {s.primary_contact_name && (
                           <div className="text-xs text-muted-foreground mt-1 truncate">
                             {s.primary_contact_name}{s.primary_contact_position ? ` · ${s.primary_contact_position}` : ""}
@@ -320,8 +339,14 @@ function SchoolsPage() {
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
+                    {(s.lat != null && s.lng != null) || s.place_id ? (
+                      <div className="mt-3">
+                        <MapPreview lat={s.lat} lng={s.lng} query={s.formatted_address || s.address} height={120} />
+                      </div>
+                    ) : null}
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

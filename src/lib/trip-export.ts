@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
+import { mapsSearchUrl } from "@/lib/google-maps";
 
 type Trip = { title: string; start_date: string; end_date: string; objectives?: string | null };
 type Activity = {
@@ -15,9 +16,13 @@ type Activity = {
   school_id?: string | null;
   objectives?: string | null;
   visit_notes?: string | null;
+  place_id?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  formatted_address?: string | null;
   agents?: { trading_name?: string } | null;
-  schools?: { name?: string } | null;
-  agent_branches?: { branch_name?: string } | null;
+  schools?: { name?: string; address?: string | null; place_id?: string | null; lat?: number | null; lng?: number | null; formatted_address?: string | null } | null;
+  agent_branches?: { branch_name?: string; address?: string | null; place_id?: string | null; lat?: number | null; lng?: number | null; formatted_address?: string | null } | null;
 };
 type Hotel = {
   check_in_date: string;
@@ -32,6 +37,15 @@ function origin(): string {
 }
 function agentUrl(id: string) { return `${origin()}/agents/${id}`; }
 function schoolUrl() { return `${origin()}/schools`; }
+
+function activityMapUrl(a: Activity): string | null {
+  return mapsSearchUrl({
+    query: a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || null,
+    placeId: a.place_id ?? a.agent_branches?.place_id ?? a.schools?.place_id ?? null,
+    lat: a.lat ?? a.agent_branches?.lat ?? a.schools?.lat ?? null,
+    lng: a.lng ?? a.agent_branches?.lng ?? a.schools?.lng ?? null,
+  });
+}
 
 function buildDays(trip: Trip, activities: Activity[]) {
   const start = parseISO(trip.start_date);
@@ -151,6 +165,11 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
       if (a.school_id && a.schools?.name) {
         links.push({ label: `School: ${a.schools.name}`, url: schoolUrl() });
       }
+      const mapUrl = activityMapUrl(a);
+      if (mapUrl) {
+        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        links.push({ label: `📍 ${addr}`, url: mapUrl });
+      }
       const hasExtra = links.length || a.objectives || a.visit_notes;
       if (!hasExtra) continue;
       if (y > 260) { doc.addPage(); y = 20; }
@@ -216,6 +235,11 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       }
       if (a.school_id && a.schools?.name) {
         items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
+      }
+      const mapUrl = activityMapUrl(a);
+      if (mapUrl) {
+        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        items.push(`<a href="${esc(mapUrl)}">📍 ${esc(addr)}</a>`);
       }
       const linkLine = items.length
         ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`
