@@ -4,13 +4,32 @@ import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 
 type Trip = { title: string; start_date: string; end_date: string };
+type SchoolRef = {
+  name?: string;
+  address?: string | null;
+  primary_contact_name?: string | null;
+  primary_contact_position?: string | null;
+  primary_contact_email?: string | null;
+  primary_contact_phone?: string | null;
+  general_email?: string | null;
+  general_phone?: string | null;
+} | null;
+type BranchRef = {
+  branch_name?: string;
+  address?: string | null;
+  contact_first_name?: string | null;
+  contact_last_name?: string | null;
+  contact_position?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+} | null;
 type Activity = {
   day_date: string; type: string; title: string;
   start_time: string | null; end_time: string | null;
   location: string | null;
   agents?: { trading_name?: string } | null;
-  schools?: { name?: string } | null;
-  agent_branches?: { branch_name?: string } | null;
+  schools?: SchoolRef;
+  agent_branches?: BranchRef;
 };
 type Hotel = {
   name: string;
@@ -43,6 +62,44 @@ function activityRow(a: Activity) {
     a.agents?.trading_name, a.schools?.name, a.agent_branches?.branch_name, a.location,
   ].filter(Boolean).join(" • ");
   return [time, a.title, detail];
+}
+
+type ContactInfo = {
+  source: string;
+  name: string | null;
+  position: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+};
+
+function activityContact(a: Activity): ContactInfo | null {
+  if (a.agent_branches) {
+    const b = a.agent_branches;
+    const name = [b.contact_first_name, b.contact_last_name].filter(Boolean).join(" ") || null;
+    return {
+      source: b.branch_name || "Agent branch",
+      name, position: b.contact_position || null,
+      email: b.contact_email || null, phone: b.contact_phone || null,
+      address: b.address || null,
+    };
+  }
+  if (a.schools) {
+    const s = a.schools;
+    return {
+      source: s.name || "School",
+      name: s.primary_contact_name || null,
+      position: s.primary_contact_position || null,
+      email: s.primary_contact_email || s.general_email || null,
+      phone: s.primary_contact_phone || s.general_phone || null,
+      address: s.address || null,
+    };
+  }
+  return null;
+}
+
+function contactHasAny(c: ContactInfo): boolean {
+  return Boolean(c.name || c.position || c.email || c.phone || c.address);
 }
 
 function hotelDayLabel(stay: Hotel, dayKey: string): string {
