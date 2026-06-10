@@ -109,6 +109,13 @@ function TripPlanner() {
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+  const editorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (selectedDay && editorRef.current) {
+      editorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedDay]);
 
 
 
