@@ -562,6 +562,9 @@ function TripPlanner() {
             const isSelected = selectedDay === key;
             const prevKey = format(addDays(d, -1), "yyyy-MM-dd");
             const prevHasEvents = (byDay[prevKey] ?? []).some((a) => a.type === "recruitment_event");
+            const stay = hotelForDay(key);
+            const isCheckIn = stay && stay.check_in_date === key;
+            const isCheckOut = stay && stay.check_out_date === key;
             return (
               <Card key={key} className={`p-5 ${resting ? "bg-muted/40" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -579,13 +582,65 @@ function TripPlanner() {
                         <Copy className="h-4 w-4 mr-1" /> Repeat previous day
                       </Button>
                     )}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => !stay && openAddHotel(key)}
+                              disabled={!!stay || !!resting}
+                            >
+                              <HotelIcon className="h-4 w-4 mr-1" /> Add hotel
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        {stay && (
+                          <TooltipContent>Covered by {stay.name} ({stay.check_in_date} → {stay.check_out_date})</TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                     <Button size="sm" variant={isSelected ? "default" : "ghost"} onClick={() => openForDay(d)} disabled={!!resting}>
                       <Plus className="h-4 w-4 mr-1" /> Add
                     </Button>
                   </div>
                 </div>
+                {stay && (
+                  <button
+                    type="button"
+                    onClick={() => openEditHotel(stay)}
+                    className="w-full text-left mb-2 flex items-center gap-3 rounded-lg border border-dashed bg-muted/40 px-3 py-2 hover:bg-muted transition-colors"
+                  >
+                    <HotelIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="flex-1 min-w-0 text-sm">
+                      <div className="font-medium truncate">
+                        {stay.map_url ? (
+                          <a
+                            href={stay.map_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="underline text-primary"
+                          >
+                            {stay.name}
+                          </a>
+                        ) : (
+                          stay.name
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {isCheckIn
+                          ? `Check-in${stay.check_in_time ? ` ${stay.check_in_time.slice(0, 5)}` : ""}`
+                          : isCheckOut
+                            ? `Check-out${stay.check_out_time ? ` ${stay.check_out_time.slice(0, 5)}` : ""}`
+                            : "Staying overnight"}
+                      </div>
+                    </div>
+                  </button>
+                )}
                 {dayActs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No activities. Click "Add" to schedule.</p>
+                  <p className="text-sm text-muted-foreground">{stay ? "No other activities scheduled." : "No activities. Click \"Add\" to schedule."}</p>
                 ) : (
                   <div className="space-y-2">
                     {dayActs.map((a) => (
@@ -619,6 +674,7 @@ function TripPlanner() {
               </Card>
             );
           })}
+
         </div>
 
         <div className="lg:col-span-1">
