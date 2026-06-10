@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { readFileSync } from "fs";
-import { join } from "path";
+import agentsCsvText from "@/data/seed/agents.csv?raw";
+import branchesCsvText from "@/data/seed/branches.csv?raw";
 
 // Tiny CSV parser (handles quoted fields w/ commas + embedded quotes).
 function parseCsv(text: string): string[][] {
