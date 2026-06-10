@@ -71,8 +71,10 @@ function TripPlanner() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
 
   const { data: trip } = useQuery({
     queryKey: ["trip", tripId],
