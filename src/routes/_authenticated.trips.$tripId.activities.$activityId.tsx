@@ -127,7 +127,8 @@ function ActivityDetail() {
           email={activity.agent_branches.contact_email}
           phone={activity.agent_branches.contact_phone}
           address={[activity.agent_branches.address, activity.agent_branches.city, activity.agent_branches.country].filter(Boolean).join(", ")}
-          directoryLink={activity.agents?.id ? { to: "/agents/$agentId", params: { agentId: activity.agents.id }, label: "Open agent in directory" } : null}
+          preview={{ kind: "agent", agentId: activity.agents?.id ?? null, branchId: activity.agent_branches.id }}
+          directoryLink={activity.agents?.id ? { to: "/agents/$agentId", params: { agentId: activity.agents.id }, label: "Open full agent page" } : null}
         />
       )}
 
@@ -139,6 +140,7 @@ function ActivityDetail() {
           email={activity.schools.primary_contact_email || activity.schools.general_email}
           phone={activity.schools.primary_contact_phone || activity.schools.general_phone}
           address={[activity.schools.address, activity.schools.city, activity.schools.country].filter(Boolean).join(", ")}
+          preview={{ kind: "school", schoolId: activity.schools.id }}
           directoryLink={{ to: "/schools", params: {}, label: "Open schools directory" }}
         />
       )}
