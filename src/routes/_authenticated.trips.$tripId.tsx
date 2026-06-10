@@ -110,6 +110,7 @@ function TripPlanner() {
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
+  const [editObjectives, setEditObjectives] = useState("");
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
   const editorRef = useRef<HTMLDivElement | null>(null);
