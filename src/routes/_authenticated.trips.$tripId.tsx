@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,13 @@ function TripPlanner() {
   const [editLegs, setEditLegs] = useState<{ id?: string; country: string; start_date: string; end_date: string }[]>([]);
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+  const editorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (selectedDay && editorRef.current) {
+      editorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedDay]);
 
 
 
@@ -756,8 +763,9 @@ function TripPlanner() {
 
         </div>
 
-        <div className="lg:col-span-1">
-          <Card className="p-5 lg:sticky lg:top-4">
+        <div className="lg:col-span-1" ref={editorRef}>
+          <Card className="p-5 lg:sticky lg:top-4 scroll-mt-4">
+
             {!selectedDay ? (
               <div className="text-sm text-muted-foreground space-y-2">
                 <div className="font-semibold text-foreground">Activity editor</div>
