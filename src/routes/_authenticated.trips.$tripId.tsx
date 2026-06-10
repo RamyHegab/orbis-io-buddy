@@ -1158,6 +1158,23 @@ function TripPlanner() {
                 </>
               )}
 
+              <div>
+                <Label>Objectives</Label>
+                <Textarea
+                  value={form.objectives}
+                  onChange={(e) => setForm({ ...form, objectives: e.target.value })}
+                  placeholder="What you plan to achieve (e.g. discuss September intake, sign new agreement)"
+                />
+              </div>
+              <div>
+                <Label>Notes during visit</Label>
+                <Textarea
+                  value={form.visit_notes}
+                  onChange={(e) => setForm({ ...form, visit_notes: e.target.value })}
+                  placeholder="Observations, outcomes, follow-ups — used by the AI trip report"
+                />
+              </div>
+
               {validationMessage && (
                 <p className="text-xs text-muted-foreground">{validationMessage}</p>
               )}
