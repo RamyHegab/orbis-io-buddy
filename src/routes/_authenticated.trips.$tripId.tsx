@@ -48,6 +48,7 @@ type FormState = {
   end_time: string;
   end_date: string;
   location: string;
+  map_url: string;
   agent_id: string;
   branch_id: string;
   school_id: string;
@@ -67,11 +68,12 @@ type FormState = {
 
 const emptyForm: FormState = {
   type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
-  location: "", agent_id: "", branch_id: "", school_id: "",
+  location: "", map_url: "", agent_id: "", branch_id: "", school_id: "",
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
   resting_type: "", description: "", notes: "",
 };
+
 
 function TripPlanner() {
   const { tripId } = Route.useParams();
@@ -154,6 +156,7 @@ function TripPlanner() {
         end_time: form.end_time || null,
         end_date: form.end_date || null,
         location: form.location || null,
+        map_url: form.map_url || null,
         agent_id: form.agent_id || null,
         branch_id: form.branch_id || null,
         school_id: form.school_id || null,
@@ -613,18 +616,46 @@ function TripPlanner() {
 
                 {form.type === "recruitment_event" && (
                   <>
-                    <div><Label>Venue name</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Hilton Conference Centre" /></div>
+                    <div><Label>Event title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Spring Education Fair 2026" /></div>
                     <div>
-                      <Label>Address</Label>
-                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Venue address" />
-                      {form.location && (
+                      <Label>Venue</Label>
+                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Hilton Conference Centre" />
+                    </div>
+                    <div>
+                      <Label>Google Maps link</Label>
+                      <Input
+                        value={form.map_url}
+                        onChange={(e) => setForm({ ...form, map_url: e.target.value })}
+                        placeholder="Paste the Google Maps URL for the venue"
+                      />
+                      {!form.map_url && form.location && (
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.location)}`}
                           target="_blank" rel="noopener noreferrer"
                           className="text-xs text-primary underline mt-1 inline-block"
                         >
-                          Find on Google Maps
+                          Find "{form.location}" on Google Maps →
                         </a>
+                      )}
+                      {form.map_url && (
+                        <>
+                          <a
+                            href={form.map_url}
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-primary underline mt-1 inline-block"
+                          >
+                            Open saved location ↗
+                          </a>
+                          <div className="mt-2 rounded-md overflow-hidden border">
+                            <iframe
+                              title="Venue map"
+                              src={`https://maps.google.com/maps?q=${encodeURIComponent(form.location || form.map_url)}&output=embed`}
+                              className="w-full h-48 border-0"
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                            />
+                          </div>
+                        </>
                       )}
                     </div>
                     <TimeRange form={form} setForm={setForm} />
@@ -638,6 +669,7 @@ function TripPlanner() {
                     <CostInput form={form} setForm={setForm} />
                   </>
                 )}
+
 
                 {form.type === "hotel" && (
                   <>
