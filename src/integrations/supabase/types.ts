@@ -29,6 +29,7 @@ export type Database = {
           flight_number: string | null
           id: string
           location: string | null
+          map_url: string | null
           notes: string | null
           resting_type: string | null
           school_id: string | null
@@ -54,6 +55,7 @@ export type Database = {
           flight_number?: string | null
           id?: string
           location?: string | null
+          map_url?: string | null
           notes?: string | null
           resting_type?: string | null
           school_id?: string | null
@@ -79,6 +81,7 @@ export type Database = {
           flight_number?: string | null
           id?: string
           location?: string | null
+          map_url?: string | null
           notes?: string | null
           resting_type?: string | null
           school_id?: string | null
