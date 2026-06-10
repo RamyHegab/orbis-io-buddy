@@ -1161,11 +1161,11 @@ function TripPlanner() {
               {!isLgUp && (
                 <Dialog
                   open={!!selectedDay}
-                  onOpenChange={(o) => { if (!o) { setSelectedDay(null); setForm(emptyForm); } }}
+                  onOpenChange={(o) => { if (!o) { setSelectedDay(null); setEditingActivityId(null); setForm(emptyForm); } }}
                 >
                   <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>New activity — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
+                      <DialogTitle>{editingActivityId ? "Edit activity" : "New activity"} — {selectedDay ? fmtDate(selectedDay) : ""}</DialogTitle>
                     </DialogHeader>
                     {selectedDay && editorBody}
                   </DialogContent>
