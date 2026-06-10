@@ -13,9 +13,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated.templates'
 import { Route as AuthenticatedSchoolsRouteImport } from './routes/_authenticated.schools'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated.agents'
+import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated.agents.$agentId'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
@@ -40,6 +42,11 @@ const AuthenticatedTripsRoute = AuthenticatedTripsRouteImport.update({
   path: '/trips',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSchoolsRoute = AuthenticatedSchoolsRouteImport.update({
   id: '/schools',
   path: '/schools',
@@ -55,6 +62,12 @@ const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const FormsActivityIdTemplateIdRoute =
+  FormsActivityIdTemplateIdRouteImport.update({
+    id: '/forms/$activityId/$templateId',
+    path: '/forms/$activityId/$templateId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTripsTripIdRoute =
   AuthenticatedTripsTripIdRouteImport.update({
     id: '/$tripId',
@@ -86,9 +99,11 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/schools': typeof AuthenticatedSchoolsRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/trips': typeof AuthenticatedTripsRouteWithChildren
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
+  '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
@@ -98,9 +113,11 @@ export interface FileRoutesByTo {
   '/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/schools': typeof AuthenticatedSchoolsRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/trips': typeof AuthenticatedTripsRouteWithChildren
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
+  '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
@@ -112,9 +129,11 @@ export interface FileRoutesById {
   '/_authenticated/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/schools': typeof AuthenticatedSchoolsRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRouteWithChildren
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
+  '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/_authenticated/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
@@ -126,9 +145,11 @@ export interface FileRouteTypes {
     | '/agents'
     | '/dashboard'
     | '/schools'
+    | '/templates'
     | '/trips'
     | '/agents/$agentId'
     | '/trips/$tripId'
+    | '/forms/$activityId/$templateId'
     | '/trips/$tripId/report'
     | '/trips/$tripId/activities/$activityId'
   fileRoutesByTo: FileRoutesByTo
@@ -138,9 +159,11 @@ export interface FileRouteTypes {
     | '/agents'
     | '/dashboard'
     | '/schools'
+    | '/templates'
     | '/trips'
     | '/agents/$agentId'
     | '/trips/$tripId'
+    | '/forms/$activityId/$templateId'
     | '/trips/$tripId/report'
     | '/trips/$tripId/activities/$activityId'
   id:
@@ -151,9 +174,11 @@ export interface FileRouteTypes {
     | '/_authenticated/agents'
     | '/_authenticated/dashboard'
     | '/_authenticated/schools'
+    | '/_authenticated/templates'
     | '/_authenticated/trips'
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/trips/$tripId'
+    | '/forms/$activityId/$templateId'
     | '/_authenticated/trips/$tripId/report'
     | '/_authenticated/trips/$tripId/activities/$activityId'
   fileRoutesById: FileRoutesById
@@ -162,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -194,6 +220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTripsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/schools': {
       id: '/_authenticated/schools'
       path: '/schools'
@@ -214,6 +247,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/agents'
       preLoaderRoute: typeof AuthenticatedAgentsRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/forms/$activityId/$templateId': {
+      id: '/forms/$activityId/$templateId'
+      path: '/forms/$activityId/$templateId'
+      fullPath: '/forms/$activityId/$templateId'
+      preLoaderRoute: typeof FormsActivityIdTemplateIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/trips/$tripId': {
       id: '/_authenticated/trips/$tripId'
@@ -289,6 +329,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSchoolsRoute: typeof AuthenticatedSchoolsRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedTripsRoute: typeof AuthenticatedTripsRouteWithChildren
 }
 
@@ -296,6 +337,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsRoute: AuthenticatedAgentsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSchoolsRoute: AuthenticatedSchoolsRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedTripsRoute: AuthenticatedTripsRouteWithChildren,
 }
 
@@ -307,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
