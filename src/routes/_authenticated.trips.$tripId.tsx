@@ -763,8 +763,9 @@ function TripPlanner() {
 
         </div>
 
-        <div className="lg:col-span-1">
-          <Card className="p-5 lg:sticky lg:top-4">
+        <div className="lg:col-span-1" ref={editorRef}>
+          <Card className="p-5 lg:sticky lg:top-4 scroll-mt-4">
+
             {!selectedDay ? (
               <div className="text-sm text-muted-foreground space-y-2">
                 <div className="font-semibold text-foreground">Activity editor</div>
