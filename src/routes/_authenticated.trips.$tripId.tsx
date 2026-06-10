@@ -595,7 +595,12 @@ function CostInput({ form, setForm }: { form: FormState; setForm: (f: FormState)
 
 function defaultTitle(f: FormState, branches: any, schools: any, agents: any): string {
   switch (f.type) {
-    case "travel": return f.transport_mode ? `${f.transport_mode}` : "Travel";
+    case "travel": {
+      const from = [f.from_city, f.transport_mode === "Air travel" ? f.from_country : ""].filter(Boolean).join(", ");
+      const to = [f.to_city, f.transport_mode === "Air travel" ? f.to_country : ""].filter(Boolean).join(", ");
+      if (from && to) return `${from} → ${to}`;
+      return f.transport_mode || "Travel";
+    }
     case "agent_visit": {
       const b = branches?.find((x: any) => x.id === f.branch_id);
       return b ? `Visit ${b.branch_name}` : "Agent visit";
