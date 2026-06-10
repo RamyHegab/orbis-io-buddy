@@ -389,6 +389,53 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_submissions: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          payload: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitter_email: string | null
+          submitter_name: string | null
+          type: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitter_email?: string | null
+          submitter_name?: string | null
+          type: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitter_email?: string | null
+          submitter_name?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_submissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
