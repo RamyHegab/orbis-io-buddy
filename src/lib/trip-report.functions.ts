@@ -28,6 +28,12 @@ export const generateTripReport = createServerFn({ method: "POST" })
       .order("day_date")
       .order("start_time");
 
+    const { data: hotels } = await supabase
+      .from("trip_hotels")
+      .select("*")
+      .eq("trip_id", data.tripId)
+      .order("check_in_date");
+
     const activityIds = (activities ?? []).map((a) => a.id);
     const { data: comments } = activityIds.length
       ? await supabase.from("activity_comments").select("*").in("activity_id", activityIds)
@@ -54,6 +60,13 @@ export const generateTripReport = createServerFn({ method: "POST" })
       totals.total[cur] = (totals.total[cur] ?? 0) + amt;
       if (totals[a.type]) totals[a.type][cur] = (totals[a.type][cur] ?? 0) + amt;
     }
+    for (const h of hotels ?? []) {
+      if (h.cost == null) continue;
+      const cur = h.cost_currency || "GBP";
+      const amt = Number(h.cost);
+      totals.total[cur] = (totals.total[cur] ?? 0) + amt;
+      totals.hotel[cur] = (totals.hotel[cur] ?? 0) + amt;
+    }
     const fmtTotals = (m: Record<string, number>) =>
       Object.entries(m).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(", ") || "—";
     ctx += `\n## Cost Totals\n`;
@@ -61,6 +74,19 @@ export const generateTripReport = createServerFn({ method: "POST" })
     ctx += `- Hotels: ${fmtTotals(totals.hotel)}\n`;
     ctx += `- Events: ${fmtTotals(totals.recruitment_event)}\n`;
     ctx += `- Total: ${fmtTotals(totals.total)}\n`;
+
+    if (hotels && hotels.length) {
+      ctx += `\n## Accommodation (${hotels.length})\n`;
+      for (const h of hotels) {
+        const nights = Math.max(1, Math.round((new Date(h.check_out_date).getTime() - new Date(h.check_in_date).getTime()) / 86400000));
+        ctx += `- **${h.name}** — ${h.check_in_date} → ${h.check_out_date} (${nights} night${nights > 1 ? "s" : ""})`;
+        if (h.cost != null) ctx += ` · ${h.cost_currency || "GBP"} ${Number(h.cost).toFixed(2)}`;
+        if (h.map_url) ctx += ` · [Map](${h.map_url})`;
+        if (h.address) ctx += ` · ${h.address}`;
+        ctx += `\n`;
+      }
+    }
+
 
     ctx += `\n## Activities (${activities?.length ?? 0})\n`;
     for (const a of activities ?? []) {
