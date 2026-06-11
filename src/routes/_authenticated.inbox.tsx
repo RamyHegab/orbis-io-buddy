@@ -75,7 +75,8 @@ function InboxPage() {
 
       const dup = await findDuplicate(item, clean);
       if (dup) {
-        const label = dup.branch_name || dup.name || dup.trading_name || "existing record";
+        const d = dup as any;
+        const label = d.branch_name || d.name || d.trading_name || "existing record";
         const ok = window.confirm(`A matching ${item.type.replace("_", " ")} already exists ("${label}"). Overwrite it with the new details?`);
         if (!ok) return { skipped: true as const };
         const { error } = await supabase.from(table as any).update(clean).eq("id", dup.id);
