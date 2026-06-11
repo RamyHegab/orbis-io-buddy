@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import {
@@ -12,21 +13,30 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Globe2,
-  Inbox,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
+  showCount?: "pending_submissions";
+};
+
+const navItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
-  { to: "/inbox", label: "Inbox", icon: Inbox },
+  { to: "/inbox", label: "Notifications", icon: Bell, showCount: "pending_submissions" },
   { to: "/forms", label: "Forms", icon: FileText },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
   { to: "/templates", label: "Form Templates", icon: FileText, adminOnly: true },
 ];
+
 
 export function AppShell() {
   const { user, loading } = useAuth();
