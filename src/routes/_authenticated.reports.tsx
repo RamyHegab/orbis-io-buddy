@@ -14,7 +14,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "Reports — Orbis CRM" }] }),
+  head: () => ({ meta: [{ title: "Global Reporting — Orbis CRM" }] }),
   component: ReportsPage,
 });
 
