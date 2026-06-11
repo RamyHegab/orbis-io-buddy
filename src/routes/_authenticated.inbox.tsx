@@ -104,7 +104,7 @@ function InboxPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Inbox" description="Pending intake-form submissions awaiting review." />
+      <PageHeader title="Notifications" description="Pending submissions and auto-discovered items awaiting your review." />
       {!items || items.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">No pending submissions.</Card>
       ) : (
