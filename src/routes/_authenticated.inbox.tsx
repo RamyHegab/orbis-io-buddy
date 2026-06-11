@@ -11,7 +11,7 @@ import { Check, X } from "lucide-react";
 import { fmtDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/inbox")({
-  head: () => ({ meta: [{ title: "Inbox — Orbis CRM" }] }),
+  head: () => ({ meta: [{ title: "Notifications — Orbis CRM" }] }),
   component: InboxPage,
 });
 
@@ -90,7 +90,7 @@ function InboxPage() {
       if (e2) throw e2;
       return { skipped: false as const };
     },
-    onSuccess: (res) => { if (!res?.skipped) toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
+    onSuccess: (res) => { if (!res?.skipped) toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); qc.invalidateQueries({ queryKey: ["pending_submissions_count"] }); },
     onError: (e: any) => toast.error(e.message ?? "Approve failed"),
   });
 
@@ -99,12 +99,12 @@ function InboxPage() {
       const { error } = await supabase.from("pending_submissions").update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user?.id }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Rejected"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
+    onSuccess: () => { toast.success("Rejected"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); qc.invalidateQueries({ queryKey: ["pending_submissions_count"] }); },
   });
 
   return (
     <PageContainer>
-      <PageHeader title="Inbox" description="Pending intake-form submissions awaiting review." />
+      <PageHeader title="Notifications" description="Pending submissions and auto-discovered items awaiting your review." />
       {!items || items.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">No pending submissions.</Card>
       ) : (

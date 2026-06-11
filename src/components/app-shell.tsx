@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import {
@@ -12,27 +13,49 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Globe2,
-  Inbox,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
+  showCount?: "pending_submissions";
+};
+
+const navItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
-  { to: "/inbox", label: "Inbox", icon: Inbox },
+  { to: "/inbox", label: "Notifications", icon: Bell, showCount: "pending_submissions" },
   { to: "/forms", label: "Forms", icon: FileText },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
   { to: "/templates", label: "Form Templates", icon: FileText, adminOnly: true },
 ];
 
+
 export function AppShell() {
   const { user, loading } = useAuth();
   const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const { data: pendingCount = 0 } = useQuery({
+    enabled: !!user,
+    queryKey: ["pending_submissions_count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("pending_submissions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -45,6 +68,7 @@ export function AppShell() {
       </div>
     );
   }
+
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -69,6 +93,7 @@ export function AppShell() {
             .map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
               const Icon = item.icon;
+              const count = item.showCount === "pending_submissions" ? pendingCount : 0;
               return (
                 <Link
                   key={item.to}
@@ -81,10 +106,16 @@ export function AppShell() {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {count > 0 && (
+                    <span className="inline-flex min-w-[1.25rem] h-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  )}
                 </Link>
               );
             })}
+
         </nav>
         <div className="border-t border-sidebar-border p-3 space-y-2">
           <div className="px-2 text-xs">
