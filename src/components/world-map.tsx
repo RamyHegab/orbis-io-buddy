@@ -97,20 +97,20 @@ export function WorldMap({ data }: Props) {
                   onMouseLeave={() => setTooltip(null)}
                   style={{
                     default: {
-                      fill: has ? "hsl(var(--gold))" : "hsl(var(--muted))",
-                      stroke: "hsl(var(--primary))",
+                      fill: has ? "var(--gold)" : "var(--muted)",
+                      stroke: "var(--primary)",
                       strokeWidth: 0.4,
                       outline: "none",
                     },
                     hover: {
-                      fill: "hsl(var(--primary))",
-                      stroke: "hsl(var(--gold))",
+                      fill: "var(--primary)",
+                      stroke: "var(--gold)",
                       strokeWidth: 0.8,
                       outline: "none",
                       cursor: "pointer",
                     },
                     pressed: {
-                      fill: "hsl(var(--primary))",
+                      fill: "var(--primary)",
                       outline: "none",
                     },
                   }}
