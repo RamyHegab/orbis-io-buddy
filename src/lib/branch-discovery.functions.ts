@@ -21,6 +21,46 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (error || !data) throw new Error("Forbidden: admin only");
 }
 
+async function geocode(query: string): Promise<{ place_id?: string; lat?: number; lng?: number; formatted_address?: string } | null> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const gmKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!lovableKey || !gmKey || !query?.trim()) return null;
+  try {
+    const url = `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?address=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmKey },
+    });
+    const data: any = await res.json();
+    const hit = data?.results?.[0];
+    if (!hit) return null;
+    return {
+      place_id: hit.place_id,
+      lat: hit.geometry?.location?.lat,
+      lng: hit.geometry?.location?.lng,
+      formatted_address: hit.formatted_address,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function enrichBranch(b: any, agentName: string) {
+  const locStr = [b.city, b.country].filter(Boolean).join(", ");
+  const query = b.address
+    ? `${b.address}${locStr ? ", " + locStr : ""}`
+    : `${agentName} ${[b.branch_name, locStr].filter(Boolean).join(" ")}`.trim();
+  const geo = await geocode(query);
+  if (!geo) return b;
+  return {
+    ...b,
+    place_id: b.place_id ?? geo.place_id,
+    lat: b.lat ?? geo.lat,
+    lng: b.lng ?? geo.lng,
+    formatted_address: b.formatted_address ?? geo.formatted_address,
+    address: b.address ?? geo.formatted_address,
+  };
+}
+
 async function aiExtract(markdown: string, agentName: string, sourceUrl: string) {
   const { generateObject } = await import("ai");
   const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
@@ -85,6 +125,11 @@ async function discoverForAgent(agent: { id: string; trading_name: string; websi
         if (results.length > 0) break;
       }
     } catch {}
+  }
+
+  // Enrich with Google Maps geocoding (address + location)
+  for (const r of results) {
+    r.branch = await enrichBranch(r.branch, agent.trading_name);
   }
 
   return results;
