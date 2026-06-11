@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { generateTripReport } from "@/lib/trip-report.functions";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId/report")({
