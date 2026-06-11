@@ -157,9 +157,11 @@ function Dashboard() {
         <Card className="p-4 border-2 border-primary/80 h-full overflow-hidden flex flex-col">
           <div className="flex items-center justify-between mb-2 px-1 shrink-0">
             <h2 className="font-semibold">Global footprint</h2>
-            <span className="text-xs text-muted-foreground">
-              Hover a country for agents, schools & completed trips
-            </span>
+            <Link to="/reports">
+              <Button size="sm" className="bg-gold text-gold-foreground hover:bg-gold/90">
+                <FileBarChart className="h-3.5 w-3.5 mr-1.5" /> Create Report
+              </Button>
+            </Link>
           </div>
           <div className="flex-1 overflow-hidden">
             <WorldMap data={countryStats ?? {}} />
