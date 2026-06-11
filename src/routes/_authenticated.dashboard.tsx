@@ -153,15 +153,17 @@ function Dashboard() {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-6 mb-6">
-        <Card className="p-4 border-2 border-primary/80">
-          <div className="flex items-center justify-between mb-2 px-1">
+      <div className="grid lg:grid-cols-[2fr_1fr] gap-6 mb-6 lg:h-[420px]">
+        <Card className="p-4 border-2 border-primary/80 h-full overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
             <h2 className="font-semibold">Global footprint</h2>
             <span className="text-xs text-muted-foreground">
               Hover a country for agents, schools & completed trips
             </span>
           </div>
-          <WorldMap data={countryStats ?? {}} />
+          <div className="flex-1 overflow-hidden">
+            <WorldMap data={countryStats ?? {}} />
+          </div>
         </Card>
         <UpcomingChecklist trip={upcomingTrip as any} />
       </div>
