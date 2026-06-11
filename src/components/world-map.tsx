@@ -69,7 +69,8 @@ export function WorldMap({ data }: Props) {
       <ComposableMap
         projection="geoEqualEarth"
         width={800}
-        height={400}
+        height={380}
+        projectionConfig={{ scale: 145, center: [0, 10] }}
         style={{ width: "100%", height: "100%" }}
         preserveAspectRatio="xMidYMid meet"
       >
