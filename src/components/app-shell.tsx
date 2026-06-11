@@ -44,6 +44,19 @@ export function AppShell() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  const { data: pendingCount = 0 } = useQuery({
+    enabled: !!user,
+    queryKey: ["pending_submissions_count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("pending_submissions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
@@ -55,6 +68,7 @@ export function AppShell() {
       </div>
     );
   }
+
 
   const signOut = async () => {
     await supabase.auth.signOut();
