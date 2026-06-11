@@ -14,7 +14,6 @@ import { Plus, Trash2, GraduationCap, Upload, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
-import { MapPreview } from "@/components/map-preview";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
