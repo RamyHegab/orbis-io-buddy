@@ -121,15 +121,15 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
 
 function HorizontalRow({ title, trips, selectedId, onSelect, empty }: { title: string; trips: any[]; selectedId?: string | null; onSelect?: (id: string) => void; empty: string }) {
   return (
-    <section className="space-y-2">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
-        <span className="text-xs text-muted-foreground">{trips.length}</span>
+    <section className="rounded-md border-2 border-primary/80 bg-card overflow-hidden">
+      <div className="flex items-center justify-between bg-primary text-primary-foreground px-4 py-2">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-gold">{title}</h2>
+        <span className="text-[11px] font-semibold text-gold/80">{trips.length}</span>
       </div>
       {trips.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted-foreground">{empty}</Card>
+        <div className="p-6 text-center text-sm text-muted-foreground">{empty}</div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+        <div className="flex gap-3 overflow-x-auto p-4">
           {trips.map((t) => (
             <TripCard
               key={t.id}
