@@ -11,7 +11,7 @@ import { Check, X } from "lucide-react";
 import { fmtDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/inbox")({
-  head: () => ({ meta: [{ title: "Inbox — Orbis CRM" }] }),
+  head: () => ({ meta: [{ title: "Notifications — Orbis CRM" }] }),
   component: InboxPage,
 });
 
