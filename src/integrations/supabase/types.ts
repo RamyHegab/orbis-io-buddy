@@ -782,6 +782,7 @@ export type Database = {
       }
       trips: {
         Row: {
+          checklist: Json
           created_at: string
           destinations: string[]
           end_date: string
@@ -795,6 +796,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          checklist?: Json
           created_at?: string
           destinations?: string[]
           end_date: string
@@ -808,6 +810,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          checklist?: Json
           created_at?: string
           destinations?: string[]
           end_date?: string

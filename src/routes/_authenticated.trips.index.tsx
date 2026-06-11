@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Plane, Trash2 } from "lucide-react";
+import { Plus, Plane, Trash2, CheckCircle2, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
@@ -43,12 +43,200 @@ function bucketOf(t: { start_date: string; end_date: string; status: string }): 
   return "in_progress";
 }
 
+type ChecklistKey =
+  | "confirm_itinerary"
+  | "itinerary_approved"
+  | "freight_required"
+  | "parcel_sent"
+  | "book_appointment"
+  | "book_flights_hotels"
+  | "risk_assessment";
+
+const CHECKLIST_ITEMS: { key: ChecklistKey; label: string; hint?: string }[] = [
+  { key: "confirm_itinerary", label: "Confirm itinerary" },
+  { key: "itinerary_approved", label: "Itinerary approved", hint: "Line manager approves from their account" },
+  { key: "freight_required", label: "Freight required?", hint: "System will remind in notifications if Yes" },
+  { key: "parcel_sent", label: "Parcel sent" },
+  { key: "book_appointment", label: "Book appointment", hint: "Will prompt to email itinerary contacts" },
+  { key: "book_flights_hotels", label: "Book flights and hotels" },
+  { key: "risk_assessment", label: "Risk assessment review" },
+];
+
+function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean; onSelect?: () => void }) {
+  const qc = useQueryClient();
+  const del = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("trips").delete().eq("id", trip.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Trip deleted"); qc.invalidateQueries({ queryKey: ["trips"] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Card
+      onClick={onSelect}
+      className={`p-4 hover:shadow-md transition-all h-full relative group shrink-0 w-72 cursor-pointer ${selected ? "ring-2 ring-primary" : ""}`}
+    >
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            size="icon" variant="ghost"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes "{trip.title}" and all its activities.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => del.mutate()}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Link to="/trips/$tripId" params={{ tripId: trip.id }} className="block" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+            <Plane className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0 pr-6">
+            <div className="font-medium truncate">{trip.title}</div>
+            <div className="text-xs text-muted-foreground mt-1">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
+            <div className="flex flex-wrap gap-1 mt-3">
+              {trip.status === "confirmed" && <Badge className="bg-emerald-600 hover:bg-emerald-600">Confirmed</Badge>}
+              {trip.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
+            </div>
+          </div>
+        </div>
+      </Link>
+    </Card>
+  );
+}
+
+function HorizontalRow({ title, trips, selectedId, onSelect, empty }: { title: string; trips: any[]; selectedId?: string | null; onSelect?: (id: string) => void; empty: string }) {
+  return (
+    <section className="space-y-2">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+        <span className="text-xs text-muted-foreground">{trips.length}</span>
+      </div>
+      {trips.length === 0 ? (
+        <Card className="p-6 text-center text-sm text-muted-foreground">{empty}</Card>
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+          {trips.map((t) => (
+            <TripCard
+              key={t.id}
+              trip={t}
+              selected={selectedId === t.id}
+              onSelect={onSelect ? () => onSelect(t.id) : undefined}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ChecklistPanel({ trip }: { trip: any | null }) {
+  const qc = useQueryClient();
+  const checklist = (trip?.checklist ?? {}) as Record<string, any>;
+
+  const update = useMutation({
+    mutationFn: async (next: Record<string, any>) => {
+      const { error } = await supabase.from("trips").update({ checklist: next }).eq("id", trip.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["trips"] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const setVal = (key: ChecklistKey, value: any) => {
+    update.mutate({ ...checklist, [key]: value });
+  };
+
+  if (!trip) {
+    return (
+      <Card className="p-6 text-sm text-muted-foreground">
+        Select an upcoming confirmed trip to see its checklist.
+      </Card>
+    );
+  }
+
+  const allDone = CHECKLIST_ITEMS.every((i) =>
+    i.key === "freight_required" ? checklist[i.key] === "no" || checklist[i.key] === "yes" : !!checklist[i.key]
+  );
+
+  return (
+    <Card className="p-5 space-y-4 sticky top-4">
+      <div>
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">Pre-trip checklist</div>
+        <div className="font-semibold truncate">{trip.title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
+      </div>
+      <div className="space-y-3">
+        {CHECKLIST_ITEMS.map((item) => {
+          if (item.key === "freight_required") {
+            const v = checklist[item.key];
+            return (
+              <div key={item.key} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-medium">{item.label}</div>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant={v === "yes" ? "default" : "outline"} className="h-7 px-2" onClick={() => setVal(item.key, "yes")}>Yes</Button>
+                    <Button size="sm" variant={v === "no" ? "default" : "outline"} className="h-7 px-2" onClick={() => setVal(item.key, "no")}>No</Button>
+                  </div>
+                </div>
+                {item.hint && <div className="text-xs text-muted-foreground">{item.hint}</div>}
+              </div>
+            );
+          }
+          const done = !!checklist[item.key];
+          return (
+            <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={done}
+                onCheckedChange={(c) => setVal(item.key, !!c)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {item.label}
+                  {done ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle2 className="h-3 w-3" /> Done</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Circle className="h-3 w-3" /> Open</span>
+                  )}
+                </div>
+                {item.hint && <div className="text-xs text-muted-foreground">{item.hint}</div>}
+              </div>
+            </label>
+          );
+        })}
+      </div>
+      {allDone && (
+        <div className="rounded-md border border-emerald-600/30 bg-emerald-600/10 p-3 text-sm text-emerald-700 dark:text-emerald-400 text-center">
+          Good luck and enjoy your trip! ✈️
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function TripsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [legs, setLegs] = useState<Leg[]>([{ country: "", start_date: "", end_date: "" }]);
   const [objectives, setObjectives] = useState("");
+  const [selectedUpcomingId, setSelectedUpcomingId] = useState<string | null>(null);
 
   const { data: trips } = useQuery({
     queryKey: ["trips"],
@@ -91,15 +279,6 @@ function TripsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const del = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trips").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Trip deleted"); qc.invalidateQueries({ queryKey: ["trips"] }); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
   const updateLeg = (i: number, patch: Partial<Leg>) =>
     setLegs((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
 
@@ -108,58 +287,25 @@ function TripsPage() {
   const grouped = useMemo(() => {
     const g = { past: [] as any[], in_progress: [] as any[], upcoming: [] as any[] };
     for (const t of trips ?? []) g[bucketOf(t)].push(t);
+    // Sort upcoming + in_progress ascending by start date so soonest first
+    g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
+    g.upcoming.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
   }, [trips]);
 
-  const renderGrid = (list: any[]) =>
-    list.length === 0 ? (
-      <Card className="p-10 text-center text-muted-foreground">No trips in this group.</Card>
-    ) : (
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {list.map((t) => (
-          <Card key={t.id} className="p-5 hover:shadow-md transition-shadow h-full relative group">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  size="icon" variant="ghost"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete trip?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This permanently removes "{t.title}" and all its activities.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => del.mutate(t.id)}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Link to="/trips/$tripId" params={{ tripId: t.id }} className="block">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                  <Plane className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0 pr-6">
-                  <div className="font-medium truncate">{t.title}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{fmtDate(t.start_date)} → {fmtDate(t.end_date)}</div>
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {t.status === "confirmed" && <Badge className="bg-emerald-600 hover:bg-emerald-600">Confirmed</Badge>}
-                    {t.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </Card>
-        ))}
-      </div>
-    );
+  const pastLimited = grouped.past.slice(0, 3);
+
+  useEffect(() => {
+    if (grouped.upcoming.length === 0) {
+      if (selectedUpcomingId !== null) setSelectedUpcomingId(null);
+      return;
+    }
+    if (!selectedUpcomingId || !grouped.upcoming.find((t) => t.id === selectedUpcomingId)) {
+      setSelectedUpcomingId(grouped.upcoming[0].id);
+    }
+  }, [grouped.upcoming, selectedUpcomingId]);
+
+  const selectedTrip = grouped.upcoming.find((t) => t.id === selectedUpcomingId) ?? null;
 
   return (
     <PageContainer>
@@ -217,16 +363,30 @@ function TripsPage() {
         }
       />
 
-      <Tabs defaultValue="in_progress">
-        <TabsList>
-          <TabsTrigger value="in_progress">In progress ({grouped.in_progress.length})</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming confirmed ({grouped.upcoming.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({grouped.past.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="in_progress" className="mt-4">{renderGrid(grouped.in_progress)}</TabsContent>
-        <TabsContent value="upcoming" className="mt-4">{renderGrid(grouped.upcoming)}</TabsContent>
-        <TabsContent value="past" className="mt-4">{renderGrid(grouped.past)}</TabsContent>
-      </Tabs>
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
+        <div className="space-y-6 min-w-0">
+          <HorizontalRow
+            title="In progress"
+            trips={grouped.in_progress}
+            empty="No trips in progress."
+          />
+          <HorizontalRow
+            title="Upcoming confirmed"
+            trips={grouped.upcoming}
+            selectedId={selectedUpcomingId}
+            onSelect={setSelectedUpcomingId}
+            empty="No upcoming confirmed trips."
+          />
+          <HorizontalRow
+            title="Past (last 3)"
+            trips={pastLimited}
+            empty="No past trips yet."
+          />
+        </div>
+        <aside>
+          <ChecklistPanel trip={selectedTrip} />
+        </aside>
+      </div>
     </PageContainer>
   );
 }
