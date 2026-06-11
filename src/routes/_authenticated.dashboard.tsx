@@ -119,34 +119,65 @@ function Dashboard() {
     },
   });
 
-  const [filterCountry, setFilterCountry] = useState<string>("all");
+  const [agentFilter, setAgentFilter] = useState<string>("all");
+  const [schoolFilter, setSchoolFilter] = useState<string>("all");
 
-  const countryOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const [k, v] of Object.entries(countryStats ?? {})) {
-      if ((v.agents + v.schools) > 0) set.add(k);
-    }
-    return Array.from(set).sort();
-  }, [countryStats]);
+  const agentCountryOptions = useMemo(
+    () =>
+      Object.entries(countryStats ?? {})
+        .filter(([, v]) => v.agents > 0)
+        .map(([k]) => k)
+        .sort(),
+    [countryStats],
+  );
+  const schoolCountryOptions = useMemo(
+    () =>
+      Object.entries(countryStats ?? {})
+        .filter(([, v]) => v.schools > 0)
+        .map(([k]) => k)
+        .sort(),
+    [countryStats],
+  );
 
-  const filtered = filterCountry === "all" ? null : countryStats?.[filterCountry] ?? { agents: 0, schools: 0, trips: 0 };
+  const agentValue =
+    agentFilter === "all"
+      ? stats?.agents ?? 0
+      : countryStats?.[agentFilter]?.agents ?? 0;
+  const schoolValue =
+    schoolFilter === "all"
+      ? stats?.schools ?? 0
+      : countryStats?.[schoolFilter]?.schools ?? 0;
 
   const cards = [
     {
       label: "Agents",
-      value: filtered ? filtered.agents : stats?.agents ?? 0,
+      value: agentValue,
       icon: Users,
       to: "/agents",
+      filter: agentFilter,
+      setFilter: setAgentFilter,
+      options: agentCountryOptions,
     },
     {
       label: "Schools",
-      value: filtered ? filtered.schools : stats?.schools ?? 0,
+      value: schoolValue,
       icon: GraduationCap,
       to: "/schools",
+      filter: schoolFilter,
+      setFilter: setSchoolFilter,
+      options: schoolCountryOptions,
     },
-    { label: "Trips", value: stats?.trips ?? 0, icon: Plane, to: "/trips" },
-    { label: "Activities", value: stats?.activities ?? 0, icon: CalendarDays, to: "/trips" },
-  ];
+    { label: "Trips", value: stats?.trips ?? 0, icon: Plane, to: "/trips" as const },
+    { label: "Activities", value: stats?.activities ?? 0, icon: CalendarDays, to: "/trips" as const },
+  ] as Array<{
+    label: string;
+    value: number;
+    icon: typeof Users;
+    to: string;
+    filter?: string;
+    setFilter?: (v: string) => void;
+    options?: string[];
+  }>;
 
   return (
     <PageContainer>
@@ -164,43 +195,74 @@ function Dashboard() {
 
       <DiscoveryBanner />
 
-      <div className="flex items-center gap-2 mb-4">
-        <Globe className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Filter by country:</span>
-        <Select value={filterCountry} onValueChange={setFilterCountry}>
-          <SelectTrigger className="w-[240px] capitalize">
-            <SelectValue placeholder="All countries" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All countries</SelectItem>
-            {countryOptions.map((c) => (
-              <SelectItem key={c} value={c} className="capitalize">
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {filterCountry !== "all" && (
-          <Button variant="ghost" size="sm" onClick={() => setFilterCountry("all")}>
-            Clear
-          </Button>
-        )}
-      </div>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-
         {cards.map((c) => (
-          <Link key={c.label} to={c.to as any} className="block">
-            <Card className="p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">{c.label}</span>
+          <Card key={c.label} className="p-5 hover:shadow-md transition-shadow relative">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">{c.label}</span>
+              <div className="flex items-center gap-1">
+                {c.setFilter && c.options && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Filter ${c.label} by country`}
+                      >
+                        <Filter
+                          className={`h-3.5 w-3.5 ${
+                            c.filter !== "all" ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-64 space-y-2">
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Filter {c.label.toLowerCase()} by country
+                      </div>
+                      <Select value={c.filter} onValueChange={c.setFilter}>
+                        <SelectTrigger className="capitalize">
+                          <SelectValue placeholder="All countries" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All countries</SelectItem>
+                          {c.options.map((o) => (
+                            <SelectItem key={o} value={o} className="capitalize">
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {c.filter !== "all" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => c.setFilter!("all")}
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" /> Clear filter
+                        </Button>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                )}
                 <c.icon className="h-4 w-4 text-muted-foreground" />
               </div>
+            </div>
+            <Link to={c.to as any} className="block">
               <div className="text-3xl font-semibold tracking-tight">{c.value}</div>
-            </Card>
-          </Link>
+              {c.filter && c.filter !== "all" && (
+                <div className="text-xs text-muted-foreground mt-1 capitalize truncate">
+                  in {c.filter}
+                </div>
+              )}
+            </Link>
+          </Card>
         ))}
       </div>
+
 
       <div className="grid lg:grid-cols-[2fr_1fr] gap-6 mb-6 lg:h-[420px]">
         <Card className="p-4 border-2 border-primary/80 h-full overflow-hidden flex flex-col">
