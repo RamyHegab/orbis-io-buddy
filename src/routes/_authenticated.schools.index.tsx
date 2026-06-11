@@ -249,78 +249,88 @@ function SchoolsPage() {
       {Object.keys(grouped).length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">No schools yet.</Card>
       ) : (
-        <div className="space-y-8">
-          {Object.entries(grouped).map(([country, items]) => (
-            <div key={country}>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                {country} <span className="text-xs font-normal">({items.length})</span>
-              </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {items.map((s) => {
-                  const mapUrl = mapsSearchUrl({
-                    query: s.formatted_address || s.address || `${s.name} ${s.city}`,
-                    placeId: s.place_id,
-                    lat: s.lat,
-                    lng: s.lng,
-                  });
-                  return (
-                  <Card
-                    key={s.id}
-                    className="p-4 cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => navigate({ to: "/schools/$schoolId", params: { schoolId: s.id } })}
-                  >
-                    <div className="flex items-start gap-3">
-                      {s.campus_image_url ? (
-                        <img src={s.campus_image_url} alt={s.name} className="h-9 w-9 rounded-md object-cover shrink-0" />
-                      ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-accent text-accent-foreground shrink-0">
-                          <GraduationCap className="h-4 w-4" />
+        <div className="space-y-2">
+          {Object.entries(grouped).map(([country, items]) => {
+            const isOpen = openCountries[country] ?? !!filter;
+            return (
+            <Collapsible
+              key={country}
+              open={isOpen}
+              onOpenChange={(v) => setOpenCountries((m) => ({ ...m, [country]: v }))}
+            >
+              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left hover:bg-accent transition-colors">
+                <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                <span className="text-sm font-semibold uppercase tracking-wide">{country}</span>
+                <span className="text-xs text-muted-foreground">({items.length})</span>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-3 pb-2">
+                  {items.map((s) => {
+                    const mapUrl = mapsSearchUrl({
+                      query: s.formatted_address || s.address || `${s.name} ${s.city}`,
+                      placeId: s.place_id,
+                      lat: s.lat,
+                      lng: s.lng,
+                    });
+                    return (
+                    <Card
+                      key={s.id}
+                      className="p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => navigate({ to: "/schools/$schoolId", params: { schoolId: s.id } })}
+                    >
+                      <div className="flex items-start gap-3">
+                        {s.campus_image_url ? (
+                          <img src={s.campus_image_url} alt={s.name} className="h-9 w-9 rounded-md object-cover shrink-0" />
+                        ) : (
+                          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-accent text-accent-foreground shrink-0">
+                            <GraduationCap className="h-4 w-4" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{s.name}</div>
+                          <div className="text-xs text-muted-foreground">{s.city} • {LEVELS.find((l) => l.value === s.level)?.label}</div>
+                          {(s.formatted_address || s.address) && (
+                            <div className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+                              <span className="truncate">{s.formatted_address || s.address}</span>
+                              {mapUrl && (
+                                <a href={mapUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline shrink-0" title="Open in Google Maps">
+                                  <MapPin className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          {s.primary_contact_name && (
+                            <div className="text-xs text-muted-foreground mt-1 truncate">
+                              {s.primary_contact_name}{s.primary_contact_position ? ` · ${s.primary_contact_position}` : ""}
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{s.name}</div>
-                        <div className="text-xs text-muted-foreground">{s.city} • {LEVELS.find((l) => l.value === s.level)?.label}</div>
-                        {(s.formatted_address || s.address) && (
-                          <div className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
-                            <span className="truncate">{s.formatted_address || s.address}</span>
-                            {mapUrl && (
-                              <a href={mapUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline shrink-0" title="Open in Google Maps">
-                                <MapPin className="h-3 w-3" />
-                              </a>
-                            )}
-                          </div>
-                        )}
-                        {s.primary_contact_name && (
-                          <div className="text-xs text-muted-foreground mt-1 truncate">
-                            {s.primary_contact_name}{s.primary_contact_position ? ` · ${s.primary_contact_position}` : ""}
-                          </div>
-                        )}
+                        <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <AddToItineraryButton
+                            source="school"
+                            id={s.id}
+                            name={s.name}
+                            address={s.address}
+                            formatted_address={s.formatted_address}
+                            place_id={s.place_id}
+                            lat={s.lat != null ? Number(s.lat) : null}
+                            lng={s.lng != null ? Number(s.lng) : null}
+                            size="icon"
+                            variant="ghost"
+                          />
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        <AddToItineraryButton
-                          source="school"
-                          id={s.id}
-                          name={s.name}
-                          address={s.address}
-                          formatted_address={s.formatted_address}
-                          place_id={s.place_id}
-                          lat={s.lat != null ? Number(s.lat) : null}
-                          lng={s.lng != null ? Number(s.lng) : null}
-                          size="icon"
-                          variant="ghost"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                    </Card>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            );
+          })}
         </div>
       )}
     </PageContainer>
