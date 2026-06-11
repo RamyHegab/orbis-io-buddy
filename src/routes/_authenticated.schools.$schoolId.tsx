@@ -141,11 +141,22 @@ function SchoolDetail() {
           )}
         </Card>
 
-        {(school.lat != null && school.lng != null) || school.place_id ? (
-          <Card className="p-2">
-            <MapPreview lat={school.lat} lng={school.lng} query={school.formatted_address || school.address} height={260} />
-          </Card>
-        ) : null}
+        {(() => {
+          const url = mapsSearchUrl({
+            query: school.formatted_address || school.address,
+            placeId: school.place_id,
+            lat: school.lat,
+            lng: school.lng,
+          });
+          return url ? (
+            <Button asChild variant="outline" size="sm" className="w-fit">
+              <a href={url} target="_blank" rel="noreferrer">
+                <MapPin className="h-4 w-4 mr-1" /> View on Google Maps
+              </a>
+            </Button>
+          ) : null;
+        })()}
+
       </div>
     </PageContainer>
   );
