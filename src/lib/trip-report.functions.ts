@@ -79,8 +79,21 @@ export const generateTripReport = createServerFn({ method: "POST" })
     ctx += `\n## Activities (${activities?.length ?? 0})\n`;
     for (const a of activities ?? []) {
       ctx += `\n### ${a.day_date}${a.start_time ? ` ${a.start_time.slice(0, 5)}` : ""} — ${a.title} [${a.type}]\n`;
+      if (a.type === "travel") {
+        const isAir = a.transport_mode === "Air travel";
+        const from = isAir ? [a.from_country, a.from_city].filter(Boolean).join(" — ") : a.from_city;
+        const to = isAir ? [a.to_country, a.to_city].filter(Boolean).join(" — ") : a.to_city;
+        if (from) ctx += `From: ${from}\n`;
+        if (to) ctx += `To: ${to}\n`;
+        if (a.transport_mode) ctx += `Mode: ${a.transport_mode}\n`;
+        if (a.airline) ctx += `Airline: ${a.airline}${a.flight_number ? ` ${a.flight_number}` : ""}\n`;
+      }
       if (a.location) ctx += `Location: ${a.location}\n`;
-      if (a.agents && a.agent_id) ctx += `Agent: [${a.agents.trading_name}](/agents/${a.agent_id})\n`;
+      if (a.type === "agent_visit" && a.agents && a.agent_id) {
+        ctx += `Agent card: [${a.agents.trading_name}](/agents/${a.agent_id}) _(requires login)_\n`;
+      } else if (a.agents && a.agent_id) {
+        ctx += `Agent: [${a.agents.trading_name}](/agents/${a.agent_id})\n`;
+      }
       if (a.schools && a.school_id) ctx += `School: [${a.schools.name}](/schools) (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
       if (a.objectives) ctx += `Objectives: ${a.objectives}\n`;
