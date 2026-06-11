@@ -118,9 +118,31 @@ function Dashboard() {
     },
   });
 
+  const [filterCountry, setFilterCountry] = useState<string>("all");
+
+  const countryOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const [k, v] of Object.entries(countryStats ?? {})) {
+      if ((v.agents + v.schools) > 0) set.add(k);
+    }
+    return Array.from(set).sort();
+  }, [countryStats]);
+
+  const filtered = filterCountry === "all" ? null : countryStats?.[filterCountry] ?? { agents: 0, schools: 0, trips: 0 };
+
   const cards = [
-    { label: "Agents", value: stats?.agents ?? 0, icon: Users, to: "/agents" },
-    { label: "Schools", value: stats?.schools ?? 0, icon: GraduationCap, to: "/schools" },
+    {
+      label: "Agents",
+      value: filtered ? filtered.agents : stats?.agents ?? 0,
+      icon: Users,
+      to: "/agents",
+    },
+    {
+      label: "Schools",
+      value: filtered ? filtered.schools : stats?.schools ?? 0,
+      icon: GraduationCap,
+      to: "/schools",
+    },
     { label: "Trips", value: stats?.trips ?? 0, icon: Plane, to: "/trips" },
     { label: "Activities", value: stats?.activities ?? 0, icon: CalendarDays, to: "/trips" },
   ];
