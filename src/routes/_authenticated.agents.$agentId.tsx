@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
-import { MapPreview } from "@/components/map-preview";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
 import { ShareIntakeLink } from "@/components/share-intake-link";
