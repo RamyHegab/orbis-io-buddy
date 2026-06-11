@@ -163,7 +163,31 @@ function Dashboard() {
 
       <DiscoveryBanner />
 
+      <div className="flex items-center gap-2 mb-4">
+        <Globe className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Filter by country:</span>
+        <Select value={filterCountry} onValueChange={setFilterCountry}>
+          <SelectTrigger className="w-[240px] capitalize">
+            <SelectValue placeholder="All countries" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All countries</SelectItem>
+            {countryOptions.map((c) => (
+              <SelectItem key={c} value={c} className="capitalize">
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {filterCountry !== "all" && (
+          <Button variant="ghost" size="sm" onClick={() => setFilterCountry("all")}>
+            Clear
+          </Button>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
         {cards.map((c) => (
           <Link key={c.label} to={c.to as any} className="block">
             <Card className="p-5 hover:shadow-md transition-shadow">
