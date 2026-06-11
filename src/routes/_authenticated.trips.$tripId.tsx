@@ -1244,9 +1244,10 @@ function TripPlanner() {
           return (
             <>
               <div className="hidden lg:block lg:col-span-1" ref={editorRef}>
-                <Card className="p-5 lg:sticky lg:top-4 scroll-mt-4">
+                <Card className="p-5 lg:sticky lg:top-4 scroll-mt-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
                   {editorBody}
                 </Card>
+
               </div>
               {!isLgUp && (
                 <Dialog
