@@ -5,7 +5,6 @@ import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Mail, Phone, MapPin, GraduationCap } from "lucide-react";
-import { MapPreview } from "@/components/map-preview";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 
