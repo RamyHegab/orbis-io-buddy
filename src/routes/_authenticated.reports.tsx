@@ -14,7 +14,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "Reports — Orbis CRM" }] }),
+  head: () => ({ meta: [{ title: "Global Reporting — Orbis CRM" }] }),
   component: ReportsPage,
 });
 
@@ -94,7 +94,7 @@ function ReportsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Reports" description="Aggregate trip activity and AI-summarised outcomes for any date range." />
+      <PageHeader title="Global Reporting" description="Aggregate trip activity and AI-summarised outcomes for any date range." />
 
       <Card className="mb-6 border-2 border-primary/80">
         <CardHeader>

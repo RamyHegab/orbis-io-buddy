@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Users, GraduationCap, CalendarDays } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plane, Users, GraduationCap, CalendarDays, FileBarChart } from "lucide-react";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
 import { DiscoveryBanner } from "@/components/discovery-banner";
 import { WorldMap, normalizeCountry, type CountryStats } from "@/components/world-map";
@@ -125,6 +126,13 @@ function Dashboard() {
       <PageHeader
         title={`Welcome${user?.email ? `, ${user.email.split("@")[0]}` : ""}`}
         description="Your recruitment pipeline at a glance."
+        actions={
+          <Link to="/reports">
+            <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
+              <FileBarChart className="h-4 w-4 mr-2" /> Create Report
+            </Button>
+          </Link>
+        }
       />
 
       <DiscoveryBanner />
