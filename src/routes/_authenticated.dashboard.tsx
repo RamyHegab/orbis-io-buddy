@@ -126,6 +126,13 @@ function Dashboard() {
       <PageHeader
         title={`Welcome${user?.email ? `, ${user.email.split("@")[0]}` : ""}`}
         description="Your recruitment pipeline at a glance."
+        actions={
+          <Link to="/reports">
+            <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
+              <FileBarChart className="h-4 w-4 mr-2" /> Create Report
+            </Button>
+          </Link>
+        }
       />
 
       <DiscoveryBanner />
