@@ -218,33 +218,15 @@ function Dashboard() {
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64 space-y-2">
+                    <PopoverContent align="end" className="w-64 p-3 space-y-2">
                       <div className="text-xs font-medium text-muted-foreground">
                         Filter {c.label.toLowerCase()} by country
                       </div>
-                      <Select value={c.filter} onValueChange={c.setFilter}>
-                        <SelectTrigger className="capitalize">
-                          <SelectValue placeholder="All countries" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All countries</SelectItem>
-                          {c.options.map((o) => (
-                            <SelectItem key={o} value={o} className="capitalize">
-                              {o}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {c.filter !== "all" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => c.setFilter!("all")}
-                        >
-                          <X className="h-3.5 w-3.5 mr-1" /> Clear filter
-                        </Button>
-                      )}
+                      <CountryFilter
+                        options={c.options}
+                        value={c.filter}
+                        onChange={c.setFilter}
+                      />
                     </PopoverContent>
                   </Popover>
                 )}
