@@ -15,13 +15,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated.templates'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
-import { Route as AuthenticatedSchoolsRouteImport } from './routes/_authenticated.schools'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated.inbox'
 import { Route as AuthenticatedFormsRouteImport } from './routes/_authenticated.forms'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated.agents'
 import { Route as AuthenticatedTripsIndexRouteImport } from './routes/_authenticated.trips.index'
+import { Route as AuthenticatedSchoolsIndexRouteImport } from './routes/_authenticated.schools.index'
 import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated.agents.index'
 import { Route as PublicIntakeTypeRouteImport } from './routes/public.intake.$type'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
@@ -60,11 +60,6 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedSchoolsRoute = AuthenticatedSchoolsRouteImport.update({
-  id: '/schools',
-  path: '/schools',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -95,6 +90,12 @@ const AuthenticatedTripsIndexRoute = AuthenticatedTripsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedTripsRoute,
 } as any)
+const AuthenticatedSchoolsIndexRoute =
+  AuthenticatedSchoolsIndexRouteImport.update({
+    id: '/schools/',
+    path: '/schools/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAgentsIndexRoute =
   AuthenticatedAgentsIndexRouteImport.update({
     id: '/',
@@ -120,9 +121,9 @@ const AuthenticatedTripsTripIdRoute =
   } as any)
 const AuthenticatedSchoolsSchoolIdRoute =
   AuthenticatedSchoolsSchoolIdRouteImport.update({
-    id: '/$schoolId',
-    path: '/$schoolId',
-    getParentRoute: () => AuthenticatedSchoolsRoute,
+    id: '/schools/$schoolId',
+    path: '/schools/$schoolId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAgentsAgentIdRoute =
   AuthenticatedAgentsAgentIdRouteImport.update({
@@ -151,7 +152,6 @@ export interface FileRoutesByFullPath {
   '/forms': typeof AuthenticatedFormsRoute
   '/inbox': typeof AuthenticatedInboxRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/schools': typeof AuthenticatedSchoolsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/trips': typeof AuthenticatedTripsRouteWithChildren
@@ -161,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/agents/': typeof AuthenticatedAgentsIndexRoute
+  '/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
@@ -172,7 +173,6 @@ export interface FileRoutesByTo {
   '/forms': typeof AuthenticatedFormsRoute
   '/inbox': typeof AuthenticatedInboxRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/schools': typeof AuthenticatedSchoolsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
@@ -181,6 +181,7 @@ export interface FileRoutesByTo {
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
+  '/schools': typeof AuthenticatedSchoolsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
@@ -195,7 +196,6 @@ export interface FileRoutesById {
   '/_authenticated/forms': typeof AuthenticatedFormsRoute
   '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/schools': typeof AuthenticatedSchoolsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRouteWithChildren
@@ -205,6 +205,7 @@ export interface FileRoutesById {
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
+  '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/_authenticated/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
@@ -219,7 +220,6 @@ export interface FileRouteTypes {
     | '/forms'
     | '/inbox'
     | '/reports'
-    | '/schools'
     | '/settings'
     | '/templates'
     | '/trips'
@@ -229,6 +229,7 @@ export interface FileRouteTypes {
     | '/forms/$activityId/$templateId'
     | '/public/intake/$type'
     | '/agents/'
+    | '/schools/'
     | '/trips/'
     | '/trips/$tripId/report'
     | '/trips/$tripId/activities/$activityId'
@@ -240,7 +241,6 @@ export interface FileRouteTypes {
     | '/forms'
     | '/inbox'
     | '/reports'
-    | '/schools'
     | '/settings'
     | '/templates'
     | '/agents/$agentId'
@@ -249,6 +249,7 @@ export interface FileRouteTypes {
     | '/forms/$activityId/$templateId'
     | '/public/intake/$type'
     | '/agents'
+    | '/schools'
     | '/trips'
     | '/trips/$tripId/report'
     | '/trips/$tripId/activities/$activityId'
@@ -262,7 +263,6 @@ export interface FileRouteTypes {
     | '/_authenticated/forms'
     | '/_authenticated/inbox'
     | '/_authenticated/reports'
-    | '/_authenticated/schools'
     | '/_authenticated/settings'
     | '/_authenticated/templates'
     | '/_authenticated/trips'
@@ -272,6 +272,7 @@ export interface FileRouteTypes {
     | '/forms/$activityId/$templateId'
     | '/public/intake/$type'
     | '/_authenticated/agents/'
+    | '/_authenticated/schools/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
     | '/_authenticated/trips/$tripId/activities/$activityId'
@@ -329,13 +330,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/schools': {
-      id: '/_authenticated/schools'
-      path: '/schools'
-      fullPath: '/schools'
-      preLoaderRoute: typeof AuthenticatedSchoolsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
@@ -378,6 +372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTripsIndexRouteImport
       parentRoute: typeof AuthenticatedTripsRoute
     }
+    '/_authenticated/schools/': {
+      id: '/_authenticated/schools/'
+      path: '/schools'
+      fullPath: '/schools/'
+      preLoaderRoute: typeof AuthenticatedSchoolsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/agents/': {
       id: '/_authenticated/agents/'
       path: '/'
@@ -408,10 +409,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/schools/$schoolId': {
       id: '/_authenticated/schools/$schoolId'
-      path: '/$schoolId'
+      path: '/schools/$schoolId'
       fullPath: '/schools/$schoolId'
       preLoaderRoute: typeof AuthenticatedSchoolsSchoolIdRouteImport
-      parentRoute: typeof AuthenticatedSchoolsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/agents/$agentId': {
       id: '/_authenticated/agents/$agentId'
@@ -450,17 +451,6 @@ const AuthenticatedAgentsRouteChildren: AuthenticatedAgentsRouteChildren = {
 const AuthenticatedAgentsRouteWithChildren =
   AuthenticatedAgentsRoute._addFileChildren(AuthenticatedAgentsRouteChildren)
 
-interface AuthenticatedSchoolsRouteChildren {
-  AuthenticatedSchoolsSchoolIdRoute: typeof AuthenticatedSchoolsSchoolIdRoute
-}
-
-const AuthenticatedSchoolsRouteChildren: AuthenticatedSchoolsRouteChildren = {
-  AuthenticatedSchoolsSchoolIdRoute: AuthenticatedSchoolsSchoolIdRoute,
-}
-
-const AuthenticatedSchoolsRouteWithChildren =
-  AuthenticatedSchoolsRoute._addFileChildren(AuthenticatedSchoolsRouteChildren)
-
 interface AuthenticatedTripsTripIdRouteChildren {
   AuthenticatedTripsTripIdReportRoute: typeof AuthenticatedTripsTripIdReportRoute
   AuthenticatedTripsTripIdActivitiesActivityIdRoute: typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
@@ -497,10 +487,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFormsRoute: typeof AuthenticatedFormsRoute
   AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedSchoolsRoute: typeof AuthenticatedSchoolsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedTripsRoute: typeof AuthenticatedTripsRouteWithChildren
+  AuthenticatedSchoolsSchoolIdRoute: typeof AuthenticatedSchoolsSchoolIdRoute
+  AuthenticatedSchoolsIndexRoute: typeof AuthenticatedSchoolsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -509,10 +500,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFormsRoute: AuthenticatedFormsRoute,
   AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedSchoolsRoute: AuthenticatedSchoolsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedTripsRoute: AuthenticatedTripsRouteWithChildren,
+  AuthenticatedSchoolsSchoolIdRoute: AuthenticatedSchoolsSchoolIdRoute,
+  AuthenticatedSchoolsIndexRoute: AuthenticatedSchoolsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -529,3 +521,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
