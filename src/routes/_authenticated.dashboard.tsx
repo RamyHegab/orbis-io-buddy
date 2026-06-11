@@ -47,7 +47,7 @@ function Dashboard() {
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from("trips")
-        .select("id, title, start_date, end_date, checklist, status")
+        .select("id, title, start_date, end_date, destinations, checklist, status")
         .gte("end_date", today)
         .eq("status", "confirmed")
         .order("start_date", { ascending: true })
