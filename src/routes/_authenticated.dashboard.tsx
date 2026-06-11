@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,8 @@ import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plane, Users, GraduationCap, CalendarDays, FileBarChart } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plane, Users, GraduationCap, CalendarDays, FileBarChart, Globe } from "lucide-react";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
 import { DiscoveryBanner } from "@/components/discovery-banner";
 import { WorldMap, normalizeCountry, type CountryStats } from "@/components/world-map";
@@ -116,9 +118,31 @@ function Dashboard() {
     },
   });
 
+  const [filterCountry, setFilterCountry] = useState<string>("all");
+
+  const countryOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const [k, v] of Object.entries(countryStats ?? {})) {
+      if ((v.agents + v.schools) > 0) set.add(k);
+    }
+    return Array.from(set).sort();
+  }, [countryStats]);
+
+  const filtered = filterCountry === "all" ? null : countryStats?.[filterCountry] ?? { agents: 0, schools: 0, trips: 0 };
+
   const cards = [
-    { label: "Agents", value: stats?.agents ?? 0, icon: Users, to: "/agents" },
-    { label: "Schools", value: stats?.schools ?? 0, icon: GraduationCap, to: "/schools" },
+    {
+      label: "Agents",
+      value: filtered ? filtered.agents : stats?.agents ?? 0,
+      icon: Users,
+      to: "/agents",
+    },
+    {
+      label: "Schools",
+      value: filtered ? filtered.schools : stats?.schools ?? 0,
+      icon: GraduationCap,
+      to: "/schools",
+    },
     { label: "Trips", value: stats?.trips ?? 0, icon: Plane, to: "/trips" },
     { label: "Activities", value: stats?.activities ?? 0, icon: CalendarDays, to: "/trips" },
   ];
@@ -139,7 +163,31 @@ function Dashboard() {
 
       <DiscoveryBanner />
 
+      <div className="flex items-center gap-2 mb-4">
+        <Globe className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Filter by country:</span>
+        <Select value={filterCountry} onValueChange={setFilterCountry}>
+          <SelectTrigger className="w-[240px] capitalize">
+            <SelectValue placeholder="All countries" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All countries</SelectItem>
+            {countryOptions.map((c) => (
+              <SelectItem key={c} value={c} className="capitalize">
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {filterCountry !== "all" && (
+          <Button variant="ghost" size="sm" onClick={() => setFilterCountry("all")}>
+            Clear
+          </Button>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
         {cards.map((c) => (
           <Link key={c.label} to={c.to as any} className="block">
             <Card className="p-5 hover:shadow-md transition-shadow">
