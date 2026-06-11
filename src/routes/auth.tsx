@@ -53,11 +53,11 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-background to-accent/40 px-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold text-gold-foreground shadow-sm">
             <Globe2 className="h-6 w-6" />
           </div>
           <div>
-            <div className="text-xl font-semibold tracking-tight">Orbis CRM</div>
+            <div className="text-xl font-semibold tracking-tight text-gold">Orbis CRM</div>
             <div className="text-xs text-muted-foreground">University Recruitment</div>
           </div>
         </div>
