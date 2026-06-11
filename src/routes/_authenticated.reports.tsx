@@ -94,7 +94,7 @@ function ReportsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Reports" description="Aggregate trip activity and AI-summarised outcomes for any date range." />
+      <PageHeader title="Global Reporting" description="Aggregate trip activity and AI-summarised outcomes for any date range." />
 
       <Card className="mb-6 border-2 border-primary/80">
         <CardHeader>
