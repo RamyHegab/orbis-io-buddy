@@ -26,7 +26,7 @@ function CountryFilter({
   onChange,
 }: {
   options: string[];
-  value: string;
+  value?: string;
   onChange: (v: string) => void;
 }) {
   const [query, setQuery] = useState("");
