@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MapPin, ExternalLink } from "lucide-react";
 import { isGoogleMapsConfigured, loadGoogleMaps, mapsSearchUrl } from "@/lib/google-maps";
-import { MapPreview } from "@/components/map-preview";
 
 export type AddressValue = {
   address: string;
