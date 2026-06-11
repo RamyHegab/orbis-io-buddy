@@ -1,19 +1,26 @@
-## Problem
-The `Global footprint` card on the dashboard is a fixed-height box (`lg:h-[420px]`), but `WorldMap` renders the SVG with `width: 100%; height: auto`. The aspect ratio of the Equal Earth projection (~2.05:1) rarely matches the card, so the map either overflows or leaves big empty bands at the top/bottom and looks off-center.
+## Goal
 
-## Fix (presentation only)
-Edit `src/components/world-map.tsx`:
+Make the Agents and Schools list pages much shorter on first view by grouping entries under country headers that are **collapsed by default**. Users click a country to expand and see its agents/schools.
 
-1. Change the outer wrapper from `relative w-full` to `relative w-full h-full flex items-center justify-center`.
-2. Update `<ComposableMap>` so it scales to the container instead of forcing its own aspect:
-   - Keep `projection="geoEqualEarth"`.
-   - Add an explicit `width={800}` / `height={400}` (matches the projection's natural ratio for the viewBox).
-   - Set `style={{ width: "100%", height: "100%" }}`.
-   - Add `preserveAspectRatio="xMidYMid meet"` (via the underlying svg props) so the map is centered and uniformly scaled with no clipping.
-   - Drop the hard-coded `projectionConfig={{ scale: 155 }}` (let the viewBox + meet handle sizing so it always fits).
+## Changes
 
-No changes to `_authenticated.dashboard.tsx` — the card already constrains height; once the SVG respects both axes, the map will sit centered and fully visible inside the box.
+### `src/routes/_authenticated.schools.index.tsx`
+- Schools are already grouped by country, but every group is rendered open. Wrap each country block in a `Collapsible` (from `@/components/ui/collapsible`) with `defaultOpen={false}`.
+- Country header becomes the `CollapsibleTrigger`: a full-width row showing flag/name, the count badge, and a chevron that rotates when open.
+- The school cards grid moves into `CollapsibleContent`.
+- When the user types in the search box, auto-expand any country that has matches (so search results are visible without manual clicks). Empty search = all collapsed.
 
-## Out of scope
-- No data, routing, or layout-grid changes.
-- Reports page and checklist panel untouched.
+### `src/routes/_authenticated.agents.index.tsx`
+- Currently a flat grid of agent cards. Add the same country grouping the Schools page uses, keyed off `hq_country` (fallback `"—"`). Sort countries alphabetically, agents alphabetically inside.
+- Wrap each country group in the same `Collapsible` pattern (collapsed by default, auto-expand on active search).
+- Keep the existing card markup, search input, header actions, and empty state untouched.
+
+### Shared behavior
+- Collapsed header style: subtle bordered row, `py-2 px-3`, hover background, chevron-right icon that rotates 90° when open. Matches existing muted-uppercase country label styling so it doesn't feel like a new component language.
+- No changes to data fetching, mutations, dialogs, routing, or card internals.
+
+## Technical notes
+
+- `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` already exist at `src/components/ui/collapsible.tsx`.
+- Use `useState<Record<string, boolean>>` to track open state per country so toggling and the search-driven auto-open can coexist (derive effective open state as `openMap[country] ?? !!filter && hasMatches`).
+- No new dependencies, no backend changes.
