@@ -99,7 +99,7 @@ function InboxPage() {
       const { error } = await supabase.from("pending_submissions").update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user?.id }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Rejected"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
+    onSuccess: () => { toast.success("Rejected"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); qc.invalidateQueries({ queryKey: ["pending_submissions_count"] }); },
   });
 
   return (
