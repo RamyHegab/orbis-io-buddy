@@ -127,6 +127,11 @@ async function discoverForAgent(agent: { id: string; trading_name: string; websi
     } catch {}
   }
 
+  // Enrich with Google Maps geocoding (address + location)
+  for (const r of results) {
+    r.branch = await enrichBranch(r.branch, agent.trading_name);
+  }
+
   return results;
 }
 
