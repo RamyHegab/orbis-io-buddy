@@ -1383,8 +1383,13 @@ function CostInput({ form, setForm }: { form: FormState; setForm: (f: FormState)
 function defaultTitle(f: FormState, branches: any, schools: any, agents: any): string {
   switch (f.type) {
     case "travel": {
-      const from = [f.from_city, f.transport_mode === "Air travel" ? f.from_country : ""].filter(Boolean).join(", ");
-      const to = [f.to_city, f.transport_mode === "Air travel" ? f.to_country : ""].filter(Boolean).join(", ");
+      const isAir = f.transport_mode === "Air travel";
+      const from = isAir
+        ? [f.from_country, f.from_city].filter(Boolean).join(" — ")
+        : f.from_city;
+      const to = isAir
+        ? [f.to_country, f.to_city].filter(Boolean).join(" — ")
+        : f.to_city;
       if (from && to) return `${from} → ${to}`;
       return f.transport_mode || "Travel";
     }
