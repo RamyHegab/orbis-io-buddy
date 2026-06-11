@@ -76,6 +76,15 @@ function AgentsPage() {
     );
   }, [agents, filter]);
 
+  const grouped = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const a of filtered) {
+      const key = a.hq_country?.trim() || "—";
+      (map[key] = map[key] ?? []).push(a);
+    }
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
+  }, [filtered]);
+
   const createAgent = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
