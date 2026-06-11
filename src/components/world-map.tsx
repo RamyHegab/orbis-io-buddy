@@ -65,11 +65,13 @@ export function WorldMap({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full flex items-center justify-center">
       <ComposableMap
         projection="geoEqualEarth"
-        projectionConfig={{ scale: 155 }}
-        style={{ width: "100%", height: "auto" }}
+        width={800}
+        height={400}
+        style={{ width: "100%", height: "100%" }}
+        preserveAspectRatio="xMidYMid meet"
       >
         <Geographies geography={worldData as any}>
           {({ geographies }: { geographies: any[] }) =>
