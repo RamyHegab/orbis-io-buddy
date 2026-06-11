@@ -976,13 +976,26 @@ function TripPlanner() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <div className="font-semibold">{editingActivityId ? "Edit activity" : "New activity"}</div>
                   <div className="text-xs text-muted-foreground">{fmtDate(selectedDay)}</div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => { setSelectedDay(null); setEditingActivityId(null); setForm(emptyForm); }}>Cancel</Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedDay(null); setEditingActivityId(null); setForm(emptyForm); }}>Cancel</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (validationMessage) { toast.error(validationMessage); return; }
+                      create.mutate();
+                    }}
+                    disabled={create.isPending}
+                  >
+                    {editingActivityId ? "Save changes" : "Save"}
+                  </Button>
+                </div>
               </div>
+
               {(() => {
                 const outOfRange =
                   (selectedDay && (selectedDay < trip.start_date || selectedDay > trip.end_date)) ||

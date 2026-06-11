@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import { loadGoogleMaps } from "@/lib/google-maps";
 
 type Props = {
@@ -7,16 +8,27 @@ type Props = {
   query?: string | null;
   height?: number;
   className?: string;
+  /** Optional external close handler. When provided, parent controls visibility. */
+  onClose?: () => void;
+  /** Show the close (X) button overlay. Defaults to true. */
+  closable?: boolean;
 };
 
-// Compact, read-only Google map preview. Uses google.maps.Marker (not
-// AdvancedMarkerElement) and no mapId, per project rules.
-export function MapPreview({ lat, lng, query, height = 160, className }: Props) {
+// Compact, read-only Google map preview. Dismissible — once the lookup
+// resolves and the map is shown, the user (or caller) can close it.
+export function MapPreview({
+  lat, lng, query, height = 160, className, onClose, closable = true,
+}: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  // Re-open when the location target changes (new pick / new coords).
+  useEffect(() => { setDismissed(false); }, [lat, lng, query]);
 
   useEffect(() => {
+    if (dismissed) return;
     let cancelled = false;
     const hasCoords = typeof lat === "number" && typeof lng === "number";
     if (!hasCoords && !query) return;
@@ -26,7 +38,6 @@ export function MapPreview({ lat, lng, query, height = 160, className }: Props) 
       let center = hasCoords ? { lat: lat as number, lng: lng as number } : null;
 
       if (!center && query) {
-        // Use Places Text Search to find a centre when only a free-form query exists.
         try {
           const { Place } = await google.maps.importLibrary("places");
           const { places } = await Place.searchByText({
@@ -37,9 +48,7 @@ export function MapPreview({ lat, lng, query, height = 160, className }: Props) 
           if (places?.[0]?.location) {
             center = { lat: places[0].location.lat(), lng: places[0].location.lng() };
           }
-        } catch {
-          /* swallow — preview just won't render */
-        }
+        } catch { /* swallow */ }
       }
       if (!center) return;
 
@@ -60,8 +69,29 @@ export function MapPreview({ lat, lng, query, height = 160, className }: Props) 
     }).catch(() => { /* preview hidden */ });
 
     return () => { cancelled = true; };
-  }, [lat, lng, query]);
+  }, [lat, lng, query, dismissed]);
 
+  if (dismissed) return null;
   if (lat == null && lng == null && !query) return null;
-  return <div ref={ref} className={className} style={{ width: "100%", height, borderRadius: 8, overflow: "hidden" }} />;
+
+  const handleClose = () => {
+    if (onClose) onClose();
+    else setDismissed(true);
+  };
+
+  return (
+    <div className={className} style={{ position: "relative", width: "100%", height, borderRadius: 8, overflow: "hidden" }}>
+      <div ref={ref} style={{ width: "100%", height: "100%" }} />
+      {closable && (
+        <button
+          type="button"
+          onClick={handleClose}
+          aria-label="Close map"
+          className="absolute top-1.5 right-1.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
 }
