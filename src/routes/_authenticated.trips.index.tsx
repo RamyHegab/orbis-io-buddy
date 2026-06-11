@@ -174,23 +174,23 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   );
 
   return (
-    <Card className="p-5 space-y-4 sticky top-4">
-      <div>
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">Pre-trip checklist</div>
-        <div className="font-semibold truncate">{trip.title}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
+    <Card className="p-0 sticky top-4 border-2 border-primary/80 overflow-hidden rounded-md">
+      <div className="bg-primary text-primary-foreground px-5 py-3">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-gold">Pre-trip checklist</div>
+        <div className="font-semibold truncate mt-0.5">{trip.title}</div>
+        <div className="text-xs text-primary-foreground/70 mt-0.5">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
       </div>
-      <div className="space-y-3">
+      <div className="p-5 space-y-4">
         {CHECKLIST_ITEMS.map((item) => {
           if (item.key === "freight_required") {
             const v = checklist[item.key];
             return (
-              <div key={item.key} className="space-y-1">
+              <div key={item.key} className="space-y-1 rounded-md border border-primary/30 bg-muted/40 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-medium">{item.label}</div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant={v === "yes" ? "default" : "outline"} className="h-7 px-2" onClick={() => setVal(item.key, "yes")}>Yes</Button>
-                    <Button size="sm" variant={v === "no" ? "default" : "outline"} className="h-7 px-2" onClick={() => setVal(item.key, "no")}>No</Button>
+                    <Button size="sm" variant={v === "yes" ? "default" : "outline"} className={`h-7 px-2 ${v === "yes" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "yes")}>Yes</Button>
+                    <Button size="sm" variant={v === "no" ? "default" : "outline"} className={`h-7 px-2 ${v === "no" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "no")}>No</Button>
                   </div>
                 </div>
                 {item.hint && <div className="text-xs text-muted-foreground">{item.hint}</div>}
@@ -203,13 +203,13 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
               <Checkbox
                 checked={done}
                 onCheckedChange={(c) => setVal(item.key, !!c)}
-                className="mt-0.5"
+                className="mt-0.5 data-[state=checked]:bg-gold data-[state=checked]:text-gold-foreground data-[state=checked]:border-gold"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   {item.label}
                   {done ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle2 className="h-3 w-3" /> Done</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-gold-foreground bg-gold rounded-sm px-1.5 py-0.5"><CheckCircle2 className="h-3 w-3" /> Done</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Circle className="h-3 w-3" /> Open</span>
                   )}
@@ -219,12 +219,12 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
             </label>
           );
         })}
+        {allDone && (
+          <div className="rounded-md border-2 border-gold bg-gold/15 p-3 text-sm font-semibold text-primary text-center">
+            Good luck and enjoy your trip! ✈️
+          </div>
+        )}
       </div>
-      {allDone && (
-        <div className="rounded-md border border-emerald-600/30 bg-emerald-600/10 p-3 text-sm text-emerald-700 dark:text-emerald-400 text-center">
-          Good luck and enjoy your trip! ✈️
-        </div>
-      )}
     </Card>
   );
 }
