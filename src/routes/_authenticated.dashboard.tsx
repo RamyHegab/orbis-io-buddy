@@ -10,6 +10,7 @@ import { Plane, Users, GraduationCap, CalendarDays, FileBarChart } from "lucide-
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
 import { DiscoveryBanner } from "@/components/discovery-banner";
 import { WorldMap, normalizeCountry, type CountryStats } from "@/components/world-map";
+import { UpcomingChecklist } from "@/components/upcoming-checklist";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Orbis CRM" }] }),
@@ -46,8 +47,9 @@ function Dashboard() {
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from("trips")
-        .select("*")
+        .select("id, title, start_date, end_date, destinations, checklist, status")
         .gte("end_date", today)
+        .eq("status", "confirmed")
         .order("start_date", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -151,15 +153,18 @@ function Dashboard() {
         ))}
       </div>
 
-      <Card className="p-4 mb-6 border-2 border-primary/80">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <h2 className="font-semibold">Global footprint</h2>
-          <span className="text-xs text-muted-foreground">
-            Hover a country for agents, schools & completed trips
-          </span>
-        </div>
-        <WorldMap data={countryStats ?? {}} />
-      </Card>
+      <div className="grid lg:grid-cols-[1fr_320px] gap-6 mb-6">
+        <Card className="p-4 border-2 border-primary/80">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h2 className="font-semibold">Global footprint</h2>
+            <span className="text-xs text-muted-foreground">
+              Hover a country for agents, schools & completed trips
+            </span>
+          </div>
+          <WorldMap data={countryStats ?? {}} />
+        </Card>
+        <UpcomingChecklist trip={upcomingTrip as any} />
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
 
