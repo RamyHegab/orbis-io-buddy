@@ -99,16 +99,16 @@ export function AppShell() {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors border-l-2",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+                      ? "border-gold bg-sidebar-accent text-gold"
+                      : "border-transparent text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-gold",
                   )}
                 >
                   <Icon className="h-4 w-4" />
                   <span className="flex-1">{item.label}</span>
                   {count > 0 && (
-                    <span className="inline-flex min-w-[1.25rem] h-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                    <span className="inline-flex min-w-[1.25rem] h-5 items-center justify-center rounded-full bg-gold px-1.5 text-[11px] font-semibold text-gold-foreground">
                       {count > 99 ? "99+" : count}
                     </span>
                   )}
