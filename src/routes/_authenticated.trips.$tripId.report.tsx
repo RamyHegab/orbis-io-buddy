@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { generateTripReport } from "@/lib/trip-report.functions";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId/report")({
@@ -76,8 +77,8 @@ function TripReportPage() {
           <div className="text-xs text-muted-foreground mb-4">
             Generated {new Date(latest.created_at).toLocaleString()} {latest.model && `• ${latest.model}`}
           </div>
-          <div className="prose prose-sm max-w-none prose-headings:tracking-tight prose-p:text-foreground">
-            <ReactMarkdown>{latest.content_md}</ReactMarkdown>
+          <div className="trip-report prose prose-sm max-w-none prose-headings:tracking-tight prose-headings:text-foreground prose-p:text-foreground prose-li:text-foreground prose-strong:text-foreground prose-a:text-primary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{latest.content_md}</ReactMarkdown>
           </div>
         </Card>
       ) : (

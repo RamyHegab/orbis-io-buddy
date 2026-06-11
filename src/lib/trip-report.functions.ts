@@ -79,8 +79,21 @@ export const generateTripReport = createServerFn({ method: "POST" })
     ctx += `\n## Activities (${activities?.length ?? 0})\n`;
     for (const a of activities ?? []) {
       ctx += `\n### ${a.day_date}${a.start_time ? ` ${a.start_time.slice(0, 5)}` : ""} — ${a.title} [${a.type}]\n`;
+      if (a.type === "travel") {
+        const isAir = a.transport_mode === "Air travel";
+        const from = isAir ? [a.from_country, a.from_city].filter(Boolean).join(" — ") : a.from_city;
+        const to = isAir ? [a.to_country, a.to_city].filter(Boolean).join(" — ") : a.to_city;
+        if (from) ctx += `From: ${from}\n`;
+        if (to) ctx += `To: ${to}\n`;
+        if (a.transport_mode) ctx += `Mode: ${a.transport_mode}\n`;
+        if (a.airline) ctx += `Airline: ${a.airline}${a.flight_number ? ` ${a.flight_number}` : ""}\n`;
+      }
       if (a.location) ctx += `Location: ${a.location}\n`;
-      if (a.agents && a.agent_id) ctx += `Agent: [${a.agents.trading_name}](/agents/${a.agent_id})\n`;
+      if (a.type === "agent_visit" && a.agents && a.agent_id) {
+        ctx += `Agent card: [${a.agents.trading_name}](/agents/${a.agent_id}) _(requires login)_\n`;
+      } else if (a.agents && a.agent_id) {
+        ctx += `Agent: [${a.agents.trading_name}](/agents/${a.agent_id})\n`;
+      }
       if (a.schools && a.school_id) ctx += `School: [${a.schools.name}](/schools) (${a.schools.city}, ${a.schools.country})\n`;
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
       if (a.objectives) ctx += `Objectives: ${a.objectives}\n`;
@@ -112,7 +125,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
           {
             role: "system",
             content:
-              "You are an executive assistant for a university international recruitment team. Write a professional, well-structured trip report in Markdown based on the provided data. Start with an Executive Summary that reflects the stated Trip Objectives (if provided) and assesses how well they were met. Then include Highlights by Country/City, Key Agent & School Engagements, Recruitment Event Outcomes, Action Items / Follow-ups, and a brief Conclusion. Weave each activity's Objectives and 'Notes during visit' into the narrative — these are the primary source of qualitative insight. For the cost summary, only show Travel, Hotels, Events and Total — do NOT list individual hotels, nights, or accommodation breakdowns. Do NOT include any agent or school contact details (names, emails, phones, addresses). When referencing an agent or school, preserve the markdown link provided in the source data (e.g. [Agent Name](/agents/<id>)) so the reader can click through. Be concise and concrete. Use bullet points where helpful.",
+              "You are an executive assistant for a university international recruitment team. Write a polished, well-structured trip report in GitHub-flavoured Markdown. Use this exact section order:\n\n1. **Executive Summary** — reflect the Trip Objectives and assess how well they were met.\n2. **Trip Overview** — a markdown table with columns | Field | Detail | covering dates, destinations, total activities, and headline outcomes.\n3. **Cost Summary** — a markdown table with columns | Category | Amount | for Travel, Hotels, Events, Total ONLY. Never list individual hotels, nights or accommodation breakdowns.\n4. **Itinerary at a Glance** — a markdown table with columns | Date | Type | Title | Location |. For Travel rows, format Title as `From → To` using the country and city already provided. For Agent Visit rows, the Title MUST be `Agent Name — Branch` and MUST be wrapped in the markdown link to the agent card (e.g. `[Agent Name — Branch](/agents/<id>)`); add `(requires login)` in italics on the same cell.\n5. **Highlights by Country / City**.\n6. **Key Agent & School Engagements** — for every agent visit, render the agent name as a markdown link to `/agents/<id>` followed by `_(requires login)_` on a new line, then a short paragraph weaving in Objectives and 'Notes during visit'.\n7. **Recruitment Event Outcomes**.\n8. **Action Items / Follow-ups** — a markdown table with columns | # | Action | Owner | Due |.\n9. **Conclusion**.\n\nRules:\n- Always prefer markdown tables over long bullet lists where data is tabular — they render as clean two-tone striped tables.\n- Preserve every markdown link provided in the source data verbatim so the reader can click through.\n- Do NOT include any agent or school contact details (names of staff, emails, phones, postal addresses).\n- Be concise, concrete, and executive-friendly.",
           },
           { role: "user", content: ctx },
         ],

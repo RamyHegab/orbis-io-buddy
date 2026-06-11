@@ -250,6 +250,10 @@ function TripPlanner() {
         branch_id: form.branch_id || null,
         school_id: form.school_id || null,
         transport_mode: form.transport_mode || null,
+        from_city: form.from_city || null,
+        from_country: form.from_country || null,
+        to_city: form.to_city || null,
+        to_country: form.to_country || null,
         airline: form.airline || null,
         flight_number: form.flight_number || null,
         cost: form.cost ? Number(form.cost) : null,
@@ -1023,14 +1027,21 @@ function TripPlanner() {
                       <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
-                    <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
-                  </div>
-                  {form.transport_mode === "Air travel" && (
+                  {form.transport_mode === "Air travel" ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
+                        <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
+                        <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
+                      </div>
+                    </>
+                  ) : (
                     <div className="grid grid-cols-2 gap-3">
-                      <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
-                      <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
+                      <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                      <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
@@ -1376,8 +1387,13 @@ function CostInput({ form, setForm }: { form: FormState; setForm: (f: FormState)
 function defaultTitle(f: FormState, branches: any, schools: any, agents: any): string {
   switch (f.type) {
     case "travel": {
-      const from = [f.from_city, f.transport_mode === "Air travel" ? f.from_country : ""].filter(Boolean).join(", ");
-      const to = [f.to_city, f.transport_mode === "Air travel" ? f.to_country : ""].filter(Boolean).join(", ");
+      const isAir = f.transport_mode === "Air travel";
+      const from = isAir
+        ? [f.from_country, f.from_city].filter(Boolean).join(" — ")
+        : f.from_city;
+      const to = isAir
+        ? [f.to_country, f.to_city].filter(Boolean).join(" — ")
+        : f.to_city;
       if (from && to) return `${from} → ${to}`;
       return f.transport_mode || "Travel";
     }
