@@ -65,15 +65,21 @@ export function WorldMap({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden p-3">
+    <div className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30">
       <ComposableMap
-        projection="geoEqualEarth"
-        width={800}
-        height={420}
-        projectionConfig={{ scale: 118, center: [0, 0] }}
-        style={{ width: "92%", height: "92%", display: "block" }}
-        preserveAspectRatio="xMidYMid meet"
+        projection="geoMercator"
+        projectionConfig={{ scale: 130, center: [10, 38] }}
+        width={980}
+        height={520}
+        style={{ width: "100%", height: "100%", display: "block" }}
+        preserveAspectRatio="xMidYMid slice"
       >
+        <defs>
+          <linearGradient id="activeCountry" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--gold)" stopOpacity="1" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
         <Geographies geography={worldData as any}>
           {({ geographies }: { geographies: any[] }) =>
             geographies.map((geo) => {
@@ -85,12 +91,7 @@ export function WorldMap({ data }: Props) {
                   key={geo.rsmKey}
                   geography={geo}
                   onMouseEnter={(evt) => {
-                    setTooltip({
-                      x: evt.clientX,
-                      y: evt.clientY,
-                      name,
-                      stats,
-                    });
+                    setTooltip({ x: evt.clientX, y: evt.clientY, name, stats });
                   }}
                   onMouseMove={(evt) => {
                     setTooltip((t) =>
@@ -100,15 +101,16 @@ export function WorldMap({ data }: Props) {
                   onMouseLeave={() => setTooltip(null)}
                   style={{
                     default: {
-                      fill: has ? "var(--gold)" : "var(--muted)",
-                      stroke: "var(--primary)",
-                      strokeWidth: 0.4,
+                      fill: has ? "url(#activeCountry)" : "hsl(var(--muted) / 0.5)",
+                      stroke: "hsl(var(--border))",
+                      strokeWidth: 0.5,
                       outline: "none",
+                      transition: "all 0.2s ease",
                     },
                     hover: {
                       fill: "var(--primary)",
                       stroke: "var(--gold)",
-                      strokeWidth: 0.8,
+                      strokeWidth: 1,
                       outline: "none",
                       cursor: "pointer",
                     },
