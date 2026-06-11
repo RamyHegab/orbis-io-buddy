@@ -313,12 +313,8 @@ function SchoolsPage() {
                         />
                       </div>
                     </div>
-                    {(s.lat != null && s.lng != null) || s.place_id ? (
-                      <div className="mt-3">
-                        <MapPreview lat={s.lat} lng={s.lng} query={s.formatted_address || s.address} height={120} />
-                      </div>
-                    ) : null}
                   </Card>
+
                   );
                 })}
               </div>
