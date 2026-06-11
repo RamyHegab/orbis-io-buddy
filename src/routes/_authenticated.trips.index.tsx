@@ -76,13 +76,14 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
   return (
     <Card
       onClick={onSelect}
-      className={`p-4 hover:shadow-md transition-all h-full relative group shrink-0 w-72 cursor-pointer ${selected ? "ring-2 ring-primary" : ""}`}
+      className={`p-0 hover:shadow-md transition-all relative group shrink-0 w-56 cursor-pointer overflow-hidden rounded-md border-2 ${selected ? "border-gold shadow-md" : "border-primary/80"}`}
     >
+      <div className={`h-1.5 w-full ${trip.status === "confirmed" ? "bg-gold" : "bg-primary"}`} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
             size="icon" variant="ghost"
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-7 w-7"
             onClick={(e) => e.stopPropagation()}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -101,19 +102,17 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <Link to="/trips/$tripId" params={{ tripId: trip.id }} className="block" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-            <Plane className="h-5 w-5" />
-          </div>
-          <div className="flex-1 min-w-0 pr-6">
-            <div className="font-medium truncate">{trip.title}</div>
-            <div className="text-xs text-muted-foreground mt-1">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
-            <div className="flex flex-wrap gap-1 mt-3">
-              {trip.status === "confirmed" && <Badge className="bg-emerald-600 hover:bg-emerald-600">Confirmed</Badge>}
-              {trip.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
-            </div>
-          </div>
+      <Link to="/trips/$tripId" params={{ tripId: trip.id }} className="block p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-gold shrink-0 mb-3">
+          <Plane className="h-5 w-5" />
+        </div>
+        <div className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{trip.title}</div>
+        <div className="text-xs text-muted-foreground mt-2">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
+        <div className="flex flex-wrap gap-1 mt-3">
+          {trip.status === "confirmed" && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Confirmed</Badge>}
+          {trip.destinations?.slice(0, 3).map((d: string) => (
+            <Badge key={d} variant="outline" className="border-primary/40 text-primary">{d}</Badge>
+          ))}
         </div>
       </Link>
     </Card>
