@@ -164,11 +164,7 @@ export function AddressAutocomplete({
           Google Maps not configured — free-form address only.
         </p>
       )}
-      {showPreview && (value.lat != null || value.address) && (
-        <div className="mt-2">
-          <MapPreview lat={value.lat} lng={value.lng} query={value.formatted_address || value.address} />
-        </div>
-      )}
     </div>
   );
 }
+
