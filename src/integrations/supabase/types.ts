@@ -28,6 +28,8 @@ export type Database = {
           end_time: string | null
           flight_number: string | null
           formatted_address: string | null
+          from_city: string | null
+          from_country: string | null
           id: string
           lat: number | null
           lng: number | null
@@ -40,6 +42,8 @@ export type Database = {
           school_id: string | null
           start_time: string | null
           title: string
+          to_city: string | null
+          to_country: string | null
           transport_mode: string | null
           trip_id: string
           type: Database["public"]["Enums"]["activity_type"]
@@ -60,6 +64,8 @@ export type Database = {
           end_time?: string | null
           flight_number?: string | null
           formatted_address?: string | null
+          from_city?: string | null
+          from_country?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -72,6 +78,8 @@ export type Database = {
           school_id?: string | null
           start_time?: string | null
           title: string
+          to_city?: string | null
+          to_country?: string | null
           transport_mode?: string | null
           trip_id: string
           type: Database["public"]["Enums"]["activity_type"]
@@ -92,6 +100,8 @@ export type Database = {
           end_time?: string | null
           flight_number?: string | null
           formatted_address?: string | null
+          from_city?: string | null
+          from_country?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -104,6 +114,8 @@ export type Database = {
           school_id?: string | null
           start_time?: string | null
           title?: string
+          to_city?: string | null
+          to_country?: string | null
           transport_mode?: string | null
           trip_id?: string
           type?: Database["public"]["Enums"]["activity_type"]
