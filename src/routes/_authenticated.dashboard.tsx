@@ -7,9 +7,9 @@ import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plane, Users, GraduationCap, CalendarDays, FileBarChart, Filter, X } from "lucide-react";
+import { Plane, Users, GraduationCap, CalendarDays, FileBarChart, Filter, X, Search } from "lucide-react";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
 import { DiscoveryBanner } from "@/components/discovery-banner";
 import { WorldMap, normalizeCountry, type CountryStats } from "@/components/world-map";
@@ -19,6 +19,86 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Orbis CRM" }] }),
   component: Dashboard,
 });
+
+function CountryFilter({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value?: string;
+  onChange: (v: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((o) => o.toLowerCase().includes(q));
+  }, [query, options]);
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          placeholder="Search country..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-8 h-8 text-sm"
+        />
+      </div>
+      <div className="max-h-52 overflow-y-auto space-y-0.5">
+        <button
+          onClick={() => {
+            onChange("all");
+            setQuery("");
+          }}
+          className={`w-full text-left px-2 py-1.5 rounded text-sm capitalize transition-colors ${
+            value === "all"
+              ? "bg-primary/10 text-primary font-medium"
+              : "hover:bg-muted"
+          }`}
+        >
+          All countries
+        </button>
+        {filtered.map((o) => (
+          <button
+            key={o}
+            onClick={() => {
+              onChange(o);
+              setQuery("");
+            }}
+            className={`w-full text-left px-2 py-1.5 rounded text-sm capitalize transition-colors ${
+              value === o
+                ? "bg-primary/10 text-primary font-medium"
+                : "hover:bg-muted"
+            }`}
+          >
+            {o}
+          </button>
+        ))}
+        {filtered.length === 0 && query.trim() && (
+          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+            No countries found
+          </div>
+        )}
+      </div>
+      {value !== "all" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full"
+          onClick={() => {
+            onChange("all");
+            setQuery("");
+          }}
+        >
+          <X className="h-3.5 w-3.5 mr-1" /> Clear filter
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function Dashboard() {
   const { user } = useAuth();
@@ -218,33 +298,15 @@ function Dashboard() {
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64 space-y-2">
+                    <PopoverContent align="end" className="w-64 p-3 space-y-2">
                       <div className="text-xs font-medium text-muted-foreground">
                         Filter {c.label.toLowerCase()} by country
                       </div>
-                      <Select value={c.filter} onValueChange={c.setFilter}>
-                        <SelectTrigger className="capitalize">
-                          <SelectValue placeholder="All countries" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All countries</SelectItem>
-                          {c.options.map((o) => (
-                            <SelectItem key={o} value={o} className="capitalize">
-                              {o}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {c.filter !== "all" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => c.setFilter!("all")}
-                        >
-                          <X className="h-3.5 w-3.5 mr-1" /> Clear filter
-                        </Button>
-                      )}
+                      <CountryFilter
+                        options={c.options}
+                        value={c.filter}
+                        onChange={c.setFilter}
+                      />
                     </PopoverContent>
                   </Popover>
                 )}
