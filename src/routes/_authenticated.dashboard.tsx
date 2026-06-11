@@ -10,6 +10,7 @@ import { Plane, Users, GraduationCap, CalendarDays, FileBarChart } from "lucide-
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
 import { DiscoveryBanner } from "@/components/discovery-banner";
 import { WorldMap, normalizeCountry, type CountryStats } from "@/components/world-map";
+import { UpcomingChecklist } from "@/components/upcoming-checklist";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Orbis CRM" }] }),
