@@ -1023,14 +1023,21 @@ function TripPlanner() {
                       <SelectContent>{TRANSPORT_MODES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
-                    <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
-                  </div>
-                  {form.transport_mode === "Air travel" && (
+                  {form.transport_mode === "Air travel" ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
+                        <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
+                        <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
+                      </div>
+                    </>
+                  ) : (
                     <div className="grid grid-cols-2 gap-3">
-                      <div><Label>From (country)</Label><Input value={form.from_country} onChange={(e) => setForm({ ...form, from_country: e.target.value })} placeholder="United Kingdom" /></div>
-                      <div><Label>To (country)</Label><Input value={form.to_country} onChange={(e) => setForm({ ...form, to_country: e.target.value })} placeholder="Thailand" /></div>
+                      <div><Label>From (city)</Label><Input value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} placeholder="London" /></div>
+                      <div><Label>To (city)</Label><Input value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} placeholder="Bangkok" /></div>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
