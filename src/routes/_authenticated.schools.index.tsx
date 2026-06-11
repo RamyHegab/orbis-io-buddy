@@ -20,7 +20,7 @@ import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
 import { ShareIntakeLink } from "@/components/share-intake-link";
 
-export const Route = createFileRoute("/_authenticated/schools")({
+export const Route = createFileRoute("/_authenticated/schools/")({
   head: () => ({ meta: [{ title: "Schools — Orbis CRM" }] }),
   component: SchoolsPage,
 });
