@@ -14,7 +14,6 @@ import { Plus, Trash2, GraduationCap, Upload, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
-import { MapPreview } from "@/components/map-preview";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
@@ -313,12 +312,8 @@ function SchoolsPage() {
                         />
                       </div>
                     </div>
-                    {(s.lat != null && s.lng != null) || s.place_id ? (
-                      <div className="mt-3">
-                        <MapPreview lat={s.lat} lng={s.lng} query={s.formatted_address || s.address} height={120} />
-                      </div>
-                    ) : null}
                   </Card>
+
                   );
                 })}
               </div>

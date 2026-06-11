@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MapPin, ExternalLink } from "lucide-react";
 import { isGoogleMapsConfigured, loadGoogleMaps, mapsSearchUrl } from "@/lib/google-maps";
-import { MapPreview } from "@/components/map-preview";
 
 export type AddressValue = {
   address: string;
@@ -164,11 +163,7 @@ export function AddressAutocomplete({
           Google Maps not configured — free-form address only.
         </p>
       )}
-      {showPreview && (value.lat != null || value.address) && (
-        <div className="mt-2">
-          <MapPreview lat={value.lat} lng={value.lng} query={value.formatted_address || value.address} />
-        </div>
-      )}
     </div>
   );
 }
+

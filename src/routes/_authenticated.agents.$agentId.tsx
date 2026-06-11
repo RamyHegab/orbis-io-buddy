@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
-import { MapPreview } from "@/components/map-preview";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
 import { ShareIntakeLink } from "@/components/share-intake-link";
@@ -263,10 +262,8 @@ function AgentDetail() {
                         <div className="mt-1">
                           <div className="text-xs text-muted-foreground">{b.formatted_address || b.address}</div>
                           {url && <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> View on Google Maps</a>}
-                          {(b.lat != null && b.lng != null) && (
-                            <div className="mt-2"><MapPreview lat={Number(b.lat)} lng={Number(b.lng)} height={120} /></div>
-                          )}
                         </div>
+
                       );
                     })()}
                     {contactName && <div className="text-sm mt-2">{contactName}{b.contact_position ? ` — ${b.contact_position}` : ""}</div>}
