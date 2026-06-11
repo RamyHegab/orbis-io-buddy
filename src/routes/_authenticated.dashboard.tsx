@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plane, Users, GraduationCap, CalendarDays } from "lucide-react";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_DOT_COLORS } from "@/lib/format";
 import { DiscoveryBanner } from "@/components/discovery-banner";
+import { WorldMap, normalizeCountry, type CountryStats } from "@/components/world-map";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Orbis CRM" }] }),
@@ -67,6 +68,51 @@ function Dashboard() {
     },
   });
 
+  const { data: countryStats } = useQuery({
+    enabled: !!uid,
+    queryKey: ["country-stats", uid],
+    queryFn: async () => {
+      const [agentsRes, branchesRes, schoolsRes, tripsRes] = await Promise.all([
+        supabase.from("agents").select("id, hq_country"),
+        supabase.from("agent_branches").select("agent_id, country"),
+        supabase.from("schools").select("country"),
+        supabase.from("trips").select("destinations, end_date"),
+      ]);
+
+      const agentCountries: Record<string, Set<string>> = {};
+      for (const a of agentsRes.data ?? []) {
+        if (!a.hq_country) continue;
+        const k = normalizeCountry(a.hq_country);
+        (agentCountries[k] ??= new Set()).add(a.id);
+      }
+      for (const b of branchesRes.data ?? []) {
+        if (!b.country || !b.agent_id) continue;
+        const k = normalizeCountry(b.country);
+        (agentCountries[k] ??= new Set()).add(b.agent_id);
+      }
+
+      const stats: Record<string, CountryStats> = {};
+      for (const [k, ids] of Object.entries(agentCountries)) {
+        (stats[k] ??= { agents: 0, schools: 0, trips: 0 }).agents = ids.size;
+      }
+      for (const s of schoolsRes.data ?? []) {
+        if (!s.country) continue;
+        const k = normalizeCountry(s.country);
+        (stats[k] ??= { agents: 0, schools: 0, trips: 0 }).schools += 1;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      for (const t of tripsRes.data ?? []) {
+        if (!t.end_date || t.end_date > today) continue;
+        for (const d of t.destinations ?? []) {
+          if (!d) continue;
+          const k = normalizeCountry(d);
+          (stats[k] ??= { agents: 0, schools: 0, trips: 0 }).trips += 1;
+        }
+      }
+      return stats;
+    },
+  });
+
   const cards = [
     { label: "Agents", value: stats?.agents ?? 0, icon: Users, to: "/agents" },
     { label: "Schools", value: stats?.schools ?? 0, icon: GraduationCap, to: "/schools" },
@@ -97,7 +143,18 @@ function Dashboard() {
         ))}
       </div>
 
+      <Card className="p-4 mb-6 border-2 border-primary/80">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <h2 className="font-semibold">Global footprint</h2>
+          <span className="text-xs text-muted-foreground">
+            Hover a country for agents, schools & completed trips
+          </span>
+        </div>
+        <WorldMap data={countryStats ?? {}} />
+      </Card>
+
       <div className="grid lg:grid-cols-2 gap-6">
+
         <Card className="p-6">
           <h2 className="font-semibold mb-1">Next trip</h2>
           {upcomingTrip ? (
