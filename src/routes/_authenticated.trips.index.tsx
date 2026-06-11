@@ -76,13 +76,14 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
   return (
     <Card
       onClick={onSelect}
-      className={`p-4 hover:shadow-md transition-all h-full relative group shrink-0 w-72 cursor-pointer ${selected ? "ring-2 ring-primary" : ""}`}
+      className={`p-0 hover:shadow-md transition-all relative group shrink-0 w-56 cursor-pointer overflow-hidden rounded-md border-2 ${selected ? "border-gold shadow-md" : "border-primary/80"}`}
     >
+      <div className={`h-1.5 w-full ${trip.status === "confirmed" ? "bg-gold" : "bg-primary"}`} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
             size="icon" variant="ghost"
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-7 w-7"
             onClick={(e) => e.stopPropagation()}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -101,19 +102,17 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <Link to="/trips/$tripId" params={{ tripId: trip.id }} className="block" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-            <Plane className="h-5 w-5" />
-          </div>
-          <div className="flex-1 min-w-0 pr-6">
-            <div className="font-medium truncate">{trip.title}</div>
-            <div className="text-xs text-muted-foreground mt-1">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
-            <div className="flex flex-wrap gap-1 mt-3">
-              {trip.status === "confirmed" && <Badge className="bg-emerald-600 hover:bg-emerald-600">Confirmed</Badge>}
-              {trip.destinations?.slice(0, 3).map((d: string) => <Badge key={d} variant="secondary">{d}</Badge>)}
-            </div>
-          </div>
+      <Link to="/trips/$tripId" params={{ tripId: trip.id }} className="block p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-gold shrink-0 mb-3">
+          <Plane className="h-5 w-5" />
+        </div>
+        <div className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{trip.title}</div>
+        <div className="text-xs text-muted-foreground mt-2">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
+        <div className="flex flex-wrap gap-1 mt-3">
+          {trip.status === "confirmed" && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Confirmed</Badge>}
+          {trip.destinations?.slice(0, 3).map((d: string) => (
+            <Badge key={d} variant="outline" className="border-primary/40 text-primary">{d}</Badge>
+          ))}
         </div>
       </Link>
     </Card>
@@ -122,15 +121,15 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
 
 function HorizontalRow({ title, trips, selectedId, onSelect, empty }: { title: string; trips: any[]; selectedId?: string | null; onSelect?: (id: string) => void; empty: string }) {
   return (
-    <section className="space-y-2">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
-        <span className="text-xs text-muted-foreground">{trips.length}</span>
+    <section className="rounded-md border-2 border-primary/80 bg-card overflow-hidden">
+      <div className="flex items-center justify-between bg-primary text-primary-foreground px-4 py-2">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-gold">{title}</h2>
+        <span className="text-[11px] font-semibold text-gold/80">{trips.length}</span>
       </div>
       {trips.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted-foreground">{empty}</Card>
+        <div className="p-6 text-center text-sm text-muted-foreground">{empty}</div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+        <div className="flex gap-3 overflow-x-auto p-4">
           {trips.map((t) => (
             <TripCard
               key={t.id}
@@ -175,23 +174,23 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   );
 
   return (
-    <Card className="p-5 space-y-4 sticky top-4">
-      <div>
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">Pre-trip checklist</div>
-        <div className="font-semibold truncate">{trip.title}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
+    <Card className="p-0 sticky top-4 border-2 border-primary/80 overflow-hidden rounded-md">
+      <div className="bg-primary text-primary-foreground px-5 py-3">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-gold">Pre-trip checklist</div>
+        <div className="font-semibold truncate mt-0.5">{trip.title}</div>
+        <div className="text-xs text-primary-foreground/70 mt-0.5">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
       </div>
-      <div className="space-y-3">
+      <div className="p-5 space-y-4">
         {CHECKLIST_ITEMS.map((item) => {
           if (item.key === "freight_required") {
             const v = checklist[item.key];
             return (
-              <div key={item.key} className="space-y-1">
+              <div key={item.key} className="space-y-1 rounded-md border border-primary/30 bg-muted/40 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-medium">{item.label}</div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant={v === "yes" ? "default" : "outline"} className="h-7 px-2" onClick={() => setVal(item.key, "yes")}>Yes</Button>
-                    <Button size="sm" variant={v === "no" ? "default" : "outline"} className="h-7 px-2" onClick={() => setVal(item.key, "no")}>No</Button>
+                    <Button size="sm" variant={v === "yes" ? "default" : "outline"} className={`h-7 px-2 ${v === "yes" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "yes")}>Yes</Button>
+                    <Button size="sm" variant={v === "no" ? "default" : "outline"} className={`h-7 px-2 ${v === "no" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "no")}>No</Button>
                   </div>
                 </div>
                 {item.hint && <div className="text-xs text-muted-foreground">{item.hint}</div>}
@@ -204,13 +203,13 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
               <Checkbox
                 checked={done}
                 onCheckedChange={(c) => setVal(item.key, !!c)}
-                className="mt-0.5"
+                className="mt-0.5 data-[state=checked]:bg-gold data-[state=checked]:text-gold-foreground data-[state=checked]:border-gold"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   {item.label}
                   {done ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle2 className="h-3 w-3" /> Done</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-gold-foreground bg-gold rounded-sm px-1.5 py-0.5"><CheckCircle2 className="h-3 w-3" /> Done</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Circle className="h-3 w-3" /> Open</span>
                   )}
@@ -220,12 +219,12 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
             </label>
           );
         })}
+        {allDone && (
+          <div className="rounded-md border-2 border-gold bg-gold/15 p-3 text-sm font-semibold text-primary text-center">
+            Good luck and enjoy your trip! ✈️
+          </div>
+        )}
       </div>
-      {allDone && (
-        <div className="rounded-md border border-emerald-600/30 bg-emerald-600/10 p-3 text-sm text-emerald-700 dark:text-emerald-400 text-center">
-          Good luck and enjoy your trip! ✈️
-        </div>
-      )}
     </Card>
   );
 }

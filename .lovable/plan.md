@@ -1,55 +1,47 @@
-## Backend audit findings
+## Goal
+Refresh the visual style across the app while keeping every existing feature, route, and data flow exactly as-is.
 
-The linter found 3 warnings. After inspecting the policies and functions, here's what's real and what to fix.
+**Palette**
+- Background: warm **sand** (`oklch(0.955 0.022 85)`)
+- Primary / sidebar / frames: **deep navy** (`oklch(0.22–0.26 0.07 260)`)
+- Accent: **gold** (`oklch(0.78 0.13 85)`) — logo, active states, highlights, key badges
+- Ink: navy on sand; gold on navy
 
-### 1. `pending_submissions` — overly permissive (HIGH)
-Any signed-in user can currently read, update, or delete every pending submission in the system. This is the Notifications inbox — only admins should approve/reject.
+## Changes
 
-Current policies:
-- `SELECT` using `true` → any authenticated user
-- `UPDATE` using `true` / with check `true` → any authenticated user
-- `DELETE` using `true` → any authenticated user
+### 1. `src/styles.css` — global tokens (one edit)
+Rewrite the `:root` (and matching `.dark`) token block to the navy/gold/sand system above. This recolors everything that already uses semantic tokens (cards, buttons, badges, dialogs, inputs, sidebar) in one shot — no component code changes needed.
 
-**Fix:** Replace with admin-only policies using the existing `public.has_role(auth.uid(), 'admin')` helper. Keep the existing public-INSERT policy (the intake form needs anonymous submissions).
+Also:
+- Tighten `--radius` from `0.75rem` → `0.5rem` for a crisper, more square frame feel.
+- Add `--gold` token for explicit gold use.
 
-### 2. `handle_new_user` — SECURITY DEFINER exposed (MEDIUM)
-This is a trigger function only — it should never be callable from the API. Authenticated users can currently invoke it directly.
+### 2. `src/components/app-shell.tsx` — sidebar polish
+- Logo tile: navy → **gold** background with navy globe icon. Brand text in gold.
+- Active nav item: gold left-border accent + gold text (instead of teal-tinted bg).
+- Notification badge: gold pill with navy text.
+- No structural/layout changes.
 
-**Fix:** `REVOKE EXECUTE ... FROM PUBLIC, anon, authenticated`. The `on_auth_user_created` trigger still runs it because triggers execute regardless of grants.
+### 3. `src/components/page-header.tsx`
+- Add a thin gold underline rule under the H1 to echo the framed look.
 
-### 3. `has_role` — SECURITY DEFINER callable (ACCEPT)
-The linter flags this, but it is the documented Lovable/Supabase pattern for RLS role checks and must remain callable by `authenticated` (RLS policies evaluate it as the calling user). No action — this is a false positive for this use case.
+### 4. `src/routes/_authenticated.trips.index.tsx` — Trips page restyle only
+Functionality unchanged (rows, checklist, create dialog, selection all behave the same). Visual updates only:
+- Each row wrapped in a **navy-framed panel** (border + subtle navy header bar showing section name + count) sitting on the sand background.
+- Trip cards become **square-feel tiles** (aspect closer to 1:1, fixed width ~14rem, navy 1px frame, sand interior, gold accent strip on top for status). Selected upcoming card uses a thicker gold frame instead of teal ring.
+- Plane icon tile: navy bg, gold icon.
+- "Confirmed" / destination badges restyled: confirmed → gold; destinations → navy outline chips.
+- Checklist panel: navy header band, gold check marks for Done, gold Yes/No active state, gold "Good luck" banner.
 
-### 4. `form_templates` SELECT using `true` — ACCEPT
-SELECT-only `true` is intentional so any signed-in user can read templates. Linter already excludes this category; it showed up only because the others did. No action.
+### 5. Other routes
+No code changes — they automatically pick up the new tokens (cards, buttons, inputs, dialogs all theme-driven).
 
-## Migration to apply
+## Out of scope
+- No changes to data, routing, queries, mutations, RLS, or component APIs.
+- No changes to dark mode beyond keeping it valid (navy deepened, gold preserved).
+- No font change (keeps Inter).
 
-```sql
--- pending_submissions: replace permissive policies with admin-only
-DROP POLICY IF EXISTS "Authenticated can read" ON public.pending_submissions;
-DROP POLICY IF EXISTS "Authenticated can update" ON public.pending_submissions;
-DROP POLICY IF EXISTS "Authenticated can delete" ON public.pending_submissions;
-
-CREATE POLICY "Admins can read pending submissions"
-  ON public.pending_submissions FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Admins can update pending submissions"
-  ON public.pending_submissions FOR UPDATE TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'))
-  WITH CHECK (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Admins can delete pending submissions"
-  ON public.pending_submissions FOR DELETE TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
-
--- handle_new_user: trigger-only, hide from API surface
-REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
-```
-
-## Verification
-After the migration, re-run `supabase--linter`. Expected: warnings 1 and 2 cleared; warning 3 (`has_role`) remains as an accepted false positive.
-
-## Heads-up
-Tightening `pending_submissions` to admins-only means non-admin members will no longer see the Notifications inbox count or list. If you also want managers (or all members) to see submissions, tell me which role and I'll widen the policy accordingly.
+## Acceptance
+- Sand page background, navy sidebar with gold logo + active accents.
+- Trips page rows are framed panels with square-feel tiles inside.
+- All existing buttons / dialogs / forms still work and look cohesive in the new palette.
