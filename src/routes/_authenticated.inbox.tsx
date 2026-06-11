@@ -90,7 +90,7 @@ function InboxPage() {
       if (e2) throw e2;
       return { skipped: false as const };
     },
-    onSuccess: (res) => { if (!res?.skipped) toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
+    onSuccess: (res) => { if (!res?.skipped) toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); qc.invalidateQueries({ queryKey: ["pending_submissions_count"] }); },
     onError: (e: any) => toast.error(e.message ?? "Approve failed"),
   });
 
