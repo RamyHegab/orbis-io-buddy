@@ -33,6 +33,28 @@ function InboxPage() {
     agent_branch: ["branch_name","city","country","address","contact_first_name","contact_last_name","contact_position","contact_email","contact_phone","in_country_trading_name","agency_name","place_id","lat","lng","formatted_address"],
   };
 
+  async function findDuplicate(item: any, clean: Record<string, any>) {
+    if (item.type === "agent_branch") {
+      let q = supabase.from("agent_branches").select("id, branch_name, city, country").eq("agent_id", item.agent_id);
+      if (clean.branch_name) q = q.ilike("branch_name", clean.branch_name);
+      else if (clean.city) q = q.ilike("city", clean.city).ilike("country", clean.country ?? "");
+      else return null;
+      const { data } = await q.limit(1);
+      return data?.[0] ?? null;
+    }
+    if (item.type === "agent" && clean.trading_name) {
+      const { data } = await supabase.from("agents").select("id, trading_name").eq("user_id", user!.id).ilike("trading_name", clean.trading_name).limit(1);
+      return data?.[0] ?? null;
+    }
+    if (item.type === "school" && clean.name) {
+      let q = supabase.from("schools").select("id, name, city").eq("user_id", user!.id).ilike("name", clean.name);
+      if (clean.city) q = q.ilike("city", clean.city);
+      const { data } = await q.limit(1);
+      return data?.[0] ?? null;
+    }
+    return null;
+  }
+
   const approve = useMutation({
     mutationFn: async (item: any) => {
       if (!user) throw new Error("Not signed in");
@@ -50,12 +72,24 @@ function InboxPage() {
         if (!payload.city) payload.city = "Unknown";
         if (!payload.country) payload.country = "Unknown";
       }
-      const { error } = await supabase.from(table as any).insert(payload);
-      if (error) throw error;
+
+      const dup = await findDuplicate(item, clean);
+      if (dup) {
+        const label = dup.branch_name || dup.name || dup.trading_name || "existing record";
+        const ok = window.confirm(`A matching ${item.type.replace("_", " ")} already exists ("${label}"). Overwrite it with the new details?`);
+        if (!ok) return { skipped: true as const };
+        const { error } = await supabase.from(table as any).update(clean).eq("id", dup.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from(table as any).insert(payload);
+        if (error) throw error;
+      }
+
       const { error: e2 } = await supabase.from("pending_submissions").update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: user.id }).eq("id", item.id);
       if (e2) throw e2;
+      return { skipped: false as const };
     },
-    onSuccess: () => { toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
+    onSuccess: (res) => { if (!res?.skipped) toast.success("Approved"); qc.invalidateQueries({ queryKey: ["pending_submissions"] }); },
     onError: (e: any) => toast.error(e.message ?? "Approve failed"),
   });
 
