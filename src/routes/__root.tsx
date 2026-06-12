@@ -77,16 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
+      { title: "ORBIS" },
       { name: "description", content: "Recruitment Trip CRM manages international recruitment agents, schools, and trip itineraries for universities." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { property: "og:title", content: "ORBIS" },
       { property: "og:description", content: "Recruitment Trip CRM manages international recruitment agents, schools, and trip itineraries for universities." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:title", content: "ORBIS" },
       { name: "twitter:description", content: "Recruitment Trip CRM manages international recruitment agents, schools, and trip itineraries for universities." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d3c94fc1-c9fb-42e6-a2c6-247f08d4b723/id-preview-267d4f90--5b17a8d4-7955-445d-9499-647d18379cdd.lovable.app-1781194582588.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d3c94fc1-c9fb-42e6-a2c6-247f08d4b723/id-preview-267d4f90--5b17a8d4-7955-445d-9499-647d18379cdd.lovable.app-1781194582588.png" },
     ],
     links: [
       {
