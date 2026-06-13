@@ -77,7 +77,7 @@ function CountryFilter({
                 : "hover:bg-muted"
             }`}
           >
-            {o}
+            {label(o)}
           </button>
         ))}
         {filtered.length === 0 && query.trim() && (
