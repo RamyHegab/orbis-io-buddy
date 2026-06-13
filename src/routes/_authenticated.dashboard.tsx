@@ -327,6 +327,7 @@ function Dashboard() {
                         options={c.options}
                         value={c.filter}
                         onChange={c.setFilter}
+                        displayMap={displayMap}
                       />
                     </PopoverContent>
                   </Popover>
@@ -337,8 +338,8 @@ function Dashboard() {
             <Link to={c.to as any} className="block">
               <div className="text-3xl font-semibold tracking-tight">{c.value}</div>
               {c.filter && c.filter !== "all" && (
-                <div className="text-xs text-muted-foreground mt-1 capitalize truncate">
-                  in {c.filter}
+                <div className="text-xs text-muted-foreground mt-1 truncate">
+                  in {displayMap[c.filter] ?? c.filter}
                 </div>
               )}
             </Link>
