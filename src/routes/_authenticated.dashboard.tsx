@@ -24,17 +24,20 @@ function CountryFilter({
   options,
   value,
   onChange,
+  displayMap,
 }: {
   options: string[];
   value?: string;
   onChange: (v: string) => void;
+  displayMap?: Record<string, string>;
 }) {
   const [query, setQuery] = useState("");
+  const label = (k: string) => displayMap?.[k] ?? k;
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter((o) => o.toLowerCase().includes(q));
-  }, [query, options]);
+    return options.filter((o) => label(o).toLowerCase().includes(q) || o.toLowerCase().includes(q));
+  }, [query, options, displayMap]);
 
   return (
     <div className="space-y-2">
