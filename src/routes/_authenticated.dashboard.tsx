@@ -355,7 +355,7 @@ function Dashboard() {
             </Link>
           </div>
           <div className="flex-1 overflow-hidden">
-            <WorldMap data={countryStats ?? {}} />
+            <WorldMap data={statsMap} />
           </div>
         </Card>
         <UpcomingChecklist trip={upcomingTrip as any} />
