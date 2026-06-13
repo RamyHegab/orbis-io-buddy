@@ -159,21 +159,36 @@ function Dashboard() {
     queryKey: ["country-stats", uid],
     queryFn: async () => {
       const [agentsRes, branchesRes, schoolsRes, tripsRes] = await Promise.all([
-        supabase.from("agents").select("id, hq_country"),
+        supabase.from("agents").select("id, hq_country, countries_of_operation"),
         supabase.from("agent_branches").select("agent_id, country"),
         supabase.from("schools").select("country"),
         supabase.from("trips").select("destinations, end_date"),
       ]);
 
+      // Preserve original casing per normalized key (first seen wins).
+      const display: Record<string, string> = {};
+      const remember = (raw: string) => {
+        const k = normalizeCountry(raw);
+        if (!k) return k;
+        if (!display[k]) display[k] = raw.trim();
+        return k;
+      };
+
       const agentCountries: Record<string, Set<string>> = {};
       for (const a of agentsRes.data ?? []) {
-        if (!a.hq_country) continue;
-        const k = normalizeCountry(a.hq_country);
-        (agentCountries[k] ??= new Set()).add(a.id);
+        if (a.hq_country) {
+          const k = remember(a.hq_country);
+          (agentCountries[k] ??= new Set()).add(a.id);
+        }
+        for (const c of (a.countries_of_operation as string[] | null) ?? []) {
+          if (!c) continue;
+          const k = remember(c);
+          (agentCountries[k] ??= new Set()).add(a.id);
+        }
       }
       for (const b of branchesRes.data ?? []) {
         if (!b.country || !b.agent_id) continue;
-        const k = normalizeCountry(b.country);
+        const k = remember(b.country);
         (agentCountries[k] ??= new Set()).add(b.agent_id);
       }
 
@@ -183,7 +198,7 @@ function Dashboard() {
       }
       for (const s of schoolsRes.data ?? []) {
         if (!s.country) continue;
-        const k = normalizeCountry(s.country);
+        const k = remember(s.country);
         (stats[k] ??= { agents: 0, schools: 0, trips: 0 }).schools += 1;
       }
       const today = new Date().toISOString().slice(0, 10);
@@ -191,42 +206,45 @@ function Dashboard() {
         if (!t.end_date || t.end_date > today) continue;
         for (const d of t.destinations ?? []) {
           if (!d) continue;
-          const k = normalizeCountry(d);
+          const k = remember(d);
           (stats[k] ??= { agents: 0, schools: 0, trips: 0 }).trips += 1;
         }
       }
-      return stats;
+      return { stats, display };
     },
   });
 
   const [agentFilter, setAgentFilter] = useState<string>("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
 
+  const statsMap = countryStats?.stats ?? {};
+  const displayMap = countryStats?.display ?? {};
+
   const agentCountryOptions = useMemo(
     () =>
-      Object.entries(countryStats ?? {})
+      Object.entries(statsMap)
         .filter(([, v]) => v.agents > 0)
         .map(([k]) => k)
-        .sort(),
-    [countryStats],
+        .sort((a, b) => (displayMap[a] ?? a).localeCompare(displayMap[b] ?? b)),
+    [statsMap, displayMap],
   );
   const schoolCountryOptions = useMemo(
     () =>
-      Object.entries(countryStats ?? {})
+      Object.entries(statsMap)
         .filter(([, v]) => v.schools > 0)
         .map(([k]) => k)
-        .sort(),
-    [countryStats],
+        .sort((a, b) => (displayMap[a] ?? a).localeCompare(displayMap[b] ?? b)),
+    [statsMap, displayMap],
   );
 
   const agentValue =
     agentFilter === "all"
       ? stats?.agents ?? 0
-      : countryStats?.[agentFilter]?.agents ?? 0;
+      : statsMap[agentFilter]?.agents ?? 0;
   const schoolValue =
     schoolFilter === "all"
       ? stats?.schools ?? 0
-      : countryStats?.[schoolFilter]?.schools ?? 0;
+      : statsMap[schoolFilter]?.schools ?? 0;
 
   const cards = [
     {
