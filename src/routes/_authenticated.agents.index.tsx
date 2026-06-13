@@ -10,8 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building2, MapPin, Database, ChevronRight } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, Building2, MapPin, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
@@ -39,7 +38,7 @@ function AgentsPage() {
   const seed = useServerFn(seedAirtableData);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
-  const [openCountries, setOpenCountries] = useState<Record<string, boolean>>({});
+  
   const [form, setForm] = useState({
     trading_name: "",
     legal_name: "",
@@ -76,14 +75,6 @@ function AgentsPage() {
     );
   }, [agents, filter]);
 
-  const grouped = useMemo(() => {
-    const map: Record<string, any[]> = {};
-    for (const a of filtered) {
-      const key = a.hq_country?.trim() || "—";
-      (map[key] = map[key] ?? []).push(a);
-    }
-    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
-  }, [filtered]);
 
   const createAgent = useMutation({
     mutationFn: async () => {
@@ -178,68 +169,50 @@ function AgentsPage() {
       <Input placeholder="Search by name, country, or operation…" value={filter} onChange={(e) => setFilter(e.target.value)} className="max-w-sm mb-6" />
 
       {filtered.length > 0 ? (
-        <div className="space-y-2">
-          {grouped.map(([country, items]) => {
-            const isOpen = openCountries[country] ?? !!filter;
-            return (
-              <Collapsible
-                key={country}
-                open={isOpen}
-                onOpenChange={(v) => setOpenCountries((m) => ({ ...m, [country]: v }))}
-              >
-                <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left hover:bg-accent transition-colors">
-                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
-                  <span className="text-sm font-semibold uppercase tracking-wide">{country}</span>
-                  <span className="text-xs text-muted-foreground">({items.length})</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-3 pb-2">
-                    {items.map((a: any) => (
-                      <div key={a.id} className="relative">
-                        <Link to="/agents/$agentId" params={{ agentId: a.id }}>
-                          <Card className="p-5 hover:shadow-md transition-shadow h-full">
-                            <div className="flex items-start gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shrink-0">
-                                <Building2 className="h-5 w-5" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="font-medium truncate">{a.trading_name}</div>
-                                  <Badge variant={STATUS_VARIANT[a.status] ?? "outline"} className="text-[10px] uppercase">{a.status}</Badge>
-                                </div>
-                                {a.legal_name && a.legal_name !== a.trading_name && (
-                                  <div className="text-xs text-muted-foreground truncate">{a.legal_name}</div>
-                                )}
-                                {a.hq_country && (
-                                  <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                    <MapPin className="h-3 w-3" /> {a.hq_country}
-                                  </div>
-                                )}
-                                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                                  <span>{a.agent_branches?.[0]?.count ?? 0} branches</span>
-                                  {a.agreement_end_date && <span>Until {fmtDate(a.agreement_end_date, "MMM yyyy")}</span>}
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        </Link>
-                        <div className="absolute top-3 right-3">
-                          <AddToItineraryButton
-                            source="agent"
-                            id={a.id}
-                            name={a.trading_name}
-                            address={a.hq_address}
-                            size="icon"
-                            variant="ghost"
-                          />
+        <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map((a: any) => (
+              <div key={a.id} className="relative">
+                <Link to="/agents/$agentId" params={{ agentId: a.id }}>
+                  <Card className="p-5 hover:shadow-md transition-shadow h-full">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground shrink-0">
+                        <Building2 className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium truncate">{a.trading_name}</div>
+                          <Badge variant={STATUS_VARIANT[a.status] ?? "outline"} className="text-[10px] uppercase">{a.status}</Badge>
+                        </div>
+                        {a.legal_name && a.legal_name !== a.trading_name && (
+                          <div className="text-xs text-muted-foreground truncate">{a.legal_name}</div>
+                        )}
+                        {a.hq_country && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <MapPin className="h-3 w-3" /> {a.hq_country}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                          <span>{a.agent_branches?.[0]?.count ?? 0} branches</span>
+                          {a.agreement_end_date && <span>Until {fmtDate(a.agreement_end_date, "MMM yyyy")}</span>}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
+                    </div>
+                  </Card>
+                </Link>
+                <div className="absolute top-3 right-3">
+                  <AddToItineraryButton
+                    source="agent"
+                    id={a.id}
+                    name={a.trading_name}
+                    address={a.hq_address}
+                    size="icon"
+                    variant="ghost"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <Card className="p-10 text-center text-muted-foreground">
