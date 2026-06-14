@@ -405,9 +405,6 @@ function VisitReports({ agentId }: { agentId: string }) {
           const branchLabel = v.agent_branches?.branch_name
             || [v.agent_branches?.city, v.agent_branches?.country].filter(Boolean).join(", ");
           return (
-          const branchLabel = v.agent_branches?.branch_name
-            || [v.agent_branches?.city, v.agent_branches?.country].filter(Boolean).join(", ");
-          return (
             <Card key={v.id} className="p-4">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="min-w-0">
