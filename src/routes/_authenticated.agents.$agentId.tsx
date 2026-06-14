@@ -186,6 +186,8 @@ function AgentDetail() {
         )}
       </Card>
 
+      <VisitReports agentId={agentId} />
+
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-lg font-semibold">Branches</h2>
         <div className="flex gap-2 flex-wrap">
