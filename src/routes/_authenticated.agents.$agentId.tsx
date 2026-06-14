@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar, FileText, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
@@ -19,6 +19,7 @@ import { ImportListDialog } from "@/components/import-list-dialog";
 import { ShareIntakeLink } from "@/components/share-intake-link";
 import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
