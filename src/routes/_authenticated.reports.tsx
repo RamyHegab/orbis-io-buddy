@@ -12,6 +12,7 @@ import { generateAggregateReport, type AggregateReport } from "@/lib/aggregate-r
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { renderMarkdownToPdf } from "@/lib/markdown-pdf";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Global Reporting — Orbis CRM" }] }),
@@ -47,13 +48,43 @@ function ReportsPage() {
   const onExportPdf = () => {
     if (!report) return;
     const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Recruitment Report", 14, 18);
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Title block — mirrors the on-screen Trip Report header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("Recruitment Report", 14, 22);
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(`${report.startDate}  to  ${report.endDate}`, 14, 26);
+    doc.setTextColor(110);
+    doc.text(`${report.startDate} – ${report.endDate}`, 14, 29);
+    doc.text(`Generated ${new Date().toLocaleString()}`, 14, 34);
+    doc.setTextColor(0);
+    doc.setDrawColor(220);
+    doc.line(14, 38, pageW - 14, 38);
+
+    // AI summary rendered as formatted markdown — the same body the
+    // itinerary planner's Trip Report shows on screen.
+    let y = 44;
+    if (report.aiSummary) {
+      y = renderMarkdownToPdf(doc, report.aiSummary, { x: 14, y, width: pageW - 28, bottom: 280 });
+    } else {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(140);
+      doc.text("No AI summary available for this range.", 14, y);
+      doc.setTextColor(0);
+      y += 8;
+    }
+
+    // Supporting data tables on a fresh page
+    doc.addPage();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Supporting data", 14, 20);
 
     autoTable(doc, {
-      startY: 32,
+      startY: 26,
       head: [["Metric", "Total"]],
       body: [
         ["Trips", String(report.totals.trips)],
@@ -61,32 +92,26 @@ function ReportsPage() {
         ["Agent visits", String(report.totals.agentVisits)],
         ["School visits", String(report.totals.schoolVisits)],
       ],
+      styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [30, 41, 75] },
     });
 
-    autoTable(doc, {
-      head: [["Country", "Trips", "Events", "Agent visits", "School visits"]],
-      body: report.byCountry.map((r) => [r.country, r.trips, r.events, r.agentVisits, r.schoolVisits]),
-      headStyles: { fillColor: [30, 41, 75] },
-    });
+    if (report.byCountry.length) {
+      autoTable(doc, {
+        head: [["Country", "Trips", "Events", "Agent visits", "School visits"]],
+        body: report.byCountry.map((r) => [r.country, r.trips, r.events, r.agentVisits, r.schoolVisits]),
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [30, 41, 75] },
+      });
+    }
 
     if (report.tripsList.length) {
       autoTable(doc, {
         head: [["Trip", "Dates", "Destinations"]],
         body: report.tripsList.map((t) => [t.title, `${t.start_date} → ${t.end_date}`, t.destinations.join(", ")]),
+        styles: { fontSize: 9, cellPadding: 2 },
         headStyles: { fillColor: [30, 41, 75] },
       });
-    }
-
-    if (report.aiSummary) {
-      const y = (doc as any).lastAutoTable?.finalY ?? 40;
-      doc.addPage();
-      doc.setFontSize(14);
-      doc.text("Key Take-aways (AI summary)", 14, 18);
-      doc.setFontSize(10);
-      const lines = doc.splitTextToSize(report.aiSummary.replace(/[#*_`>]/g, ""), 180);
-      doc.text(lines, 14, 28);
-      void y;
     }
 
     doc.save(`report_${report.startDate}_to_${report.endDate}.pdf`);
