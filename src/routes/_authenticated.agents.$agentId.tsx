@@ -460,6 +460,8 @@ function VisitReports({ agentId }: { agentId: string }) {
             </Card>
           );
         })}
+          </div>
+        )}
       </div>
     </div>
   );
