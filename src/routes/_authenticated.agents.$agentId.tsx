@@ -339,6 +339,7 @@ function VisitReports({ agentId }: { agentId: string }) {
   const userIds = Array.from(new Set([
     ...(visits ?? []).map((v: any) => v.user_id),
     ...(visits ?? []).flatMap((v: any) => (v.form_submissions ?? []).map((s: any) => s.user_id)),
+    ...(events ?? []).map((e: any) => e.user_id),
   ].filter(Boolean)));
 
   const { data: profiles } = useQuery({
