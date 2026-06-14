@@ -323,9 +323,23 @@ function VisitReports({ agentId }: { agentId: string }) {
     },
   });
 
+  const { data: events } = useQuery({
+    queryKey: ["agent-events", agentId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("activities")
+        .select(`id, day_date, title, location, objectives, visit_notes, user_id, trip_id, trips(title)`)
+        .eq("agent_id", agentId)
+        .eq("type", "recruitment_event")
+        .order("day_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
   const userIds = Array.from(new Set([
     ...(visits ?? []).map((v: any) => v.user_id),
     ...(visits ?? []).flatMap((v: any) => (v.form_submissions ?? []).map((s: any) => s.user_id)),
+    ...(events ?? []).map((e: any) => e.user_id),
   ].filter(Boolean)));
 
   const { data: profiles } = useQuery({
@@ -339,22 +353,55 @@ function VisitReports({ agentId }: { agentId: string }) {
   const nameFor = (id?: string | null) =>
     (profiles ?? []).find((p: any) => p.id === id)?.full_name || "Unknown user";
 
-  if (!visits || visits.length === 0) {
-    return (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Visit reports</h2>
-        <Card className="p-6 text-center text-sm text-muted-foreground">
-          No visit reports yet. Reports appear here after agent visits are logged on a trip.
-        </Card>
-      </div>
-    );
-  }
+  const hasVisits = (visits?.length ?? 0) > 0;
+  const hasEvents = (events?.length ?? 0) > 0;
 
   return (
-    <div className="mb-6">
-      <h2 className="text-lg font-semibold mb-3">Visit reports ({visits.length})</h2>
-      <div className="space-y-3">
-        {visits.map((v: any) => {
+    <div className="mb-6 space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold mb-3">Recruitment events ({events?.length ?? 0})</h2>
+        {hasEvents ? (
+          <div className="space-y-2">
+            {events!.map((e: any) => (
+              <Card key={e.id} className="p-3 text-sm">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="font-medium">{e.title}</div>
+                    <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                      <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" /> {fmtDate(e.day_date)}</span>
+                      {e.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {e.location}</span>}
+                      <span className="inline-flex items-center gap-1"><User className="h-3 w-3" /> {nameFor(e.user_id)}</span>
+                      {e.trips?.title && (
+                        <Link to="/trips/$tripId" params={{ tripId: e.trip_id }} className="text-primary hover:underline">
+                          {e.trips.title}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {(e.objectives || e.visit_notes) && (
+                  <div className="mt-2 space-y-1">
+                    {e.objectives && <p className="whitespace-pre-wrap"><span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">Objectives:</span>{e.objectives}</p>}
+                    {e.visit_notes && <p className="whitespace-pre-wrap"><span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">Notes:</span>{e.visit_notes}</p>}
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-4 text-center text-sm text-muted-foreground">No recruitment events linked to this agent yet.</Card>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-lg font-semibold mb-3">Visit reports ({visits?.length ?? 0})</h2>
+        {!hasVisits ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground">
+            No visit reports yet. Reports appear here after agent visits are logged on a trip.
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {visits!.map((v: any) => {
           const branchLabel = v.agent_branches?.branch_name
             || [v.agent_branches?.city, v.agent_branches?.country].filter(Boolean).join(", ");
           return (
@@ -410,6 +457,8 @@ function VisitReports({ agentId }: { agentId: string }) {
             </Card>
           );
         })}
+          </div>
+        )}
       </div>
     </div>
   );
