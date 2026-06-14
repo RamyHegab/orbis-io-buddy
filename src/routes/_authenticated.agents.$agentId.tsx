@@ -323,6 +323,19 @@ function VisitReports({ agentId }: { agentId: string }) {
     },
   });
 
+  const { data: events } = useQuery({
+    queryKey: ["agent-events", agentId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("activities")
+        .select(`id, day_date, title, location, objectives, visit_notes, user_id, trip_id, trips(title)`)
+        .eq("agent_id", agentId)
+        .eq("type", "recruitment_event")
+        .order("day_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
   const userIds = Array.from(new Set([
     ...(visits ?? []).map((v: any) => v.user_id),
     ...(visits ?? []).flatMap((v: any) => (v.form_submissions ?? []).map((s: any) => s.user_id)),
