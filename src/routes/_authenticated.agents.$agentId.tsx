@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar, FileText, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
@@ -19,6 +19,7 @@ import { ImportListDialog } from "@/components/import-list-dialog";
 import { ShareIntakeLink } from "@/components/share-intake-link";
 import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
@@ -185,6 +186,8 @@ function AgentDetail() {
         )}
       </Card>
 
+      <VisitReports agentId={agentId} />
+
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-lg font-semibold">Branches</h2>
         <div className="flex gap-2 flex-wrap">
@@ -297,5 +300,133 @@ function AgentDetail() {
         <Card className="p-8 text-center text-sm text-muted-foreground">No branches yet.</Card>
       )}
     </PageContainer>
+  );
+}
+
+function VisitReports({ agentId }: { agentId: string }) {
+  const { data: visits } = useQuery({
+    queryKey: ["agent-visits", agentId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("activities")
+        .select(`
+          id, day_date, title, objectives, visit_notes, user_id, trip_id,
+          start_time, end_time,
+          trips(title),
+          agent_branches(branch_name, city, country),
+          form_submissions(id, created_at, user_id, data, form_templates(name))
+        `)
+        .eq("agent_id", agentId)
+        .eq("type", "agent_visit")
+        .order("day_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const userIds = Array.from(new Set([
+    ...(visits ?? []).map((v: any) => v.user_id),
+    ...(visits ?? []).flatMap((v: any) => (v.form_submissions ?? []).map((s: any) => s.user_id)),
+  ].filter(Boolean)));
+
+  const { data: profiles } = useQuery({
+    queryKey: ["profiles", userIds],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
+      return data ?? [];
+    },
+  });
+  const nameFor = (id?: string | null) =>
+    (profiles ?? []).find((p: any) => p.id === id)?.full_name || "Unknown user";
+
+  if (!visits || visits.length === 0) {
+    return (
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-3">Visit reports</h2>
+        <Card className="p-6 text-center text-sm text-muted-foreground">
+          No visit reports yet. Reports appear here after agent visits are logged on a trip.
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6">
+      <h2 className="text-lg font-semibold mb-3">Visit reports ({visits.length})</h2>
+      <div className="space-y-3">
+        {visits.map((v: any) => {
+          const branchLabel = v.agent_branches?.branch_name
+            || [v.agent_branches?.city, v.agent_branches?.country].filter(Boolean).join(", ");
+          return (
+            <Card key={v.id} className="p-4">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-medium">{v.title}</div>
+                  <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                    <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" /> {fmtDate(v.day_date)}</span>
+                    <span className="inline-flex items-center gap-1"><User className="h-3 w-3" /> {nameFor(v.user_id)}</span>
+                    {v.trips?.title && (
+                      <Link to="/trips/$tripId" params={{ tripId: v.trip_id }} className="text-primary hover:underline">
+                        {v.trips.title}
+                      </Link>
+                    )}
+                    {branchLabel && <span>· {branchLabel}</span>}
+                  </div>
+                </div>
+              </div>
+
+              {(v.objectives || v.visit_notes) && (
+                <div className="mt-3 space-y-2 text-sm">
+                  {v.objectives && (
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Objectives</div>
+                      <p className="whitespace-pre-wrap">{v.objectives}</p>
+                    </div>
+                  )}
+                  {v.visit_notes && (
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Notes during visit</div>
+                      <p className="whitespace-pre-wrap">{v.visit_notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {v.form_submissions?.length > 0 && (
+                <div className="mt-3 pt-3 border-t space-y-3">
+                  {v.form_submissions.map((s: any) => (
+                    <div key={s.id} className="text-sm">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <FileText className="h-3 w-3" />
+                        <span className="font-medium text-foreground">{s.form_templates?.name ?? "Form submission"}</span>
+                        <span>· {nameFor(s.user_id)}</span>
+                        <span>· {fmtDate(s.created_at)}</span>
+                      </div>
+                      <SubmissionData data={s.data} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SubmissionData({ data }: { data: any }) {
+  if (!data || typeof data !== "object") return null;
+  const entries = Object.entries(data).filter(([, v]) => v !== null && v !== "" && v !== undefined);
+  if (entries.length === 0) return null;
+  return (
+    <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      {entries.map(([k, v]) => (
+        <div key={k} className="flex gap-2">
+          <dt className="text-muted-foreground capitalize shrink-0">{k.replace(/_/g, " ")}:</dt>
+          <dd className="whitespace-pre-wrap break-words">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
