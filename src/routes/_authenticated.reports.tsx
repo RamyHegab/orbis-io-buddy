@@ -12,6 +12,7 @@ import { generateAggregateReport, type AggregateReport } from "@/lib/aggregate-r
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { renderMarkdownToPdf } from "@/lib/markdown-pdf";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Global Reporting — Orbis CRM" }] }),
