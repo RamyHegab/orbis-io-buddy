@@ -74,6 +74,7 @@ function SchoolsPage() {
   const [campusFile, setCampusFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [openCountries, setOpenCountries] = useState<Record<string, boolean>>({});
+  const [editing, setEditing] = useState<any | null>(null);
 
   const { data: schools } = useQuery({
     queryKey: ["schools"],
