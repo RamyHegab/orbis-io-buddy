@@ -228,7 +228,7 @@ function AgentsPage() {
         <Card className="p-10 text-center text-muted-foreground">
           No agents yet. {isAdmin && "Click \"Import Airtable data\" to load your Agents/Offices CSV seed."}
         </Card>
-        </Card>
+
       )}
       <EditAgentDialog agent={editing} open={!!editing} onOpenChange={(v) => !v && setEditing(null)} />
     </PageContainer>
