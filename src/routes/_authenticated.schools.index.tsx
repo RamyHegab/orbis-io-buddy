@@ -308,6 +308,9 @@ function SchoolsPage() {
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => setEditing(s)} className="text-muted-foreground hover:text-foreground" title="Edit school">
+                            <Pencil className="h-4 w-4" />
+                          </button>
                           <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </button>
