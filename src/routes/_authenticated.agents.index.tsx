@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building2, MapPin, Database } from "lucide-react";
+import { Plus, Building2, MapPin, Database, Pencil } from "lucide-react";
+import { EditAgentDialog } from "@/components/edit-agent-dialog";
 import { toast } from "sonner";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
@@ -38,6 +39,7 @@ function AgentsPage() {
   const seed = useServerFn(seedAirtableData);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [editing, setEditing] = useState<any | null>(null);
   
   const [form, setForm] = useState({
     trading_name: "",
@@ -200,7 +202,15 @@ function AgentsPage() {
                     </div>
                   </Card>
                 </Link>
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3 flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(a); }}
+                    title="Edit agent"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <AddToItineraryButton
                     source="agent"
                     id={a.id}
@@ -218,7 +228,9 @@ function AgentsPage() {
         <Card className="p-10 text-center text-muted-foreground">
           No agents yet. {isAdmin && "Click \"Import Airtable data\" to load your Agents/Offices CSV seed."}
         </Card>
+
       )}
+      <EditAgentDialog agent={editing} open={!!editing} onOpenChange={(v) => !v && setEditing(null)} />
     </PageContainer>
   );
 }

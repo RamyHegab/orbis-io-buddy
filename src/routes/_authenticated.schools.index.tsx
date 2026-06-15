@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, GraduationCap, Upload, MapPin, ChevronRight } from "lucide-react";
+import { Plus, Trash2, GraduationCap, Upload, MapPin, ChevronRight, Pencil } from "lucide-react";
+import { EditSchoolDialog } from "@/components/edit-school-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,6 +74,7 @@ function SchoolsPage() {
   const [campusFile, setCampusFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [openCountries, setOpenCountries] = useState<Record<string, boolean>>({});
+  const [editing, setEditing] = useState<any | null>(null);
 
   const { data: schools } = useQuery({
     queryKey: ["schools"],
@@ -306,6 +308,9 @@ function SchoolsPage() {
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => setEditing(s)} className="text-muted-foreground hover:text-foreground" title="Edit school">
+                            <Pencil className="h-4 w-4" />
+                          </button>
                           <button onClick={() => confirm("Delete?") && remove.mutate(s.id)} className="text-muted-foreground hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -333,6 +338,7 @@ function SchoolsPage() {
           })}
         </div>
       )}
+      <EditSchoolDialog school={editing} open={!!editing} onOpenChange={(v) => !v && setEditing(null)} />
     </PageContainer>
   );
 }
