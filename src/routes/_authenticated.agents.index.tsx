@@ -202,7 +202,15 @@ function AgentsPage() {
                     </div>
                   </Card>
                 </Link>
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3 flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(a); }}
+                    title="Edit agent"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <AddToItineraryButton
                     source="agent"
                     id={a.id}
