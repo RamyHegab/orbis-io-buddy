@@ -39,6 +39,7 @@ function AgentsPage() {
   const seed = useServerFn(seedAirtableData);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [editing, setEditing] = useState<any | null>(null);
   
   const [form, setForm] = useState({
     trading_name: "",
