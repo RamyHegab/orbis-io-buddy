@@ -338,6 +338,7 @@ function SchoolsPage() {
           })}
         </div>
       )}
+      <EditSchoolDialog school={editing} open={!!editing} onOpenChange={(v) => !v && setEditing(null)} />
     </PageContainer>
   );
 }
