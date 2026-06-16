@@ -1,26 +1,24 @@
-## Goal
+## Add "Lookup flight" to Air Travel activities
 
-Make the Agents and Schools list pages much shorter on first view by grouping entries under country headers that are **collapsed by default**. Users click a country to expand and see its agents/schools.
+When users add/edit a Travel activity with transport mode "Air travel", they'll get a **Lookup** button next to the Flight number field. Clicking it pulls real flight data and prefills the form.
 
-## Changes
+### What it does
+1. User enters flight number (e.g. `BA286`) and ensures the activity's start date is set.
+2. Clicks **Lookup** → calls AeroDataBox via RapidAPI using the activity's start date.
+3. On success, prefills:
+   - **Airline** (e.g. "British Airways")
+   - **From** (departure airport: `LHR — Heathrow`)
+   - **To** (arrival airport: `SFO — San Francisco Intl`)
+   - **Start date/time** (scheduled departure, local time)
+   - **End date/time** (scheduled arrival, local time)
+4. Shows a toast on error (invalid number, no flight on that date, API limit, etc.). User can still edit fields manually.
 
-### `src/routes/_authenticated.schools.index.tsx`
-- Schools are already grouped by country, but every group is rendered open. Wrap each country block in a `Collapsible` (from `@/components/ui/collapsible`) with `defaultOpen={false}`.
-- Country header becomes the `CollapsibleTrigger`: a full-width row showing flag/name, the count badge, and a chevron that rotates when open.
-- The school cards grid moves into `CollapsibleContent`.
-- When the user types in the search box, auto-expand any country that has matches (so search results are visible without manual clicks). Empty search = all collapsed.
+### Setup needed from you
+- A **RapidAPI key** with AeroDataBox subscribed (free tier = 500 req/month). I'll prompt you to add it as a secret named `RAPIDAPI_KEY` once you approve the plan. Get it at https://rapidapi.com/aedbx-aedbx/api/aerodatabox.
 
-### `src/routes/_authenticated.agents.index.tsx`
-- Currently a flat grid of agent cards. Add the same country grouping the Schools page uses, keyed off `hq_country` (fallback `"—"`). Sort countries alphabetically, agents alphabetically inside.
-- Wrap each country group in the same `Collapsible` pattern (collapsed by default, auto-expand on active search).
-- Keep the existing card markup, search input, header actions, and empty state untouched.
-
-### Shared behavior
-- Collapsed header style: subtle bordered row, `py-2 px-3`, hover background, chevron-right icon that rotates 90° when open. Matches existing muted-uppercase country label styling so it doesn't feel like a new component language.
-- No changes to data fetching, mutations, dialogs, routing, or card internals.
-
-## Technical notes
-
-- `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` already exist at `src/components/ui/collapsible.tsx`.
-- Use `useState<Record<string, boolean>>` to track open state per country so toggling and the search-driven auto-open can coexist (derive effective open state as `openMap[country] ?? !!filter && hasMatches`).
-- No new dependencies, no backend changes.
+### Technical details
+- New server function `lookupFlight` in `src/lib/flights.functions.ts` using `createServerFn` + `requireSupabaseAuth` (so the RapidAPI key never leaves the server).
+- Calls `GET https://aerodatabox.p.rapidapi.com/flights/number/{number}/{YYYY-MM-DD}` with header `X-RapidAPI-Key`.
+- Maps response → `{ airline, from, to, startsAt, endsAt }`. If multiple legs returned (codeshares), picks the first.
+- UI change in `src/routes/_authenticated.trips.$tripId.tsx`: add a "Lookup" button next to the flight number input inside the Air travel branch; disabled while loading or if no flight number / start date.
+- No DB schema changes.
