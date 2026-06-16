@@ -22,6 +22,9 @@ import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/forma
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { useServerFn } from "@tanstack/react-start";
+import { lookupFlight } from "@/lib/flights.functions";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId")({
   component: TripPlanner,
@@ -1439,4 +1442,44 @@ function validateForm(f: FormState): string | null {
     case "other": return f.title ? null : "Enter a title for the activity.";
     default: return "Pick an activity type.";
   }
+}
+
+function FlightLookupButton({ form, setForm, selectedDay }: { form: FormState; setForm: (f: FormState) => void; selectedDay: string | null }) {
+  const lookup = useServerFn(lookupFlight);
+  const [loading, setLoading] = useState(false);
+  const canLookup = !!form.flight_number?.trim() && !!selectedDay;
+
+  const onClick = async () => {
+    if (!canLookup) {
+      toast.error(!form.flight_number?.trim() ? "Enter a flight number first" : "Select a day for this activity first");
+      return;
+    }
+    setLoading(true);
+    try {
+      const r = await lookup({ data: { flightNumber: form.flight_number, date: selectedDay! } });
+      setForm({
+        ...form,
+        airline: r.airline || form.airline,
+        flight_number: r.flight_number || form.flight_number,
+        from_city: r.from_city || form.from_city,
+        from_country: r.from_country || form.from_country,
+        to_city: r.to_city || form.to_city,
+        to_country: r.to_country || form.to_country,
+        start_time: r.start_time || form.start_time,
+        end_time: r.end_time || form.end_time,
+        end_date: r.end_date || form.end_date,
+      });
+      toast.success("Flight details loaded");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Flight lookup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={onClick} disabled={loading || !canLookup}>
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
+    </Button>
+  );
 }
