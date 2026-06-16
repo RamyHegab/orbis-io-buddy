@@ -51,7 +51,7 @@ function AuthPage() {
           </div>
           <div>
             <div className="text-xl font-semibold tracking-tight text-gold">Orbis CRM</div>
-            <div className="text-xs text-muted-foreground">University Recruitment</div>
+            <div className="text-xs text-muted-foreground">The IO Buddy</div>
           </div>
         </div>
         <Card className="p-6 shadow-xl">
