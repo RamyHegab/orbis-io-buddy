@@ -1052,7 +1052,13 @@ function TripPlanner() {
                   {form.transport_mode === "Air travel" && (
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>Airline</Label><Input value={form.airline} onChange={(e) => setForm({ ...form, airline: e.target.value })} /></div>
-                      <div><Label>Flight number</Label><Input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} /></div>
+                      <div>
+                        <Label>Flight number</Label>
+                        <div className="flex gap-2">
+                          <Input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} placeholder="BA286" />
+                          <FlightLookupButton form={form} setForm={setForm} selectedDay={selectedDay} />
+                        </div>
+                      </div>
                     </div>
                   )}
                   <CostInput form={form} setForm={setForm} />
