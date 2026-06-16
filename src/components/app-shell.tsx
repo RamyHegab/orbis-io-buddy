@@ -83,7 +83,7 @@ export function AppShell() {
           </div>
           <div>
             <div className="font-semibold tracking-tight text-gold">Orbis CRM</div>
-            <div className="text-xs text-sidebar-foreground/60">Recruitment Trips</div>
+            <div className="text-xs text-sidebar-foreground/60">The IO Buddy</div>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">

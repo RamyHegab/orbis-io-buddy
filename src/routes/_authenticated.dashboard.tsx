@@ -107,6 +107,21 @@ function Dashboard() {
   const { user } = useAuth();
   const uid = user?.id;
 
+  const { data: profile } = useQuery({
+    enabled: !!uid,
+    queryKey: ["profile", uid],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name").eq("id", uid!).maybeSingle();
+      return data;
+    },
+  });
+
+  const firstName = (profile?.full_name?.split(" ")[0]) || user?.email?.split("@")[0] || "";
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = firstName ? `${timeGreeting}, ${firstName} 👋` : `${timeGreeting} 👋`;
+  const subtitle = `Welcome back${firstName ? `, ${firstName}` : ""} — here's your recruitment pipeline at a glance.`;
+
   const { data: stats } = useQuery({
     enabled: !!uid,
     queryKey: ["stats", uid],
@@ -283,8 +298,8 @@ function Dashboard() {
   return (
     <PageContainer>
       <PageHeader
-        title={`Welcome${user?.email ? `, ${user.email.split("@")[0]}` : ""}`}
-        description="Your recruitment pipeline at a glance."
+        title={greeting}
+        description={subtitle}
         actions={
           <Link to="/reports">
             <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
