@@ -118,7 +118,7 @@ function InboxPage() {
                     {s.source === "auto_discovery" && <Badge variant="secondary">Auto-discovered</Badge>}
                     <span className="text-xs text-muted-foreground">{fmtDate(s.created_at)}</span>
                     {s.submitter_name && <span className="text-xs">from <strong>{s.submitter_name}</strong>{s.submitter_email ? ` (${s.submitter_email})` : ""}</span>}
-                    {s.source_url && (
+                    {s.source_url && /^https?:\/\//i.test(s.source_url) && (
                       <a href={s.source_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate max-w-[260px]">
                         source ↗
                       </a>
