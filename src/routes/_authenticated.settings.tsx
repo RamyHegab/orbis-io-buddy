@@ -144,7 +144,7 @@ function SettingsPage() {
           <CardTitle>Coming soon</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Manage team members, roles, Notion sync, and branding from this page.
+          Manage team members, roles, and branding from this page.
         </CardContent>
       </Card>
     </PageContainer>
