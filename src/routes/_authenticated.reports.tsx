@@ -203,6 +203,80 @@ function ReportsPage() {
   );
 }
 
+function CountryMultiSelect({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
+  }, [query, options]);
+  const toggle = (c: string) =>
+    onChange(value.includes(c) ? value.filter((x) => x !== c) : [...value, c]);
+
+  const label =
+    value.length === 0 ? "All countries" : value.length === 1 ? value[0] : `${value.length} countries`;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-56 justify-between font-normal">
+          <span className="flex items-center gap-2 truncate">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="truncate">{label}</span>
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 p-2">
+        <div className="relative mb-2">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search country..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-8 h-8 text-sm"
+          />
+        </div>
+        <div className="max-h-60 overflow-y-auto space-y-0.5">
+          {filtered.length === 0 && (
+            <div className="px-2 py-2 text-sm text-muted-foreground">No countries</div>
+          )}
+          {filtered.map((c) => {
+            const selected = value.includes(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggle(c)}
+                className={`w-full flex items-center justify-between text-left px-2 py-1.5 rounded text-sm transition-colors ${
+                  selected ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                }`}
+              >
+                <span className="truncate">{c}</span>
+                {selected && <Check className="h-3.5 w-3.5" />}
+              </button>
+            );
+          })}
+        </div>
+        {value.length > 0 && (
+          <div className="pt-2 mt-2 border-t border-border">
+            <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => onChange([])}>
+              Clear selection
+            </Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+
 function ReportView({ report }: { report: AggregateReport }) {
   const t = report.totals;
   return (
