@@ -5,6 +5,7 @@ import { z } from "zod";
 const Input = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  countries: z.array(z.string()).optional(),
 });
 
 export type AggregateReport = {
@@ -102,15 +103,37 @@ export const generateAggregateReport = createServerFn({ method: "POST" })
       else if (a.type === "school_visit") { schoolVisits += 1; row(c).schoolVisits += 1; }
     }
 
-    const byCountrySorted = Array.from(byCountry.values()).sort((a, b) =>
+    // Optional country filter — restrict aggregates to the picked set
+    const countryFilter = (data.countries ?? []).map((c) => c.trim()).filter(Boolean);
+    const filteredByCountry = countryFilter.length
+      ? Array.from(byCountry.values()).filter((r) => countryFilter.includes(r.country))
+      : Array.from(byCountry.values());
+    const byCountrySorted = filteredByCountry.sort((a, b) =>
       (b.trips + b.events + b.agentVisits + b.schoolVisits) - (a.trips + a.events + a.agentVisits + a.schoolVisits),
     );
 
+    // Recompute totals when filtered
+    if (countryFilter.length) {
+      events = 0; agentVisits = 0; schoolVisits = 0;
+      for (const r of byCountrySorted) {
+        events += r.events;
+        agentVisits += r.agentVisits;
+        schoolVisits += r.schoolVisits;
+      }
+    }
+
+    // Filter trips list to those touching selected countries
+    const filteredTrips = countryFilter.length
+      ? (trips ?? []).filter((t) => (t.destinations ?? []).some((d: string) => countryFilter.includes(d)))
+      : (trips ?? []);
+
     // AI summary of key takeaways + leads from existing trip reports.
     let aiSummary = "";
-    const sourceReports = Array.from(latestByTrip.entries());
+    const sourceTripIds = new Set(filteredTrips.map((t) => t.id));
+    const sourceReports = Array.from(latestByTrip.entries()).filter(([id]) => sourceTripIds.has(id));
+    const countryScope = countryFilter.length ? ` focused on ${countryFilter.join(", ")}` : "";
     if (sourceReports.length && apiKey) {
-      let prompt = `You are summarising a portfolio of completed recruitment trip reports for an executive briefing covering ${data.startDate} to ${data.endDate}.\n\nProduce a concise markdown summary with these sections ONLY:\n\n## Key Takeaways\n(3–6 bullet points across all trips)\n\n## Leads Generated\n(brief summary of the volume and quality of leads, agents, and schools that progressed; pull concrete numbers if present)\n\n## Notable Outcomes by Country\n(short bullets grouped by country)\n\nKeep it to ~350 words. Do not include contact details. Source reports follow:\n\n`;
+      let prompt = `You are summarising a portfolio of completed recruitment trip reports for an executive briefing covering ${data.startDate} to ${data.endDate}${countryScope}.\n\nProduce a concise markdown summary with these sections ONLY:\n\n## Key Takeaways\n(3–6 bullet points across all trips)\n\n## Leads Generated\n(brief summary of the volume and quality of leads, agents, and schools that progressed; pull concrete numbers if present)\n\n## Notable Outcomes by Country\n(short bullets grouped by country)\n\nKeep it to ~350 words. Do not include contact details. Source reports follow:\n\n`;
       for (const [tripId, md] of sourceReports) {
         const trip = trips!.find((t) => t.id === tripId);
         prompt += `\n---\n# ${trip?.title ?? tripId} (${trip?.start_date} → ${trip?.end_date})\n${md}\n`;
@@ -148,9 +171,9 @@ export const generateAggregateReport = createServerFn({ method: "POST" })
     return {
       startDate: data.startDate,
       endDate: data.endDate,
-      totals: { trips: trips?.length ?? 0, events, agentVisits, schoolVisits },
+      totals: { trips: filteredTrips.length, events, agentVisits, schoolVisits },
       byCountry: byCountrySorted,
-      tripsList: (trips ?? []).map((t) => ({
+      tripsList: filteredTrips.map((t) => ({
         id: t.id, title: t.title, start_date: t.start_date, end_date: t.end_date, destinations: t.destinations ?? [],
       })),
       aiSummary,

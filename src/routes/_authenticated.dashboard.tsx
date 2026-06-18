@@ -297,17 +297,7 @@ function Dashboard() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={greeting}
-        description={subtitle}
-        actions={
-          <Link to="/reports">
-            <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
-              <FileBarChart className="h-4 w-4 mr-2" /> Create Report
-            </Button>
-          </Link>
-        }
-      />
+      <PageHeader title={greeting} description={subtitle} />
 
       <DiscoveryBanner />
 

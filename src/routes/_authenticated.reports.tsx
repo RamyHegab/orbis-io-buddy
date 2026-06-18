@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Download, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Loader2, Download, Sparkles, Globe, X, Search, Check } from "lucide-react";
 import { generateAggregateReport, type AggregateReport } from "@/lib/aggregate-report.functions";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -31,19 +34,38 @@ function ReportsPage() {
   const init = defaultRange();
   const [startDate, setStartDate] = useState(init.start);
   const [endDate, setEndDate] = useState(init.end);
+  const [countries, setCountries] = useState<string[]>([]);
   const [report, setReport] = useState<AggregateReport | null>(null);
+
+  // Pull the union of countries from trips / agents / schools for the picker
+  const { data: countryOptions = [] } = useQuery({
+    queryKey: ["report-country-options"],
+    queryFn: async () => {
+      const [trips, agents, schools] = await Promise.all([
+        supabase.from("trips").select("destinations"),
+        supabase.from("agents").select("hq_country"),
+        supabase.from("schools").select("country"),
+      ]);
+      const set = new Set<string>();
+      for (const t of trips.data ?? []) for (const d of (t.destinations ?? []) as string[]) if (d) set.add(d);
+      for (const a of agents.data ?? []) if (a.hq_country) set.add(a.hq_country);
+      for (const s of schools.data ?? []) if (s.country) set.add(s.country);
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+  });
 
   const fn = useServerFn(generateAggregateReport);
   const mutation = useMutation({
-    mutationFn: (vars: { startDate: string; endDate: string }) => fn({ data: vars }),
+    mutationFn: (vars: { startDate: string; endDate: string; countries?: string[] }) => fn({ data: vars }),
     onSuccess: (r) => { setReport(r); toast.success("Report generated"); },
     onError: (e: any) => toast.error(e?.message ?? "Failed to generate report"),
   });
 
   const onGenerate = () => {
     if (startDate > endDate) { toast.error("Start date must be before end date"); return; }
-    mutation.mutate({ startDate, endDate });
+    mutation.mutate({ startDate, endDate, countries: countries.length ? countries : undefined });
   };
+
 
   const onExportPdf = () => {
     if (!report) return;
@@ -135,6 +157,14 @@ function ReportsPage() {
               <Label htmlFor="end" className="text-xs">End date</Label>
               <Input id="end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-44" />
             </div>
+            <div>
+              <Label className="text-xs">Countries</Label>
+              <CountryMultiSelect
+                options={countryOptions}
+                value={countries}
+                onChange={setCountries}
+              />
+            </div>
             <Button onClick={onGenerate} disabled={mutation.isPending} className="bg-gold text-gold-foreground hover:bg-gold/90">
               {mutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
               Generate report
@@ -145,6 +175,26 @@ function ReportsPage() {
               </Button>
             )}
           </div>
+          {countries.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {countries.map((c) => (
+                <Badge key={c} variant="secondary" className="gap-1">
+                  {c}
+                  <button
+                    type="button"
+                    onClick={() => setCountries(countries.filter((x) => x !== c))}
+                    className="hover:text-destructive"
+                    aria-label={`Remove ${c}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setCountries([])}>
+                Clear all
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -152,6 +202,80 @@ function ReportsPage() {
     </PageContainer>
   );
 }
+
+function CountryMultiSelect({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
+  }, [query, options]);
+  const toggle = (c: string) =>
+    onChange(value.includes(c) ? value.filter((x) => x !== c) : [...value, c]);
+
+  const label =
+    value.length === 0 ? "All countries" : value.length === 1 ? value[0] : `${value.length} countries`;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-56 justify-between font-normal">
+          <span className="flex items-center gap-2 truncate">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="truncate">{label}</span>
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 p-2">
+        <div className="relative mb-2">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search country..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-8 h-8 text-sm"
+          />
+        </div>
+        <div className="max-h-60 overflow-y-auto space-y-0.5">
+          {filtered.length === 0 && (
+            <div className="px-2 py-2 text-sm text-muted-foreground">No countries</div>
+          )}
+          {filtered.map((c) => {
+            const selected = value.includes(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggle(c)}
+                className={`w-full flex items-center justify-between text-left px-2 py-1.5 rounded text-sm transition-colors ${
+                  selected ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                }`}
+              >
+                <span className="truncate">{c}</span>
+                {selected && <Check className="h-3.5 w-3.5" />}
+              </button>
+            );
+          })}
+        </div>
+        {value.length > 0 && (
+          <div className="pt-2 mt-2 border-t border-border">
+            <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => onChange([])}>
+              Clear selection
+            </Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 function ReportView({ report }: { report: AggregateReport }) {
   const t = report.totals;
