@@ -171,9 +171,9 @@ export const generateAggregateReport = createServerFn({ method: "POST" })
     return {
       startDate: data.startDate,
       endDate: data.endDate,
-      totals: { trips: trips?.length ?? 0, events, agentVisits, schoolVisits },
+      totals: { trips: filteredTrips.length, events, agentVisits, schoolVisits },
       byCountry: byCountrySorted,
-      tripsList: (trips ?? []).map((t) => ({
+      tripsList: filteredTrips.map((t) => ({
         id: t.id, title: t.title, start_date: t.start_date, end_date: t.end_date, destinations: t.destinations ?? [],
       })),
       aiSummary,
