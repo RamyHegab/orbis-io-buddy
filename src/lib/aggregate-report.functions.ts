@@ -103,9 +103,29 @@ export const generateAggregateReport = createServerFn({ method: "POST" })
       else if (a.type === "school_visit") { schoolVisits += 1; row(c).schoolVisits += 1; }
     }
 
-    const byCountrySorted = Array.from(byCountry.values()).sort((a, b) =>
+    // Optional country filter — restrict aggregates to the picked set
+    const countryFilter = (data.countries ?? []).map((c) => c.trim()).filter(Boolean);
+    const filteredByCountry = countryFilter.length
+      ? Array.from(byCountry.values()).filter((r) => countryFilter.includes(r.country))
+      : Array.from(byCountry.values());
+    const byCountrySorted = filteredByCountry.sort((a, b) =>
       (b.trips + b.events + b.agentVisits + b.schoolVisits) - (a.trips + a.events + a.agentVisits + a.schoolVisits),
     );
+
+    // Recompute totals when filtered
+    if (countryFilter.length) {
+      events = 0; agentVisits = 0; schoolVisits = 0;
+      for (const r of byCountrySorted) {
+        events += r.events;
+        agentVisits += r.agentVisits;
+        schoolVisits += r.schoolVisits;
+      }
+    }
+
+    // Filter trips list to those touching selected countries
+    const filteredTrips = countryFilter.length
+      ? (trips ?? []).filter((t) => (t.destinations ?? []).some((d: string) => countryFilter.includes(d)))
+      : (trips ?? []);
 
     // AI summary of key takeaways + leads from existing trip reports.
     let aiSummary = "";
