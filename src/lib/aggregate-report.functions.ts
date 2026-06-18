@@ -129,9 +129,11 @@ export const generateAggregateReport = createServerFn({ method: "POST" })
 
     // AI summary of key takeaways + leads from existing trip reports.
     let aiSummary = "";
-    const sourceReports = Array.from(latestByTrip.entries());
+    const sourceTripIds = new Set(filteredTrips.map((t) => t.id));
+    const sourceReports = Array.from(latestByTrip.entries()).filter(([id]) => sourceTripIds.has(id));
+    const countryScope = countryFilter.length ? ` focused on ${countryFilter.join(", ")}` : "";
     if (sourceReports.length && apiKey) {
-      let prompt = `You are summarising a portfolio of completed recruitment trip reports for an executive briefing covering ${data.startDate} to ${data.endDate}.\n\nProduce a concise markdown summary with these sections ONLY:\n\n## Key Takeaways\n(3–6 bullet points across all trips)\n\n## Leads Generated\n(brief summary of the volume and quality of leads, agents, and schools that progressed; pull concrete numbers if present)\n\n## Notable Outcomes by Country\n(short bullets grouped by country)\n\nKeep it to ~350 words. Do not include contact details. Source reports follow:\n\n`;
+      let prompt = `You are summarising a portfolio of completed recruitment trip reports for an executive briefing covering ${data.startDate} to ${data.endDate}${countryScope}.\n\nProduce a concise markdown summary with these sections ONLY:\n\n## Key Takeaways\n(3–6 bullet points across all trips)\n\n## Leads Generated\n(brief summary of the volume and quality of leads, agents, and schools that progressed; pull concrete numbers if present)\n\n## Notable Outcomes by Country\n(short bullets grouped by country)\n\nKeep it to ~350 words. Do not include contact details. Source reports follow:\n\n`;
       for (const [tripId, md] of sourceReports) {
         const trip = trips!.find((t) => t.id === tripId);
         prompt += `\n---\n# ${trip?.title ?? tripId} (${trip?.start_date} → ${trip?.end_date})\n${md}\n`;
