@@ -157,6 +157,14 @@ function ReportsPage() {
               <Label htmlFor="end" className="text-xs">End date</Label>
               <Input id="end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-44" />
             </div>
+            <div>
+              <Label className="text-xs">Countries</Label>
+              <CountryMultiSelect
+                options={countryOptions}
+                value={countries}
+                onChange={setCountries}
+              />
+            </div>
             <Button onClick={onGenerate} disabled={mutation.isPending} className="bg-gold text-gold-foreground hover:bg-gold/90">
               {mutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
               Generate report
@@ -167,6 +175,26 @@ function ReportsPage() {
               </Button>
             )}
           </div>
+          {countries.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {countries.map((c) => (
+                <Badge key={c} variant="secondary" className="gap-1">
+                  {c}
+                  <button
+                    type="button"
+                    onClick={() => setCountries(countries.filter((x) => x !== c))}
+                    className="hover:text-destructive"
+                    aria-label={`Remove ${c}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setCountries([])}>
+                Clear all
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
