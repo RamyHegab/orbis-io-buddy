@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Download, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Loader2, Download, Sparkles, Globe, X, Search, Check } from "lucide-react";
 import { generateAggregateReport, type AggregateReport } from "@/lib/aggregate-report.functions";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -31,19 +34,38 @@ function ReportsPage() {
   const init = defaultRange();
   const [startDate, setStartDate] = useState(init.start);
   const [endDate, setEndDate] = useState(init.end);
+  const [countries, setCountries] = useState<string[]>([]);
   const [report, setReport] = useState<AggregateReport | null>(null);
+
+  // Pull the union of countries from trips / agents / schools for the picker
+  const { data: countryOptions = [] } = useQuery({
+    queryKey: ["report-country-options"],
+    queryFn: async () => {
+      const [trips, agents, schools] = await Promise.all([
+        supabase.from("trips").select("destinations"),
+        supabase.from("agents").select("hq_country"),
+        supabase.from("schools").select("country"),
+      ]);
+      const set = new Set<string>();
+      for (const t of trips.data ?? []) for (const d of (t.destinations ?? []) as string[]) if (d) set.add(d);
+      for (const a of agents.data ?? []) if (a.hq_country) set.add(a.hq_country);
+      for (const s of schools.data ?? []) if (s.country) set.add(s.country);
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+  });
 
   const fn = useServerFn(generateAggregateReport);
   const mutation = useMutation({
-    mutationFn: (vars: { startDate: string; endDate: string }) => fn({ data: vars }),
+    mutationFn: (vars: { startDate: string; endDate: string; countries?: string[] }) => fn({ data: vars }),
     onSuccess: (r) => { setReport(r); toast.success("Report generated"); },
     onError: (e: any) => toast.error(e?.message ?? "Failed to generate report"),
   });
 
   const onGenerate = () => {
     if (startDate > endDate) { toast.error("Start date must be before end date"); return; }
-    mutation.mutate({ startDate, endDate });
+    mutation.mutate({ startDate, endDate, countries: countries.length ? countries : undefined });
   };
+
 
   const onExportPdf = () => {
     if (!report) return;
