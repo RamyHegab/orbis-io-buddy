@@ -5,6 +5,7 @@ import { z } from "zod";
 const Input = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  countries: z.array(z.string()).optional(),
 });
 
 export type AggregateReport = {
