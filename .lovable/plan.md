@@ -1,24 +1,50 @@
-## Add "Lookup flight" to Air Travel activities
+# Forms — generate, share, fill offline
 
-When users add/edit a Travel activity with transport mode "Air travel", they'll get a **Lookup** button next to the Flight number field. Clicking it pulls real flight data and prefills the form.
+## What you'll get
 
-### What it does
-1. User enters flight number (e.g. `BA286`) and ensures the activity's start date is set.
-2. Clicks **Lookup** → calls AeroDataBox via RapidAPI using the activity's start date.
-3. On success, prefills:
-   - **Airline** (e.g. "British Airways")
-   - **From** (departure airport: `LHR — Heathrow`)
-   - **To** (arrival airport: `SFO — San Francisco Intl`)
-   - **Start date/time** (scheduled departure, local time)
-   - **End date/time** (scheduled arrival, local time)
-4. Shows a toast on error (invalid number, no flight on that date, API limit, etc.). User can still edit fields manually.
+1. **Admin templates** (already exists, extended)
+   - Templates page already lets admins name and build templates. We'll add a new field type **Phone (with country code)** — the country code defaults to the country of the linked event/activity (e.g. Cairo → +20).
 
-### Setup needed from you
-- A **RapidAPI key** with AeroDataBox subscribed (free tier = 500 req/month). I'll prompt you to add it as a secret named `RAPIDAPI_KEY` once you approve the plan. Get it at https://rapidapi.com/aedbx-aedbx/api/aerodatabox.
+2. **Forms page** (rebuilt)
+   - Lists all admin templates.
+   - **"Use form" button** on each: pick an activity from your itinerary → creates a new **form instance** (the form is named "{Template name} — {Activity title}" and inherits the activity date).
+   - Lists all generated instances grouped by trip, with **Share** and **Open** actions.
+   - Regular users see templates read-only (cannot edit fields).
 
-### Technical details
-- New server function `lookupFlight` in `src/lib/flights.functions.ts` using `createServerFn` + `requireSupabaseAuth` (so the RapidAPI key never leaves the server).
-- Calls `GET https://aerodatabox.p.rapidapi.com/flights/number/{number}/{YYYY-MM-DD}` with header `X-RapidAPI-Key`.
-- Maps response → `{ airline, from, to, startsAt, endsAt }`. If multiple legs returned (codeshares), picks the first.
-- UI change in `src/routes/_authenticated.trips.$tripId.tsx`: add a "Lookup" button next to the flight number input inside the Air travel branch; disabled while loading or if no flight number / start date.
-- No DB schema changes.
+3. **Public fill page** at `/f/{instanceId}`
+   - No login required (external devices can scan & fill).
+   - Renders the template's fields. Phone field shows a country picker pre-selected to the event's country.
+   - **Offline mode**: if the device is offline, submission is saved in the browser (IndexedDB via `localStorage`). A banner shows "X pending — will sync when online". On reconnect, queued submissions auto-upload.
+
+4. **Share button** on each form instance
+   - QR code (PNG, downloadable)
+   - Copy link
+   - Open in new window
+   - WhatsApp, Email, and the native device share sheet (`navigator.share`) when available
+
+5. **Users cannot edit fields**
+   - Field editor only renders inside the admin templates page (already enforced by `useIsAdmin`).
+
+## Technical details
+
+### DB migration
+- New table `form_instances` (id, template_id, activity_id, name, event_date, country_code, created_by, created_at). Public SELECT by id (anon) so the fill page works; INSERT restricted to authenticated users.
+- `form_submissions`: make `user_id` nullable, add `instance_id uuid`, `submitter_name text`, `submitter_phone text`. Add a permissive INSERT-only policy for `anon` scoped to `instance_id` existing — so external devices can submit without an account but cannot read other submissions.
+- Add `phone` to the allowed field types (stored in `fields` JSON; no enum change needed).
+
+### Country code
+- Small static map `country → dial code` in `src/lib/country-codes.ts` (covers the common ones). The instance row stores the resolved code at creation time, derived from `activity.to_country || from_country || location`.
+
+### Offline sync
+- `src/lib/offline-queue.ts`: tiny wrapper over `localStorage` keyed by instance id.
+- Fill page: on submit, attempts `fetch` → on failure or `!navigator.onLine`, pushes to queue and shows "Saved offline".
+- `window.addEventListener('online', flush)` drains the queue.
+
+### Share
+- `src/components/share-form-button.tsx`: popover with QR (using `qrcode` lib, already light), Copy, Open, WhatsApp, Email, and `navigator.share` when supported.
+
+### Files touched
+- New: migration, `src/routes/f.$instanceId.tsx` (public), `src/components/share-form-button.tsx`, `src/lib/country-codes.ts`, `src/lib/offline-queue.ts`.
+- Edited: `src/routes/_authenticated.forms.tsx` (full rebuild), `src/routes/_authenticated.templates.tsx` (add `phone` field type), small types.
+
+Confirm and I'll ship it.
