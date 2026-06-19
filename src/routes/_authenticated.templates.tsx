@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/templates")({
   component: TemplatesPage,
 });
 
-type FieldType = "text" | "textarea" | "number" | "select" | "checkbox" | "rating";
+type FieldType = "text" | "textarea" | "number" | "phone" | "select" | "checkbox" | "rating";
 interface Field {
   id: string;
   type: FieldType;
@@ -141,7 +141,7 @@ function TemplatesPage() {
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(["text", "textarea", "number", "select", "checkbox", "rating"] as FieldType[]).map((t) => (
+                    {(["text", "textarea", "number", "phone", "select", "checkbox", "rating"] as FieldType[]).map((t) => (
                       <Button key={t} variant="outline" size="sm" type="button" onClick={() => addField(t)}>
                         + {t}
                       </Button>

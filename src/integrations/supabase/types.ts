@@ -376,30 +376,90 @@ export type Database = {
           },
         ]
       }
+      form_instances: {
+        Row: {
+          activity_id: string
+          country_code: string | null
+          created_at: string
+          created_by: string
+          event_date: string | null
+          id: string
+          name: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          country_code?: string | null
+          created_at?: string
+          created_by: string
+          event_date?: string | null
+          id?: string
+          name: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          country_code?: string | null
+          created_at?: string
+          created_by?: string
+          event_date?: string | null
+          id?: string
+          name?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_instances_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_instances_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "form_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_submissions: {
         Row: {
           activity_id: string
           created_at: string
           data: Json
           id: string
+          instance_id: string | null
+          submitter_name: string | null
+          submitter_phone: string | null
           template_id: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           activity_id: string
           created_at?: string
           data?: Json
           id?: string
+          instance_id?: string | null
+          submitter_name?: string | null
+          submitter_phone?: string | null
           template_id: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           activity_id?: string
           created_at?: string
           data?: Json
           id?: string
+          instance_id?: string | null
+          submitter_name?: string | null
+          submitter_phone?: string | null
           template_id?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -407,6 +467,13 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "form_instances"
             referencedColumns: ["id"]
           },
           {
