@@ -14,6 +14,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FInstanceIdRouteImport } from './routes/f.$instanceId'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated.templates'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
@@ -55,6 +56,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FInstanceIdRoute = FInstanceIdRouteImport.update({
+  id: '/f/$instanceId',
+  path: '/f/$instanceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTripsRoute = AuthenticatedTripsRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/trips': typeof AuthenticatedTripsRouteWithChildren
+  '/f/$instanceId': typeof FInstanceIdRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/f/$instanceId': typeof FInstanceIdRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRouteWithChildren
+  '/f/$instanceId': typeof FInstanceIdRoute
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/templates'
     | '/trips'
+    | '/f/$instanceId'
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/templates'
+    | '/f/$instanceId'
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/templates'
     | '/_authenticated/trips'
+    | '/f/$instanceId'
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/trips/$tripId'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  FInstanceIdRoute: typeof FInstanceIdRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
 }
@@ -347,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/f/$instanceId': {
+      id: '/f/$instanceId'
+      path: '/f/$instanceId'
+      fullPath: '/f/$instanceId'
+      preLoaderRoute: typeof FInstanceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/trips': {
@@ -557,6 +577,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  FInstanceIdRoute: FInstanceIdRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
 }
