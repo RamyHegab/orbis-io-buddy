@@ -31,6 +31,7 @@ import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$a
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated.schools.$schoolId'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated.agents.$agentId'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
 
@@ -149,6 +150,12 @@ const AuthenticatedAgentsAgentIdRoute =
     path: '/$agentId',
     getParentRoute: () => AuthenticatedAgentsRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTripsTripIdReportRoute =
   AuthenticatedTripsTripIdReportRouteImport.update({
     id: '/report',
@@ -185,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRoutesByTo {
@@ -208,6 +216,7 @@ export interface FileRoutesByTo {
   '/schools': typeof AuthenticatedSchoolsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRoutesById {
@@ -235,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_authenticated/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRouteTypes {
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/schools/'
     | '/trips/'
     | '/trips/$tripId/report'
+    | '/lovable/email/queue/process'
     | '/trips/$tripId/activities/$activityId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/schools'
     | '/trips'
     | '/trips/$tripId/report'
+    | '/lovable/email/queue/process'
     | '/trips/$tripId/activities/$activityId'
   id:
     | '__root__'
@@ -311,6 +323,7 @@ export interface FileRouteTypes {
     | '/_authenticated/schools/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
+    | '/lovable/email/queue/process'
     | '/_authenticated/trips/$tripId/activities/$activityId'
   fileRoutesById: FileRoutesById
 }
@@ -323,6 +336,7 @@ export interface RootRouteChildren {
   FInstanceIdRoute: typeof FInstanceIdRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -481,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgentsAgentIdRouteImport
       parentRoute: typeof AuthenticatedAgentsRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/trips/$tripId/report': {
       id: '/_authenticated/trips/$tripId/report'
       path: '/report'
@@ -580,6 +601,7 @@ const rootRouteChildren: RootRouteChildren = {
   FInstanceIdRoute: FInstanceIdRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
