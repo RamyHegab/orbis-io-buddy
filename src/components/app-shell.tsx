@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useIsAdmin } from "@/hooks/use-auth";
+import { useAuth, useRole } from "@/hooks/use-auth";
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +14,7 @@ import {
   LogOut,
   Globe2,
   Bell,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,13 +34,14 @@ const navItems: NavItem[] = [
   { to: "/inbox", label: "Notifications", icon: Bell, showCount: "pending_submissions" },
   { to: "/forms", label: "Forms", icon: FileText },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/users", label: "Users", icon: UserCog, adminOnly: true },
   { to: "/templates", label: "Form Templates", icon: FileText, adminOnly: true },
 ];
 
 
 export function AppShell() {
   const { user, loading } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { role, isAdmin } = useRole();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -119,7 +121,7 @@ export function AppShell() {
         <div className="border-t border-sidebar-border p-3 space-y-2">
           <div className="px-2 text-xs">
             <div className="font-medium truncate">{user.email}</div>
-            <div className="text-sidebar-foreground/60">{isAdmin ? "Admin" : "Member"}</div>
+            <div className="text-sidebar-foreground/60 capitalize">{role ?? "Member"}</div>
           </div>
           <button
             onClick={signOut}

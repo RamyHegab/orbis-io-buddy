@@ -663,27 +663,44 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           discovery_banner_dismissed_at: string | null
+          email: string | null
           full_name: string | null
           id: string
+          line_manager_id: string | null
+          status: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           discovery_banner_dismissed_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
+          line_manager_id?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           discovery_banner_dismissed_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
+          line_manager_id?: string | null
+          status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_line_manager_id_fkey"
+            columns: ["line_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {
@@ -1044,6 +1061,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_line_manager_of: {
+        Args: { _manager: string; _user: string }
+        Returns: boolean
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1072,7 +1093,7 @@ export type Database = {
         | "other"
         | "hotel"
       agent_status: "active" | "inactive" | "prospect"
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "manager"
       school_level: "high_school" | "university" | "language_school" | "other"
       trip_status: "planning" | "active" | "completed" | "confirmed"
     }
@@ -1212,7 +1233,7 @@ export const Constants = {
         "hotel",
       ],
       agent_status: ["active", "inactive", "prospect"],
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "manager"],
       school_level: ["high_school", "university", "language_school", "other"],
       trip_status: ["planning", "active", "completed", "confirmed"],
     },

@@ -1,65 +1,66 @@
 ## Goal
 
-1. When a user confirms an itinerary, email their line manager an approval request. The manager can approve/reject via a one-click link. Trip stays editable after approval.
-2. Send periodic reminder emails for:
-   - Outstanding checklist items on upcoming trips.
-   - Trips left in Draft / In progress (not submitted) for too long.
+Add a Users page where admins invite people by email, assign a role (Admin / Manager / Member), and set each user's line manager. Regular members only see their own trips/forms; managers can additionally see and approve their direct reports' itineraries.
 
-## Prerequisites (one-time)
+## 1. Roles model
 
-- Set up the project email domain (custom sender). Required before any email sending. UI will prompt the user with the Set up email domain dialog.
-- Provision shared email infrastructure (queues, send log, suppression).
-- Scaffold the app email sender (single `/lovable/email/transactional/send` route + React Email templates).
+Extend the `app_role` enum to include `manager` alongside the existing `admin` and `member`. Existing `has_role(user_id, role)` security-definer function is reused — no recursive RLS risk.
 
-## Schema changes
+New helper functions (all `SECURITY DEFINER`):
+- `is_line_manager_of(_manager uuid, _user uuid)` → bool, checks `profiles.line_manager_id`.
+- `can_view_trip(_user uuid, _trip_owner uuid)` → bool: true if same user, admin, or line manager of owner.
 
-- `profiles`: add `line_manager_email TEXT`, `line_manager_name TEXT`, `reminder_opt_in BOOLEAN DEFAULT true`.
-- `trips`: add
-  - `approval_status` enum: `not_submitted | pending | approved | rejected` (default `not_submitted`)
-  - `submitted_at TIMESTAMPTZ`, `approved_at TIMESTAMPTZ`, `approval_token UUID` (unique, used for the manager's one-click link), `manager_decision_note TEXT`, `last_reminder_sent_at TIMESTAMPTZ`.
-- `trips` stays editable in every status — no DB lock; the UI keeps the existing "Reopen for edits" flow and editing remains allowed after `approved`.
+## 2. Profiles changes
 
-## Settings UI
+Add to `public.profiles`:
+- `email text` (mirrored from `auth.users` for admin listing)
+- `line_manager_id uuid` (nullable, FK → `profiles.id`)
+- `status text` default `'active'` (`invited | active | disabled`)
 
-- New "Line manager" section in `/settings` to set `line_manager_email`, `line_manager_name`, and a reminders toggle.
+`handle_new_user` trigger updated to copy email and set `status='active'` on first sign-in; invited rows are pre-created with `status='invited'`.
 
-## Submit-for-approval flow
+## 3. Onboarding flow (admin invites)
 
-- In `_authenticated.trips.$tripId.tsx`, the existing **Confirm itinerary** dialog becomes **Submit for approval**:
-  - Sets `status = confirmed`, `approval_status = pending`, generates `approval_token`, stores `submitted_at`.
-  - Calls server fn `submitTripForApproval(tripId)` which sends the `itinerary-approval-request` email to the saved line manager (or prompts if missing).
-- Adds badges: Pending approval / Approved / Rejected.
-- "Reopen for edits" still works in any status. Editing an `approved` trip shows an inline note; user can re-submit to notify the manager again.
+Users page (`/_authenticated/users`, admin-only):
+- Table of all users: name, email, role, line manager, status, last sign-in.
+- "Invite user" dialog: email, full name, role, line manager (dropdown of existing users).
+- On submit, a server function using `supabaseAdmin` calls `auth.admin.inviteUserByEmail` with `redirectTo=/reset-password`, then inserts the profile row + `user_roles` row + line-manager link.
+- "Edit user" dialog: change role, change line manager, disable/enable account (status flip + optional `auth.admin.updateUserById({ ban_duration })`).
+- "Resend invite" button for users whose status is still `invited`.
 
-## Manager decision route
+The invite email is the existing Lovable auth "invite" template — already covered by the email infrastructure being set up.
 
-- Public route `src/routes/trip-approval.$token.tsx` (no auth) showing trip summary + Approve / Reject buttons with optional note.
-- Backed by `/api/public/trip-approval` server route that validates token, updates `approval_status`, sets `approved_at`, sends a confirmation email back to the trip owner.
+## 4. Data restrictions (RLS rewrites)
 
-## Reminder emails (cron)
+Tighten policies on user-owned tables. Owner column is `created_by` (or `user_id` where it exists — confirmed during implementation):
 
-- Server route `src/routes/api/public/hooks/trip-reminders.ts` (apikey-protected) that:
-  - For trips starting in ≤14 days with incomplete checklist items → `checklist-reminder` email to the trip owner (one per trip per 3 days, tracked via `last_reminder_sent_at`).
-  - For trips in `planning` or `active` with no activity update in 5+ days and `approval_status = not_submitted` → `itinerary-continue` email.
-  - Respects `profiles.reminder_opt_in`. Includes unsubscribe-style toggle link to `/settings`.
-- `pg_cron` job runs daily at 09:00 UTC, posting to the route.
+- **Members**: can SELECT/INSERT/UPDATE/DELETE only rows where `created_by = auth.uid()`.
+- **Managers**: members' rules PLUS SELECT on rows where they are the owner's line manager.
+- **Admins**: full access via `has_role(auth.uid(),'admin')`.
 
-## Email templates (React Email, in `src/lib/email-templates/`)
+Tables affected: `trips`, `trip_countries`, `trip_hotels`, `trip_reports`, `activities`, `activity_comments`, `form_instances`, `form_submissions`, `pending_submissions`. Templates (`form_templates`) stay admin-managed; everyone can read.
 
-- `itinerary-approval-request.tsx` — to line manager, includes trip title, dates, destinations, Approve / Reject buttons (tokenized link).
-- `itinerary-approved.tsx` / `itinerary-rejected.tsx` — to trip owner, includes manager note.
-- `checklist-reminder.tsx` — to trip owner, lists outstanding checklist items + trip link.
-- `itinerary-continue.tsx` — to trip owner, nudge to finish the itinerary.
+## 5. Manager approval surface
 
-All branded with the project's existing palette/typography. Unsubscribe footer auto-appended by the system.
+Managers get an "Approvals" entry in the nav showing trips submitted by their direct reports with `approval_status='pending'`. This dovetails with the line-manager email plan already in progress — the same `submitTripForApproval` flow now also resolves the manager from `profiles.line_manager_id`, not a free-text email.
 
-## Files
+Trips remain editable after approval (existing "Reopen for edits" behavior preserved).
 
-- Migration: profile + trip columns, enum, indexes, GRANTs/policies.
-- New: `src/lib/email/send.ts`, `src/lib/trip-approval.functions.ts`, `src/routes/trip-approval.$token.tsx`, `src/routes/api/public/trip-approval.ts`, `src/routes/api/public/hooks/trip-reminders.ts`, six email templates, registry update.
-- Edited: `src/routes/_authenticated.trips.$tripId.tsx` (submit-for-approval UI + badges), `src/routes/_authenticated.settings.tsx` (line manager fields), `src/components/upcoming-checklist.tsx` (small status hint), `src/integrations/supabase/types.ts` (regen via migration).
+## 6. Navigation / gating
+
+- `/users` route lives under `_authenticated/`, with a `beforeLoad` admin check via `has_role`.
+- Sidebar links shown conditionally: Users (admin), Approvals (manager/admin), Templates (admin), Settings (everyone).
+- Removes the "user sets line manager themselves" plan — Settings keeps only reminder opt-in toggle.
 
 ## Out of scope
 
-- Multi-approver workflows / approval history table (single line manager only).
-- SMS / in-app push reminders.
+- Public self-signup, SSO, custom permission matrix beyond the three roles, audit log of admin actions.
+
+## Files (high level)
+
+- New migration: enum value `manager`, profile columns, helper fns, rewritten RLS on listed tables.
+- New `src/lib/users.functions.ts` (invite, update role, set line manager, disable user — all `requireSupabaseAuth` + admin check, then `supabaseAdmin` inside the handler).
+- New `src/routes/_authenticated.users.tsx` (table + invite/edit dialogs).
+- New `src/routes/_authenticated.approvals.tsx` (manager queue).
+- Edit `src/components/app-shell.tsx` for conditional nav.
+- Edit `src/hooks/use-auth.ts` to add `useIsManager()` and expose `lineManagerId`.
