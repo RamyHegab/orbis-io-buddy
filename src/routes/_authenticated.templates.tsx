@@ -38,8 +38,8 @@ function TemplatesPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [activityType, setActivityType] = useState("recruitment_event");
   const [fields, setFields] = useState<Field[]>([]);
+
 
   const { data: templates } = useQuery({
     queryKey: ["templates"],
@@ -51,7 +51,7 @@ function TemplatesPage() {
       if (!user) throw new Error("Not signed in");
       const { error } = await supabase.from("form_templates").insert({
         created_by: user.id,
-        name, description, activity_type: activityType as any,
+        name, description, activity_type: "other" as any,
         fields: fields as any,
       });
       if (error) throw error;
@@ -59,11 +59,12 @@ function TemplatesPage() {
     onSuccess: () => {
       toast.success("Template created");
       setOpen(false);
-      setName(""); setDescription(""); setActivityType("recruitment_event"); setFields([]);
+      setName(""); setDescription(""); setFields([]);
       qc.invalidateQueries({ queryKey: ["templates"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
+
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
@@ -105,13 +106,7 @@ function TemplatesPage() {
               <div className="space-y-3">
                 <div><Label>Name *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Event check-in form" /></div>
                 <div><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-                <div>
-                  <Label>Activity type</Label>
-                  <Select value={activityType} onValueChange={setActivityType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{ACTIVITY_TYPES.map((t) => <SelectItem key={t} value={t}>{ACTIVITY_TYPE_LABELS[t]}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+
 
                 <div className="border-t pt-3">
                   <Label className="mb-2 block">Fields</Label>
