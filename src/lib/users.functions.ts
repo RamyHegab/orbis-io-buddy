@@ -124,7 +124,11 @@ export const updateUser = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      line_manager_id?: string | null;
+      status?: string;
+      full_name?: string | null;
+    } = {};
     if (data.lineManagerId !== undefined) patch.line_manager_id = data.lineManagerId;
     if (data.status) patch.status = data.status;
     if (data.fullName !== undefined) patch.full_name = data.fullName;
