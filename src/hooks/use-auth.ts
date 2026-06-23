@@ -23,21 +23,34 @@ export function useAuth() {
   return { session, user, loading };
 }
 
-export function useIsAdmin() {
+export type AppRole = "admin" | "manager" | "member";
+
+export function useRole(): { role: AppRole | null; isAdmin: boolean; isManager: boolean } {
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<AppRole | null>(null);
   useEffect(() => {
     if (!user) {
-      setIsAdmin(false);
+      setRole(null);
       return;
     }
     supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
+      .then(({ data }) => {
+        const roles = (data ?? []).map((r) => r.role as AppRole);
+        if (roles.includes("admin")) setRole("admin");
+        else if (roles.includes("manager")) setRole("manager");
+        else setRole("member");
+      });
   }, [user]);
-  return isAdmin;
+  return { role, isAdmin: role === "admin", isManager: role === "manager" };
+}
+
+export function useIsAdmin() {
+  return useRole().isAdmin;
+}
+
+export function useIsManager() {
+  return useRole().isManager;
 }
