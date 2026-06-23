@@ -14,6 +14,7 @@ import {
   LogOut,
   Globe2,
   Bell,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
