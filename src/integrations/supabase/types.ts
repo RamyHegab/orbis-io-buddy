@@ -1072,7 +1072,7 @@ export type Database = {
         | "other"
         | "hotel"
       agent_status: "active" | "inactive" | "prospect"
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "manager"
       school_level: "high_school" | "university" | "language_school" | "other"
       trip_status: "planning" | "active" | "completed" | "confirmed"
     }
@@ -1212,7 +1212,7 @@ export const Constants = {
         "hotel",
       ],
       agent_status: ["active", "inactive", "prospect"],
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "manager"],
       school_level: ["high_school", "university", "language_school", "other"],
       trip_status: ["planning", "active", "completed", "confirmed"],
     },
