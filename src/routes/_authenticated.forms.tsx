@@ -44,17 +44,17 @@ function FormsPage() {
 
   const { data: activities } = useQuery({
     enabled: !!pickerTemplate,
-    queryKey: ["activities-for-form", pickerTemplate?.activity_type],
+    queryKey: ["activities-for-form"],
     queryFn: async () => {
-      let q = supabase
+      return (await supabase
         .from("activities")
         .select("id, title, day_date, location, to_country, from_country, type")
         .order("day_date", { ascending: false })
-        .limit(200);
-      if (pickerTemplate?.activity_type) q = q.eq("type", pickerTemplate.activity_type as any);
-      return (await q).data ?? [];
+        .limit(500)
+      ).data ?? [];
     },
   });
+
 
   const generate = useMutation({
     mutationFn: async () => {
@@ -68,7 +68,8 @@ function FormsPage() {
           template_id: pickerTemplate.id,
           activity_id: activity.id,
           created_by: user.id,
-          name: `${pickerTemplate.name} — ${activity.title}`,
+          name: activity.title,
+
           event_date: activity.day_date,
           country_code: dial,
         })
