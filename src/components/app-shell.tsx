@@ -41,7 +41,7 @@ const navItems: NavItem[] = [
 
 export function AppShell() {
   const { user, loading } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { role, isAdmin } = useRole();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
