@@ -34,6 +34,7 @@ const navItems: NavItem[] = [
   { to: "/inbox", label: "Notifications", icon: Bell, showCount: "pending_submissions" },
   { to: "/forms", label: "Forms", icon: FileText },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/users", label: "Users", icon: UserCog, adminOnly: true },
   { to: "/templates", label: "Form Templates", icon: FileText, adminOnly: true },
 ];
 
