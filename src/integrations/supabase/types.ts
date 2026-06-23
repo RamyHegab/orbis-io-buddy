@@ -663,27 +663,44 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           discovery_banner_dismissed_at: string | null
+          email: string | null
           full_name: string | null
           id: string
+          line_manager_id: string | null
+          status: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           discovery_banner_dismissed_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
+          line_manager_id?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           discovery_banner_dismissed_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
+          line_manager_id?: string | null
+          status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_line_manager_id_fkey"
+            columns: ["line_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {
@@ -1042,6 +1059,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_line_manager_of: {
+        Args: { _manager: string; _user: string }
         Returns: boolean
       }
       move_to_dlq: {
