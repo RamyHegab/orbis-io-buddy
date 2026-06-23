@@ -121,7 +121,7 @@ export function AppShell() {
         <div className="border-t border-sidebar-border p-3 space-y-2">
           <div className="px-2 text-xs">
             <div className="font-medium truncate">{user.email}</div>
-            <div className="text-sidebar-foreground/60">{isAdmin ? "Admin" : "Member"}</div>
+            <div className="text-sidebar-foreground/60 capitalize">{role ?? "Member"}</div>
           </div>
           <button
             onClick={signOut}
