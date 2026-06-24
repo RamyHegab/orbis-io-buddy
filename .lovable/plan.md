@@ -1,66 +1,51 @@
-## Goal
 
-Add a Users page where admins invite people by email, assign a role (Admin / Manager / Member), and set each user's line manager. Regular members only see their own trips/forms; managers can additionally see and approve their direct reports' itineraries.
+# Onboarding Guide: Admins and Users
 
-## 1. Roles model
+No code changes are needed — the system is already built. Here's how to use it.
 
-Extend the `app_role` enum to include `manager` alongside the existing `admin` and `member`. Existing `has_role(user_id, role)` security-definer function is reused — no recursive RLS risk.
+## 1. The first admin (you)
 
-New helper functions (all `SECURITY DEFINER`):
-- `is_line_manager_of(_manager uuid, _user uuid)` → bool, checks `profiles.line_manager_id`.
-- `can_view_trip(_user uuid, _trip_owner uuid)` → bool: true if same user, admin, or line manager of owner.
+The very first person to sign up automatically becomes an **Admin**. This is handled by the `handle_new_user` trigger: if no roles exist yet in the database, the new account is granted the `admin` role. Everyone else who signs up later defaults to `member`.
 
-## 2. Profiles changes
+So: open the app, sign up with your email/password (or Google), and you're the admin.
 
-Add to `public.profiles`:
-- `email text` (mirrored from `auth.users` for admin listing)
-- `line_manager_id uuid` (nullable, FK → `profiles.id`)
-- `status text` default `'active'` (`invited | active | disabled`)
+## 2. Inviting other admins or managers
 
-`handle_new_user` trigger updated to copy email and set `status='active'` on first sign-in; invited rows are pre-created with `status='invited'`.
+Once signed in as an admin, you'll see a **Users** link in the sidebar (only visible to admins).
 
-## 3. Onboarding flow (admin invites)
+On the Users page:
+1. Click **Invite user**.
+2. Enter their **email**, **full name**, and pick a **role**:
+   - **Admin** — full access; can manage users and templates.
+   - **Manager** — can see and approve trips/forms for their direct reports.
+   - **Member** — can only see their own trips and forms.
+3. Optionally pick a **Line manager** from the dropdown (the manager who approves their itineraries).
+4. Send the invite.
 
-Users page (`/_authenticated/users`, admin-only):
-- Table of all users: name, email, role, line manager, status, last sign-in.
-- "Invite user" dialog: email, full name, role, line manager (dropdown of existing users).
-- On submit, a server function using `supabaseAdmin` calls `auth.admin.inviteUserByEmail` with `redirectTo=/reset-password`, then inserts the profile row + `user_roles` row + line-manager link.
-- "Edit user" dialog: change role, change line manager, disable/enable account (status flip + optional `auth.admin.updateUserById({ ban_duration })`).
-- "Resend invite" button for users whose status is still `invited`.
+The invitee receives a branded email from `notify.orbishub.co.uk` with a secure link to set their password and sign in. On first sign-in, their profile flips from `invited` → `active`.
 
-The invite email is the existing Lovable auth "invite" template — already covered by the email infrastructure being set up.
+## 3. Inviting end users (members)
 
-## 4. Data restrictions (RLS rewrites)
+Same flow as above — use the Users page, pick **Member** as the role, and assign their line manager. Members will:
+- See only their own trips, activities, forms, and reports.
+- Have their submitted itineraries routed to their assigned line manager for approval.
 
-Tighten policies on user-owned tables. Owner column is `created_by` (or `user_id` where it exists — confirmed during implementation):
+## 4. Editing or disabling users
 
-- **Members**: can SELECT/INSERT/UPDATE/DELETE only rows where `created_by = auth.uid()`.
-- **Managers**: members' rules PLUS SELECT on rows where they are the owner's line manager.
-- **Admins**: full access via `has_role(auth.uid(),'admin')`.
+From the Users page, open any row to:
+- Change their **role** (e.g. promote a member to manager).
+- Reassign their **line manager**.
+- **Disable** the account (revokes access without deleting data) or re-enable it.
 
-Tables affected: `trips`, `trip_countries`, `trip_hotels`, `trip_reports`, `activities`, `activity_comments`, `form_instances`, `form_submissions`, `pending_submissions`. Templates (`form_templates`) stay admin-managed; everyone can read.
+## 5. Recommended rollout
 
-## 5. Manager approval surface
+1. You sign up first → become admin automatically.
+2. Invite your **managers** first, with no line manager (or another admin) assigned.
+3. Then invite **members** and assign each one to their manager.
+4. Members submit itineraries → their manager gets an approval email → they approve from the Approvals page.
 
-Managers get an "Approvals" entry in the nav showing trips submitted by their direct reports with `approval_status='pending'`. This dovetails with the line-manager email plan already in progress — the same `submitTripForApproval` flow now also resolves the manager from `profiles.line_manager_id`, not a free-text email.
+## Notes
 
-Trips remain editable after approval (existing "Reopen for edits" behavior preserved).
-
-## 6. Navigation / gating
-
-- `/users` route lives under `_authenticated/`, with a `beforeLoad` admin check via `has_role`.
-- Sidebar links shown conditionally: Users (admin), Approvals (manager/admin), Templates (admin), Settings (everyone).
-- Removes the "user sets line manager themselves" plan — Settings keeps only reminder opt-in toggle.
-
-## Out of scope
-
-- Public self-signup, SSO, custom permission matrix beyond the three roles, audit log of admin actions.
-
-## Files (high level)
-
-- New migration: enum value `manager`, profile columns, helper fns, rewritten RLS on listed tables.
-- New `src/lib/users.functions.ts` (invite, update role, set line manager, disable user — all `requireSupabaseAuth` + admin check, then `supabaseAdmin` inside the handler).
-- New `src/routes/_authenticated.users.tsx` (table + invite/edit dialogs).
-- New `src/routes/_authenticated.approvals.tsx` (manager queue).
-- Edit `src/components/app-shell.tsx` for conditional nav.
-- Edit `src/hooks/use-auth.ts` to add `useIsManager()` and expose `lineManagerId`.
+- There is no public signup form — the only way in is via an admin invite (or being the first user). This is intentional based on the earlier decision.
+- Invitation emails use the existing Lovable Email infrastructure on `notify.orbishub.co.uk`. If DNS is still propagating, invites queue and send once the domain is verified.
+- If you ever lose access to the admin account, a new admin can be granted directly in the database by inserting into `user_roles`, but this should only be done as a recovery measure.
