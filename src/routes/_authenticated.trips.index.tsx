@@ -113,7 +113,8 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
         <div className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{trip.title}</div>
         <div className="text-xs text-muted-foreground mt-2">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
         <div className="flex flex-wrap gap-1 mt-3">
-          {trip.status === "confirmed" && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Confirmed</Badge>}
+          {(trip.status === "approved" || trip.status === "confirmed") && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Approved</Badge>}
+          {trip.status === "submitted" && <Badge className="bg-amber-500 text-white hover:bg-amber-500/90">Pending approval</Badge>}
           {trip.destinations?.slice(0, 3).map((d: string) => (
             <Badge key={d} variant="outline" className="border-primary/40 text-primary">{d}</Badge>
           ))}
