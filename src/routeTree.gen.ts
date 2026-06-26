@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -40,6 +41,11 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
   '/inbox': typeof AuthenticatedInboxRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/agents': typeof AuthenticatedAgentsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/forms': typeof AuthenticatedFormsRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demo'
     | '/reset-password'
+    | '/unsubscribe'
     | '/agents'
     | '/dashboard'
     | '/forms'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demo'
     | '/reset-password'
+    | '/unsubscribe'
     | '/dashboard'
     | '/forms'
     | '/inbox'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demo'
     | '/reset-password'
+    | '/unsubscribe'
     | '/_authenticated/agents'
     | '/_authenticated/dashboard'
     | '/_authenticated/forms'
@@ -395,6 +407,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FInstanceIdRoute: typeof FInstanceIdRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
@@ -407,6 +420,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -701,6 +721,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FInstanceIdRoute: FInstanceIdRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
