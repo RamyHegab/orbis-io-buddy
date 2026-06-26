@@ -78,7 +78,11 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
       onClick={onSelect}
       className={`p-0 hover:shadow-md transition-all relative group shrink-0 w-56 cursor-pointer overflow-hidden rounded-md border-2 ${selected ? "border-gold shadow-md" : "border-primary/80"}`}
     >
-      <div className={`h-1.5 w-full ${trip.status === "confirmed" ? "bg-gold" : "bg-primary"}`} />
+      <div className={`h-1.5 w-full ${
+        trip.status === "approved" || trip.status === "confirmed" ? "bg-gold"
+          : trip.status === "submitted" ? "bg-amber-500"
+          : "bg-primary"
+      }`} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
