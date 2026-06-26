@@ -1,51 +1,67 @@
+## Goal
+Reshape the trip workflow around four lifecycle stages — **Draft / In progress**, **Pending approval**, **Approved**, **Past** — driven by an explicit user submit + line-manager approval step, with inbox + email notifications.
 
-# Onboarding Guide: Admins and Users
+## New trip lifecycle
 
-No code changes are needed — the system is already built. Here's how to use it.
+```
+planning ──save──▶ active ──submit──▶ submitted ──approve──▶ approved ──end_date passed──▶ past
+                              ▲                  │
+                              └──── reject ──────┘ (with note, back to active)
+```
 
-## 1. The first admin (you)
+- `planning` / `active` = user is still editing (saved, not yet submitted).
+- `submitted` = sent to line manager, awaiting decision. Visible in user's **In progress** panel with a **Pending approval** badge.
+- `approved` = line manager approved. Trip moves to the **Approved** panel. User can still edit freely (no re-approval required).
+- `past` = `end_date < today` (any status).
 
-The very first person to sign up automatically becomes an **Admin**. This is handled by the `handle_new_user` trigger: if no roles exist yet in the database, the new account is granted the `admin` role. Everyone else who signs up later defaults to `member`.
+## Trips page panels (replaces current 3 rows)
 
-So: open the app, sign up with your email/password (or Google), and you're the admin.
+1. **In progress** — `planning` / `active` / `submitted`. Cards in `submitted` show a yellow "Pending approval" badge; rejected trips show a red "Changes requested" badge with the manager's note on hover.
+2. **Approved** — `approved` and not yet past. This is the panel the pre-trip checklist sidebar attaches to (currently "Upcoming confirmed").
+3. **Past (last 3)** — `end_date < today`, regardless of final status. Clicking opens the trip in read-friendly mode for reviewing notes/report.
 
-## 2. Inviting other admins or managers
+## Itinerary planner (single trip page)
 
-Once signed in as an admin, you'll see a **Users** link in the sidebar (only visible to admins).
+Replace the current `Save as in progress` / `Confirm itinerary` / `Reopen for edits` action group with:
 
-On the Users page:
-1. Click **Invite user**.
-2. Enter their **email**, **full name**, and pick a **role**:
-   - **Admin** — full access; can manage users and templates.
-   - **Manager** — can see and approve trips/forms for their direct reports.
-   - **Member** — can only see their own trips and forms.
-3. Optionally pick a **Line manager** from the dropdown (the manager who approves their itineraries).
-4. Send the invite.
+- **Save (in progress)** — always available; sets status to `active`. No notification.
+- **Submit for approval** — available when status is `active`. Confirms via dialog, sets status to `submitted`, creates an approval request, notifies the line manager. Disabled (with tooltip) if the user has no line manager assigned.
+- **Withdraw submission** — visible only while `submitted`; returns trip to `active`.
+- Header badge reflects status: Draft / In progress / Pending approval / Approved / Changes requested.
+- If a previous rejection exists, show the manager's note in an alert at the top of the page until the user re-submits.
 
-The invitee receives a branded email from `notify.orbishub.co.uk` with a secure link to set their password and sign in. On first sign-in, their profile flips from `invited` → `active`.
+## Manager approval surface
 
-## 3. Inviting end users (members)
+- **Inbox page** gets a new "Approvals" section listing trips where the signed-in user is the trip owner's line manager and status is `submitted`. Each row links to the trip and offers **Approve** / **Request changes** (with required note) buttons.
+- The same actions are also available inline on the trip page when viewed by the line manager.
+- On approve: status → `approved`, approval record stamped with approver + timestamp, owner notified by email + inbox entry.
+- On reject: status → `active`, note stored, owner notified by email + inbox entry.
 
-Same flow as above — use the Users page, pick **Member** as the role, and assign their line manager. Members will:
-- See only their own trips, activities, forms, and reports.
-- Have their submitted itineraries routed to their assigned line manager for approval.
+## Notifications (inbox + email)
 
-## 4. Editing or disabling users
+- New `notifications` table (recipient, type, trip_id, payload, read_at) feeds the Inbox page for both managers and owners.
+- Three transactional email templates: `trip-submitted-for-approval` (to manager), `trip-approved` (to owner), `trip-changes-requested` (to owner). Subjects include the trip title and dates; bodies include a link back to the trip page and the manager's note when applicable.
+- Sends go through the existing Lovable app-email infrastructure (idempotency key = `<trip_id>-<event>`).
 
-From the Users page, open any row to:
-- Change their **role** (e.g. promote a member to manager).
-- Reassign their **line manager**.
-- **Disable** the account (revokes access without deleting data) or re-enable it.
+## Technical details (for reference)
 
-## 5. Recommended rollout
+- DB migration:
+  - Extend allowed `trips.status` values: keep `planning`, `active`; add `submitted`, `approved`, `rejected_unused` (existing `confirmed` rows auto-migrated to `approved`).
+  - New `trip_approvals` table: `id`, `trip_id`, `requested_by`, `manager_id`, `decision` (`pending|approved|changes_requested`), `note`, `decided_at`, timestamps. RLS: owner can see their own; manager can see/update where `manager_id = auth.uid()`; admin full read. GRANTs for `authenticated` and `service_role`.
+  - New `notifications` table: `id`, `user_id`, `type`, `trip_id`, `title`, `body`, `read_at`, `created_at`. RLS: user sees/updates own; service_role full. GRANTs for `authenticated` and `service_role`.
+- Server functions (`src/lib/trip-approvals.functions.ts`) with `requireSupabaseAuth`:
+  - `submitTripForApproval({ tripId })` — checks owner, ensures `line_manager_id` exists, sets status `submitted`, inserts pending approval row, inserts manager notification, enqueues email.
+  - `decideTripApproval({ approvalId, decision, note })` — checks caller is `manager_id`, updates approval + trip status (`approved` or back to `active`), inserts owner notification, enqueues email.
+  - `withdrawTripSubmission({ tripId })` — owner reverts `submitted` → `active`.
+- Frontend:
+  - `src/routes/_authenticated.trips.index.tsx` — replace `bucketOf` with new four-bucket logic and rename row titles.
+  - `src/routes/_authenticated.trips.$tripId.tsx` — replace the action button group, render rejection banner, render manager approve/reject controls when applicable.
+  - `src/routes/_authenticated.inbox.tsx` — add Approvals list (queries `trip_approvals` where manager = current user, status pending) and Notifications feed (queries `notifications`).
+- Email templates added in `src/lib/email-templates/` and registered.
+- The existing pre-trip checklist sidebar keeps working — its source query simply switches from `status = 'confirmed'` to `status = 'approved'`.
 
-1. You sign up first → become admin automatically.
-2. Invite your **managers** first, with no line manager (or another admin) assigned.
-3. Then invite **members** and assign each one to their manager.
-4. Members submit itineraries → their manager gets an approval email → they approve from the Approvals page.
+## Out of scope
 
-## Notes
-
-- There is no public signup form — the only way in is via an admin invite (or being the first user). This is intentional based on the earlier decision.
-- Invitation emails use the existing Lovable Email infrastructure on `notify.orbishub.co.uk`. If DNS is still propagating, invites queue and send once the domain is verified.
-- If you ever lose access to the admin account, a new admin can be granted directly in the database by inserting into `user_roles`, but this should only be done as a recovery measure.
+- No auto-revert to "needs re-approval" when editing after approval (per your choice).
+- Bulk approvals, approval reminders, and SLA timers.
+- Marketing/recap emails.

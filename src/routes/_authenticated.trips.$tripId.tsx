@@ -24,7 +24,8 @@ import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { useServerFn } from "@tanstack/react-start";
 import { lookupFlight } from "@/lib/flights.functions";
-import { Loader2 } from "lucide-react";
+import { submitTripForApproval, withdrawTripSubmission, decideTripApproval } from "@/lib/trip-approvals.functions";
+import { Loader2, AlertTriangle, Clock, Send, Undo2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId")({
   component: TripPlanner,
@@ -128,6 +129,8 @@ function TripPlanner() {
   const [editObjectives, setEditObjectives] = useState("");
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectNote, setRejectNote] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [isLgUp, setIsLgUp] = useState(false);
 
@@ -496,18 +499,71 @@ function TripPlanner() {
   });
 
   const setStatus = useMutation({
-    mutationFn: async (status: "active" | "confirmed") => {
+    mutationFn: async (status: "active") => {
       const { error } = await supabase.from("trips").update({ status }).eq("id", tripId);
       if (error) throw error;
       return status;
     },
-    onSuccess: (status) => {
-      toast.success(status === "confirmed" ? "Itinerary confirmed — ready to submit for approval" : "Itinerary saved as in progress");
+    onSuccess: () => {
+      toast.success("Itinerary saved");
       qc.invalidateQueries({ queryKey: ["trip", tripId] });
       qc.invalidateQueries({ queryKey: ["trips"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const submitForApprovalFn = useServerFn(submitTripForApproval);
+  const withdrawSubmissionFn = useServerFn(withdrawTripSubmission);
+  const decideApprovalFn = useServerFn(decideTripApproval);
+
+  const submitForApproval = useMutation({
+    mutationFn: () => submitForApprovalFn({ data: { tripId } }),
+    onSuccess: () => {
+      toast.success("Submitted to your line manager for approval");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-approvals", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to submit"),
+  });
+
+  const withdrawSubmission = useMutation({
+    mutationFn: () => withdrawSubmissionFn({ data: { tripId } }),
+    onSuccess: () => {
+      toast.success("Submission withdrawn");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-approvals", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to withdraw"),
+  });
+
+  const decideApproval = useMutation({
+    mutationFn: (vars: { approvalId: string; decision: "approved" | "changes_requested"; note?: string }) =>
+      decideApprovalFn({ data: vars }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.decision === "approved" ? "Trip approved" : "Changes requested");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-approvals", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed"),
+  });
+
+  const { data: latestApproval } = useQuery({
+    queryKey: ["trip-approvals", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trip_approvals")
+        .select("*")
+        .eq("trip_id", tripId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
 
   const fixDateYear = (d: string): string => {
     const m = d.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
@@ -602,6 +658,9 @@ function TripPlanner() {
 
   const canSubmit = isFormValid(form);
   const validationMessage = validateForm(form);
+  const isOwner = !!user && trip.user_id === user.id;
+  const pendingApproval = latestApproval?.decision === "pending" ? latestApproval : null;
+  const isManagerForThisTrip = !!user && pendingApproval?.manager_id === user.id;
 
   return (
     <PageContainer>
@@ -612,10 +671,18 @@ function TripPlanner() {
         title={
           <span className="flex items-center gap-2">
             {trip.title}
-            {trip.status === "confirmed" && (
-              <Badge className="bg-emerald-600 hover:bg-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Confirmed</Badge>
+            {(trip.status === "approved" || trip.status === "confirmed") && (
+              <Badge className="bg-emerald-600 hover:bg-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Approved</Badge>
             )}
-            {trip.status === "active" && <Badge variant="secondary">In progress</Badge>}
+            {trip.status === "submitted" && (
+              <Badge className="bg-amber-500 hover:bg-amber-500 text-white"><Clock className="h-3 w-3 mr-1" /> Pending approval</Badge>
+            )}
+            {trip.status === "active" && latestApproval?.decision === "changes_requested" && (
+              <Badge variant="destructive">Changes requested</Badge>
+            )}
+            {trip.status === "active" && latestApproval?.decision !== "changes_requested" && (
+              <Badge variant="secondary">In progress</Badge>
+            )}
             {trip.status === "planning" && <Badge variant="outline">Draft</Badge>}
           </span>
         }
@@ -623,36 +690,70 @@ function TripPlanner() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4 mr-1" /> Edit trip</Button>
-            {trip.status !== "confirmed" ? (
+
+            {isOwner && (trip.status === "planning" || trip.status === "active") && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setStatus.mutate("active")} disabled={setStatus.isPending}>
-                  <Save className="h-4 w-4 mr-1" /> Save as in progress
+                  <Save className="h-4 w-4 mr-1" /> Save (in progress)
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" disabled={setStatus.isPending}>
-                      <CheckCircle2 className="h-4 w-4 mr-1" /> Confirm itinerary
+                    <Button size="sm" disabled={submitForApproval.isPending}>
+                      <Send className="h-4 w-4 mr-1" /> Submit for approval
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm itinerary?</AlertDialogTitle>
+                      <AlertDialogTitle>Submit itinerary for approval?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Marks this itinerary as complete and ready to submit for approval. You can still edit it afterwards.
+                        Your line manager will be notified by email and in their inbox.
+                        You can still withdraw the submission before they decide.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => setStatus.mutate("confirmed")}>Confirm</AlertDialogAction>
+                      <AlertDialogAction onClick={() => submitForApproval.mutate()}>Submit</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </>
-            ) : (
-              <Button variant="outline" size="sm" onClick={() => setStatus.mutate("active")} disabled={setStatus.isPending}>
-                <Pencil className="h-4 w-4 mr-1" /> Reopen for edits
+            )}
+
+            {isOwner && trip.status === "submitted" && (
+              <Button variant="outline" size="sm" onClick={() => withdrawSubmission.mutate()} disabled={withdrawSubmission.isPending}>
+                <Undo2 className="h-4 w-4 mr-1" /> Withdraw submission
               </Button>
             )}
+
+            {isManagerForThisTrip && trip.status === "submitted" && pendingApproval && (
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={decideApproval.isPending}>
+                      <CheckCircle2 className="h-4 w-4 mr-1" /> Approve
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Approve itinerary?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        The owner will be notified and the trip will move to the Approved panel.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => decideApproval.mutate({ approvalId: pendingApproval.id, decision: "approved" })}
+                      >Approve</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Button size="sm" variant="outline" onClick={() => setRejectOpen(true)} disabled={decideApproval.isPending}>
+                  <AlertTriangle className="h-4 w-4 mr-1 text-destructive" /> Request changes
+                </Button>
+              </>
+            )}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm"><FileDown className="h-4 w-4 mr-1" /> Export</Button>
@@ -662,7 +763,6 @@ function TripPlanner() {
                   <FileText className="h-4 w-4 mr-2" /> PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportTripWord(trip, (activities ?? []) as any, (hotels ?? []) as any)}>
-
                   <FileText className="h-4 w-4 mr-2" /> Word (.doc)
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -688,6 +788,57 @@ function TripPlanner() {
           </div>
         }
       />
+
+      {trip.status === "active" && latestApproval?.decision === "changes_requested" && latestApproval.note && (
+        <Card className="p-4 mb-4 border-destructive bg-destructive/10">
+          <div className="font-semibold text-destructive mb-1 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" /> Changes requested by your line manager
+          </div>
+          <p className="text-sm whitespace-pre-wrap">{latestApproval.note}</p>
+          <p className="text-xs text-muted-foreground mt-2">Make the changes, then submit again for approval.</p>
+        </Card>
+      )}
+
+      {isManagerForThisTrip && trip.status === "submitted" && (
+        <Card className="p-4 mb-4 border-amber-500 bg-amber-50">
+          <div className="font-semibold text-amber-900 mb-1 flex items-center gap-2">
+            <Clock className="h-4 w-4" /> Awaiting your approval
+          </div>
+          <p className="text-sm text-amber-900/80">
+            This itinerary was submitted by the trip owner. Use the Approve or Request changes buttons above.
+          </p>
+        </Card>
+      )}
+
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Request changes</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Label>What needs to change?</Label>
+            <Textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              rows={5}
+              placeholder="e.g. Please add hotel costs and confirm the agent visit on Day 4."
+            />
+            <Button
+              className="w-full"
+              disabled={!rejectNote.trim() || decideApproval.isPending}
+              onClick={() => {
+                if (!pendingApproval) return;
+                decideApproval.mutate({
+                  approvalId: pendingApproval.id,
+                  decision: "changes_requested",
+                  note: rejectNote.trim(),
+                }, { onSuccess: () => { setRejectOpen(false); setRejectNote(""); } });
+              }}
+            >
+              Send back with comments
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-xl">

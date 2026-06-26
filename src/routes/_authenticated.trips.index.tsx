@@ -36,10 +36,10 @@ function buildTitle(legs: Leg[]): string {
   return `${countries} — ${format(min, "d MMM")} → ${format(max, "d MMM yyyy")}`;
 }
 
-function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "upcoming" {
+function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "approved" {
   const today = format(new Date(), "yyyy-MM-dd");
   if (t.end_date < today) return "past";
-  if (t.status === "confirmed") return "upcoming";
+  if (t.status === "approved" || t.status === "confirmed") return "approved";
   return "in_progress";
 }
 
@@ -78,7 +78,11 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
       onClick={onSelect}
       className={`p-0 hover:shadow-md transition-all relative group shrink-0 w-56 cursor-pointer overflow-hidden rounded-md border-2 ${selected ? "border-gold shadow-md" : "border-primary/80"}`}
     >
-      <div className={`h-1.5 w-full ${trip.status === "confirmed" ? "bg-gold" : "bg-primary"}`} />
+      <div className={`h-1.5 w-full ${
+        trip.status === "approved" || trip.status === "confirmed" ? "bg-gold"
+          : trip.status === "submitted" ? "bg-amber-500"
+          : "bg-primary"
+      }`} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
@@ -109,7 +113,8 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
         <div className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{trip.title}</div>
         <div className="text-xs text-muted-foreground mt-2">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
         <div className="flex flex-wrap gap-1 mt-3">
-          {trip.status === "confirmed" && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Confirmed</Badge>}
+          {(trip.status === "approved" || trip.status === "confirmed") && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Approved</Badge>}
+          {trip.status === "submitted" && <Badge className="bg-amber-500 text-white hover:bg-amber-500/90">Pending approval</Badge>}
           {trip.destinations?.slice(0, 3).map((d: string) => (
             <Badge key={d} variant="outline" className="border-primary/40 text-primary">{d}</Badge>
           ))}
@@ -284,27 +289,26 @@ function TripsPage() {
   const previewTitle = buildTitle(legs);
 
   const grouped = useMemo(() => {
-    const g = { past: [] as any[], in_progress: [] as any[], upcoming: [] as any[] };
+    const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[] };
     for (const t of trips ?? []) g[bucketOf(t)].push(t);
-    // Sort upcoming + in_progress ascending by start date so soonest first
     g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
-    g.upcoming.sort((a, b) => a.start_date.localeCompare(b.start_date));
+    g.approved.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
   }, [trips]);
 
   const pastLimited = grouped.past.slice(0, 3);
 
   useEffect(() => {
-    if (grouped.upcoming.length === 0) {
+    if (grouped.approved.length === 0) {
       if (selectedUpcomingId !== null) setSelectedUpcomingId(null);
       return;
     }
-    if (!selectedUpcomingId || !grouped.upcoming.find((t) => t.id === selectedUpcomingId)) {
-      setSelectedUpcomingId(grouped.upcoming[0].id);
+    if (!selectedUpcomingId || !grouped.approved.find((t) => t.id === selectedUpcomingId)) {
+      setSelectedUpcomingId(grouped.approved[0].id);
     }
-  }, [grouped.upcoming, selectedUpcomingId]);
+  }, [grouped.approved, selectedUpcomingId]);
 
-  const selectedTrip = grouped.upcoming.find((t) => t.id === selectedUpcomingId) ?? null;
+  const selectedTrip = grouped.approved.find((t) => t.id === selectedUpcomingId) ?? null;
 
   return (
     <PageContainer>
@@ -367,20 +371,21 @@ function TripsPage() {
           <HorizontalRow
             title="In progress"
             trips={grouped.in_progress}
-            empty="No trips in progress."
+            empty="No trips in progress. Click 'New trip' to start one."
           />
           <HorizontalRow
-            title="Upcoming confirmed"
-            trips={grouped.upcoming}
+            title="Approved"
+            trips={grouped.approved}
             selectedId={selectedUpcomingId}
             onSelect={setSelectedUpcomingId}
-            empty="No upcoming confirmed trips."
+            empty="No approved trips yet. Submit an itinerary for your line manager to approve."
           />
           <HorizontalRow
             title="Past (last 3)"
             trips={pastLimited}
             empty="No past trips yet."
           />
+
         </div>
         <aside>
           <ChecklistPanel trip={selectedTrip} />
