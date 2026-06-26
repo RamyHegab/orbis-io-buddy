@@ -496,18 +496,71 @@ function TripPlanner() {
   });
 
   const setStatus = useMutation({
-    mutationFn: async (status: "active" | "confirmed") => {
+    mutationFn: async (status: "active") => {
       const { error } = await supabase.from("trips").update({ status }).eq("id", tripId);
       if (error) throw error;
       return status;
     },
-    onSuccess: (status) => {
-      toast.success(status === "confirmed" ? "Itinerary confirmed — ready to submit for approval" : "Itinerary saved as in progress");
+    onSuccess: () => {
+      toast.success("Itinerary saved");
       qc.invalidateQueries({ queryKey: ["trip", tripId] });
       qc.invalidateQueries({ queryKey: ["trips"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const submitForApprovalFn = useServerFn(submitTripForApproval);
+  const withdrawSubmissionFn = useServerFn(withdrawTripSubmission);
+  const decideApprovalFn = useServerFn(decideTripApproval);
+
+  const submitForApproval = useMutation({
+    mutationFn: () => submitForApprovalFn({ data: { tripId } }),
+    onSuccess: () => {
+      toast.success("Submitted to your line manager for approval");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-approvals", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to submit"),
+  });
+
+  const withdrawSubmission = useMutation({
+    mutationFn: () => withdrawSubmissionFn({ data: { tripId } }),
+    onSuccess: () => {
+      toast.success("Submission withdrawn");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-approvals", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to withdraw"),
+  });
+
+  const decideApproval = useMutation({
+    mutationFn: (vars: { approvalId: string; decision: "approved" | "changes_requested"; note?: string }) =>
+      decideApprovalFn({ data: vars }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.decision === "approved" ? "Trip approved" : "Changes requested");
+      qc.invalidateQueries({ queryKey: ["trip", tripId] });
+      qc.invalidateQueries({ queryKey: ["trip-approvals", tripId] });
+      qc.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed"),
+  });
+
+  const { data: latestApproval } = useQuery({
+    queryKey: ["trip-approvals", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trip_approvals")
+        .select("*")
+        .eq("trip_id", tripId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
 
   const fixDateYear = (d: string): string => {
     const m = d.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
