@@ -284,27 +284,26 @@ function TripsPage() {
   const previewTitle = buildTitle(legs);
 
   const grouped = useMemo(() => {
-    const g = { past: [] as any[], in_progress: [] as any[], upcoming: [] as any[] };
+    const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[] };
     for (const t of trips ?? []) g[bucketOf(t)].push(t);
-    // Sort upcoming + in_progress ascending by start date so soonest first
     g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
-    g.upcoming.sort((a, b) => a.start_date.localeCompare(b.start_date));
+    g.approved.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
   }, [trips]);
 
   const pastLimited = grouped.past.slice(0, 3);
 
   useEffect(() => {
-    if (grouped.upcoming.length === 0) {
+    if (grouped.approved.length === 0) {
       if (selectedUpcomingId !== null) setSelectedUpcomingId(null);
       return;
     }
-    if (!selectedUpcomingId || !grouped.upcoming.find((t) => t.id === selectedUpcomingId)) {
-      setSelectedUpcomingId(grouped.upcoming[0].id);
+    if (!selectedUpcomingId || !grouped.approved.find((t) => t.id === selectedUpcomingId)) {
+      setSelectedUpcomingId(grouped.approved[0].id);
     }
-  }, [grouped.upcoming, selectedUpcomingId]);
+  }, [grouped.approved, selectedUpcomingId]);
 
-  const selectedTrip = grouped.upcoming.find((t) => t.id === selectedUpcomingId) ?? null;
+  const selectedTrip = grouped.approved.find((t) => t.id === selectedUpcomingId) ?? null;
 
   return (
     <PageContainer>
