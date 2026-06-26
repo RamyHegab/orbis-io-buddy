@@ -36,10 +36,10 @@ function buildTitle(legs: Leg[]): string {
   return `${countries} — ${format(min, "d MMM")} → ${format(max, "d MMM yyyy")}`;
 }
 
-function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "upcoming" {
+function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "approved" {
   const today = format(new Date(), "yyyy-MM-dd");
   if (t.end_date < today) return "past";
-  if (t.status === "confirmed") return "upcoming";
+  if (t.status === "approved" || t.status === "confirmed") return "approved";
   return "in_progress";
 }
 
