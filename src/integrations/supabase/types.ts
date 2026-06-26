@@ -605,6 +605,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          title: string
+          trip_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title: string
+          trip_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title?: string
+          trip_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_submissions: {
         Row: {
           agent_id: string | null
@@ -821,6 +862,50 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      trip_approvals: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decision: string
+          id: string
+          manager_id: string
+          note: string | null
+          requested_by: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decision?: string
+          id?: string
+          manager_id: string
+          note?: string | null
+          requested_by: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decision?: string
+          id?: string
+          manager_id?: string
+          note?: string | null
+          requested_by?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_approvals_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trip_countries: {
         Row: {
@@ -1095,7 +1180,13 @@ export type Database = {
       agent_status: "active" | "inactive" | "prospect"
       app_role: "admin" | "member" | "manager"
       school_level: "high_school" | "university" | "language_school" | "other"
-      trip_status: "planning" | "active" | "completed" | "confirmed"
+      trip_status:
+        | "planning"
+        | "active"
+        | "completed"
+        | "confirmed"
+        | "submitted"
+        | "approved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1235,7 +1326,14 @@ export const Constants = {
       agent_status: ["active", "inactive", "prospect"],
       app_role: ["admin", "member", "manager"],
       school_level: ["high_school", "university", "language_school", "other"],
-      trip_status: ["planning", "active", "completed", "confirmed"],
+      trip_status: [
+        "planning",
+        "active",
+        "completed",
+        "confirmed",
+        "submitted",
+        "approved",
+      ],
     },
   },
 } as const
