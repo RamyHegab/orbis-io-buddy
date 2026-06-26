@@ -129,6 +129,8 @@ function TripPlanner() {
   const [editObjectives, setEditObjectives] = useState("");
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectNote, setRejectNote] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [isLgUp, setIsLgUp] = useState(false);
 
