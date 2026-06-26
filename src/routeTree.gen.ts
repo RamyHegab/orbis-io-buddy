@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FInstanceIdRouteImport } from './routes/f.$instanceId'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated.users'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated.templates'
@@ -28,10 +29,13 @@ import { Route as AuthenticatedTripsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSchoolsIndexRouteImport } from './routes/_authenticated.schools.index'
 import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated.agents.index'
 import { Route as PublicIntakeTypeRouteImport } from './routes/public.intake.$type'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated.schools.$schoolId'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated.agents.$agentId'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
@@ -63,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
 const FInstanceIdRoute = FInstanceIdRouteImport.update({
   id: '/f/$instanceId',
   path: '/f/$instanceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -132,6 +141,11 @@ const PublicIntakeTypeRoute = PublicIntakeTypeRouteImport.update({
   path: '/public/intake/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FormsActivityIdTemplateIdRoute =
   FormsActivityIdTemplateIdRouteImport.update({
     id: '/forms/$activityId/$templateId',
@@ -155,6 +169,18 @@ const AuthenticatedAgentsAgentIdRoute =
     id: '/$agentId',
     path: '/$agentId',
     getParentRoute: () => AuthenticatedAgentsRoute,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
@@ -189,17 +215,21 @@ export interface FileRoutesByFullPath {
   '/templates': typeof AuthenticatedTemplatesRoute
   '/trips': typeof AuthenticatedTripsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$instanceId': typeof FInstanceIdRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRoutesByTo {
@@ -214,17 +244,21 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$instanceId': typeof FInstanceIdRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/schools': typeof AuthenticatedSchoolsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRoutesById {
@@ -243,17 +277,21 @@ export interface FileRoutesById {
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$instanceId': typeof FInstanceIdRoute
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/_authenticated/trips/$tripId/activities/$activityId': typeof AuthenticatedTripsTripIdActivitiesActivityIdRoute
 }
 export interface FileRouteTypes {
@@ -272,17 +310,21 @@ export interface FileRouteTypes {
     | '/templates'
     | '/trips'
     | '/users'
+    | '/email/unsubscribe'
     | '/f/$instanceId'
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/lovable/email/suppression'
     | '/public/intake/$type'
     | '/agents/'
     | '/schools/'
     | '/trips/'
     | '/trips/$tripId/report'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/trips/$tripId/activities/$activityId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -297,17 +339,21 @@ export interface FileRouteTypes {
     | '/settings'
     | '/templates'
     | '/users'
+    | '/email/unsubscribe'
     | '/f/$instanceId'
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/lovable/email/suppression'
     | '/public/intake/$type'
     | '/agents'
     | '/schools'
     | '/trips'
     | '/trips/$tripId/report'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/trips/$tripId/activities/$activityId'
   id:
     | '__root__'
@@ -325,17 +371,21 @@ export interface FileRouteTypes {
     | '/_authenticated/templates'
     | '/_authenticated/trips'
     | '/_authenticated/users'
+    | '/email/unsubscribe'
     | '/f/$instanceId'
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/trips/$tripId'
     | '/forms/$activityId/$templateId'
+    | '/lovable/email/suppression'
     | '/public/intake/$type'
     | '/_authenticated/agents/'
     | '/_authenticated/schools/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/_authenticated/trips/$tripId/activities/$activityId'
   fileRoutesById: FileRoutesById
 }
@@ -345,10 +395,14 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FInstanceIdRoute: typeof FInstanceIdRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -393,6 +447,13 @@ declare module '@tanstack/react-router' {
       path: '/f/$instanceId'
       fullPath: '/f/$instanceId'
       preLoaderRoute: typeof FInstanceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
@@ -486,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicIntakeTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forms/$activityId/$templateId': {
       id: '/forms/$activityId/$templateId'
       path: '/forms/$activityId/$templateId'
@@ -513,6 +581,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/agents/$agentId'
       preLoaderRoute: typeof AuthenticatedAgentsAgentIdRouteImport
       parentRoute: typeof AuthenticatedAgentsRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -619,10 +701,14 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FInstanceIdRoute: FInstanceIdRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
