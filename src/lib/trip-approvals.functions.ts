@@ -257,20 +257,51 @@ export const decideTripApproval = createServerFn({ method: "POST" })
       },
     ]);
 
+    // On approval, generate a PDF snapshot of the itinerary and include a
+    // signed download link in both the owner and manager emails.
+    let itineraryUrl: string | undefined;
+    if (data.decision === "approved") {
+      try {
+        const { generateAndUploadTripItineraryPdf } = await import(
+          "@/lib/trip-itinerary-pdf.server"
+        );
+        const out = await generateAndUploadTripItineraryPdf(trip.id, {
+          origin: siteOrigin(),
+          pathSuffix: approval.id,
+        });
+        itineraryUrl = out.url ?? undefined;
+      } catch (e) {
+        console.error("itinerary pdf generation failed", e);
+      }
+    }
+
+    const baseTemplateData = {
+      ownerName: owner?.full_name ?? undefined,
+      managerName: manager?.full_name ?? undefined,
+      tripTitle: trip.title,
+      tripDates,
+      note: data.note ?? undefined,
+      tripUrl,
+      itineraryUrl,
+    };
+
     if (owner?.email) {
       await sendApprovalEmail({
         templateName:
           data.decision === "approved" ? "trip-approved" : "trip-changes-requested",
         recipientEmail: owner.email,
         idempotencyKey: `${trip.id}-${data.decision}-${approval.id}`,
-        templateData: {
-          ownerName: owner.full_name ?? undefined,
-          managerName: manager?.full_name ?? undefined,
-          tripTitle: trip.title,
-          tripDates,
-          note: data.note ?? undefined,
-          tripUrl,
-        },
+        templateData: { ...baseTemplateData, audience: "owner" },
+      });
+    }
+
+    // Send the approved itinerary copy to the manager as well.
+    if (data.decision === "approved" && manager?.email) {
+      await sendApprovalEmail({
+        templateName: "trip-approved",
+        recipientEmail: manager.email,
+        idempotencyKey: `${trip.id}-approved-manager-${approval.id}`,
+        templateData: { ...baseTemplateData, audience: "manager" },
       });
     }
 
