@@ -92,7 +92,11 @@ function computeCostTotals(activities: Activity[], hotels: Hotel[]) {
   return { travel: fmt(travel), events: fmt(events), hotel: fmt(hotelTot), total: fmt(total) };
 }
 
-export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
+export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = [], opts?: { origin?: string }) {
+  const linkOrigin = opts?.origin ?? origin();
+  const agentLink = (id: string) => `${linkOrigin}/agents/${id}`;
+  const schoolLink = () => `${linkOrigin}/schools`;
+
   const doc = new jsPDF();
   doc.setFontSize(16);
   doc.text(trip.title, 14, 18);
@@ -155,15 +159,14 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
     });
     y = (doc as any).lastAutoTable.finalY + 2;
 
-    // Per-activity references + objectives + visit notes
     for (const a of day.acts) {
       const links: Array<{ label: string; url: string }> = [];
       if (a.agent_id) {
         const name = a.agent_branches?.branch_name ?? a.agents?.trading_name ?? "Agent";
-        links.push({ label: `Agent: ${name}`, url: agentUrl(a.agent_id) });
+        links.push({ label: `Agent: ${name}`, url: agentLink(a.agent_id) });
       }
       if (a.school_id && a.schools?.name) {
-        links.push({ label: `School: ${a.schools.name}`, url: schoolUrl() });
+        links.push({ label: `School: ${a.schools.name}`, url: schoolLink() });
       }
       const mapUrl = activityMapUrl(a);
       if (mapUrl) {
@@ -196,7 +199,21 @@ export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[
     }
     y += 2;
   }
-  doc.save(`${trip.title.replace(/[^\w\s-]/g, "")}.pdf`);
+  return doc;
+}
+
+export function tripPdfFilename(trip: Trip): string {
+  return `${trip.title.replace(/[^\w\s-]/g, "")}.pdf`;
+}
+
+export function buildTripPdfBytes(trip: Trip, activities: Activity[], hotels: Hotel[] = [], opts?: { origin?: string }): Uint8Array {
+  const doc = buildTripPdf(trip, activities, hotels, opts);
+  return new Uint8Array(doc.output("arraybuffer"));
+}
+
+export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
+  const doc = buildTripPdf(trip, activities, hotels);
+  doc.save(tripPdfFilename(trip));
 }
 
 export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
