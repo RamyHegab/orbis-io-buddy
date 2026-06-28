@@ -20,6 +20,7 @@ import { ShareIntakeLink } from "@/components/share-intake-link";
 import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { Link } from "@tanstack/react-router";
+import { EditAgentDialog } from "@/components/edit-agent-dialog";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
