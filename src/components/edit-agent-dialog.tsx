@@ -21,33 +21,47 @@ type Agent = {
   main_contact_name?: string | null;
   main_contact_email?: string | null;
   main_contact_phone?: string | null;
+  countries_of_operation?: string[] | null;
 };
 
 export function EditAgentDialog({ agent, open, onOpenChange }: { agent: Agent | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<Agent>({ id: "" });
+  const [countriesText, setCountriesText] = useState("");
 
   useEffect(() => {
-    if (agent) setForm({ ...agent });
+    if (agent) {
+      setForm({ ...agent });
+      setCountriesText((agent.countries_of_operation ?? []).join(", "));
+    }
   }, [agent]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!form.id) throw new Error("Missing agent");
-      const { id, ...patch } = form;
-      const { error } = await supabase.from("agents").update(patch as any).eq("id", id);
+      const { id, countries_of_operation: _ignored, ...patch } = form;
+      const countries = countriesText
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const { error } = await supabase
+        .from("agents")
+        .update({ ...(patch as any), countries_of_operation: countries })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Agent updated");
       onOpenChange(false);
       qc.invalidateQueries({ queryKey: ["agents"] });
+      qc.invalidateQueries({ queryKey: ["agent", form.id] });
     },
     onError: (e: any) => toast.error(e.message),
   });
 
   const v = (k: keyof Agent) => (form[k] as string) ?? "";
   const set = (k: keyof Agent, val: string) => setForm((f) => ({ ...f, [k]: val }));
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,17 +96,26 @@ export function EditAgentDialog({ agent, open, onOpenChange }: { agent: Agent | 
             <div className="text-xs font-medium text-muted-foreground mb-2">Main contact</div>
             <div className="space-y-3">
               <Input placeholder="Name" value={v("main_contact_name")} onChange={(e) => set("main_contact_name", e.target.value)} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Email" type="email" value={v("main_contact_email")} onChange={(e) => set("main_contact_email", e.target.value)} />
-                <Input placeholder="Phone" value={v("main_contact_phone")} onChange={(e) => set("main_contact_phone", e.target.value)} />
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input placeholder="Email" type="email" value={v("main_contact_email")} onChange={(e) => set("main_contact_email", e.target.value)} />
+              <Input placeholder="Phone" value={v("main_contact_phone")} onChange={(e) => set("main_contact_phone", e.target.value)} />
             </div>
           </div>
-          <Button onClick={() => save.mutate()} disabled={!form.trading_name || save.isPending} className="w-full">
-            {save.isPending ? "Saving…" : "Save changes"}
-          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
+        <div className="pt-2 border-t">
+          <Label>Countries of operation</Label>
+          <Input
+            placeholder="e.g. Egypt, Saudi Arabia, UAE"
+            value={countriesText}
+            onChange={(e) => setCountriesText(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground mt-1">Separate countries with commas.</p>
+        </div>
+        <Button onClick={() => save.mutate()} disabled={!form.trading_name || save.isPending} className="w-full">
+          {save.isPending ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 }

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar, FileText, User } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ExternalLink, Mail, Phone, MapPin, Calendar, FileText, User, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
@@ -20,6 +20,7 @@ import { ShareIntakeLink } from "@/components/share-intake-link";
 import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { Link } from "@tanstack/react-router";
+import { EditAgentDialog } from "@/components/edit-agent-dialog";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
@@ -31,6 +32,7 @@ function AgentDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [branchForm, setBranchForm] = useState({
     branch_name: "",
     city: "",
@@ -126,12 +128,17 @@ function AgentDetail() {
               name={agent.trading_name}
               address={agent.hq_address}
             />
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Edit
+            </Button>
             <Button variant="outline" size="sm" onClick={() => confirm("Delete this agent?") && deleteAgent.mutate()}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         }
       />
+
+      <EditAgentDialog agent={agent as any} open={editOpen} onOpenChange={setEditOpen} />
 
       <Card className="p-5 mb-6 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
