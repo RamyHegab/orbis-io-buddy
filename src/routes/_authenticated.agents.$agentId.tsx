@@ -32,6 +32,7 @@ function AgentDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [branchForm, setBranchForm] = useState({
     branch_name: "",
     city: "",
