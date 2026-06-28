@@ -128,12 +128,17 @@ function AgentDetail() {
               name={agent.trading_name}
               address={agent.hq_address}
             />
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Edit
+            </Button>
             <Button variant="outline" size="sm" onClick={() => confirm("Delete this agent?") && deleteAgent.mutate()}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         }
       />
+
+      <EditAgentDialog agent={agent as any} open={editOpen} onOpenChange={setEditOpen} />
 
       <Card className="p-5 mb-6 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
