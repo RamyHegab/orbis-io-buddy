@@ -1139,6 +1139,20 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_public_form_instance: {
+        Args: { p_id: string }
+        Returns: {
+          activity_id: string
+          country_code: string
+          event_date: string
+          id: string
+          name: string
+          template_description: string
+          template_fields: Json
+          template_id: string
+          template_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
