@@ -58,18 +58,22 @@ function PublicFormFill() {
   const { data: instance, isLoading } = useQuery({
     queryKey: ["form-instance", instanceId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("form_instances")
-        .select("id, name, event_date, country_code, template_id, activity_id")
-        .eq("id", instanceId)
-        .maybeSingle();
-      if (!data) return null;
-      const { data: tpl } = await supabase
-        .from("form_templates")
-        .select("name, description, fields")
-        .eq("id", data.template_id)
-        .maybeSingle();
-      return { ...data, template: tpl };
+      const { data, error } = await supabase.rpc("get_public_form_instance", { p_id: instanceId });
+      if (error || !data || data.length === 0) return null;
+      const row = data[0] as any;
+      return {
+        id: row.id,
+        name: row.name,
+        event_date: row.event_date,
+        country_code: row.country_code,
+        template_id: row.template_id,
+        activity_id: row.activity_id,
+        template: {
+          name: row.template_name,
+          description: row.template_description,
+          fields: row.template_fields,
+        },
+      };
     },
   });
 
