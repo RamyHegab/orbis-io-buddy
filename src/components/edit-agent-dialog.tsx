@@ -96,17 +96,26 @@ export function EditAgentDialog({ agent, open, onOpenChange }: { agent: Agent | 
             <div className="text-xs font-medium text-muted-foreground mb-2">Main contact</div>
             <div className="space-y-3">
               <Input placeholder="Name" value={v("main_contact_name")} onChange={(e) => set("main_contact_name", e.target.value)} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Email" type="email" value={v("main_contact_email")} onChange={(e) => set("main_contact_email", e.target.value)} />
-                <Input placeholder="Phone" value={v("main_contact_phone")} onChange={(e) => set("main_contact_phone", e.target.value)} />
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input placeholder="Email" type="email" value={v("main_contact_email")} onChange={(e) => set("main_contact_email", e.target.value)} />
+              <Input placeholder="Phone" value={v("main_contact_phone")} onChange={(e) => set("main_contact_phone", e.target.value)} />
             </div>
           </div>
-          <Button onClick={() => save.mutate()} disabled={!form.trading_name || save.isPending} className="w-full">
-            {save.isPending ? "Saving…" : "Save changes"}
-          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
+        <div className="pt-2 border-t">
+          <Label>Countries of operation</Label>
+          <Input
+            placeholder="e.g. Egypt, Saudi Arabia, UAE"
+            value={countriesText}
+            onChange={(e) => setCountriesText(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground mt-1">Separate countries with commas.</p>
+        </div>
+        <Button onClick={() => save.mutate()} disabled={!form.trading_name || save.isPending} className="w-full">
+          {save.isPending ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 }
