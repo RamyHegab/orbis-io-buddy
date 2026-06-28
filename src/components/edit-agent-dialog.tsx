@@ -21,33 +21,47 @@ type Agent = {
   main_contact_name?: string | null;
   main_contact_email?: string | null;
   main_contact_phone?: string | null;
+  countries_of_operation?: string[] | null;
 };
 
 export function EditAgentDialog({ agent, open, onOpenChange }: { agent: Agent | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<Agent>({ id: "" });
+  const [countriesText, setCountriesText] = useState("");
 
   useEffect(() => {
-    if (agent) setForm({ ...agent });
+    if (agent) {
+      setForm({ ...agent });
+      setCountriesText((agent.countries_of_operation ?? []).join(", "));
+    }
   }, [agent]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!form.id) throw new Error("Missing agent");
-      const { id, ...patch } = form;
-      const { error } = await supabase.from("agents").update(patch as any).eq("id", id);
+      const { id, countries_of_operation: _ignored, ...patch } = form;
+      const countries = countriesText
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const { error } = await supabase
+        .from("agents")
+        .update({ ...(patch as any), countries_of_operation: countries })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Agent updated");
       onOpenChange(false);
       qc.invalidateQueries({ queryKey: ["agents"] });
+      qc.invalidateQueries({ queryKey: ["agent", form.id] });
     },
     onError: (e: any) => toast.error(e.message),
   });
 
   const v = (k: keyof Agent) => (form[k] as string) ?? "";
   const set = (k: keyof Agent, val: string) => setForm((f) => ({ ...f, [k]: val }));
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
