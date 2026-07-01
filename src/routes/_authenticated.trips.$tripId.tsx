@@ -22,6 +22,7 @@ import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/forma
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { safeHttpUrl } from "@/lib/safe-url";
 import { useServerFn } from "@tanstack/react-start";
 import { lookupFlight } from "@/lib/flights.functions";
 import { submitTripForApproval, withdrawTripSubmission, decideTripApproval } from "@/lib/trip-approvals.functions";
@@ -998,19 +999,22 @@ function TripPlanner() {
                     <HotelIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <div className="flex-1 min-w-0 text-sm">
                       <div className="font-medium truncate">
-                        {stay.map_url ? (
-                          <a
-                            href={stay.map_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="underline text-primary"
-                          >
-                            {stay.name}
-                          </a>
-                        ) : (
-                          stay.name
-                        )}
+                        {(() => {
+                          const safeMapUrl = safeHttpUrl(stay.map_url);
+                          return safeMapUrl ? (
+                            <a
+                              href={safeMapUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="underline text-primary"
+                            >
+                              {stay.name}
+                            </a>
+                          ) : (
+                            stay.name
+                          );
+                        })()}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {isCheckIn

@@ -1,67 +1,44 @@
-## Goal
-Reshape the trip workflow around four lifecycle stages — **Draft / In progress**, **Pending approval**, **Approved**, **Past** — driven by an explicit user submit + line-manager approval step, with inbox + email notifications.
+# Fix: Unvalidated map_url XSS (`map_url_href_xss`)
 
-## New trip lifecycle
+Prevent `javascript:` (or other non-http) URLs stored in `trip_hotels.map_url` (and `activities.map_url`) from being rendered as live anchor `href`s.
 
+## Changes
+
+### 1. Client-side render guard
+Add a small helper and use it everywhere a user-supplied URL is rendered as an `<a href>`.
+
+- New file: `src/lib/safe-url.ts`
+  ```ts
+  export function safeHttpUrl(url: string | null | undefined): string | null {
+    if (!url) return null;
+    try {
+      const u = new URL(url, window.location.origin);
+      return u.protocol === "http:" || u.protocol === "https:" ? u.toString() : null;
+    } catch {
+      return null;
+    }
+  }
+  ```
+- `src/routes/_authenticated.trips.$tripId.tsx` (~line 1002): wrap `stay.map_url` with `safeHttpUrl(...)`; only render the `<a>` when truthy, otherwise render the hotel name as plain text.
+- Apply the same guard to any other render sites of `trip_hotels.map_url`, `activities.map_url`, and `schools` website/map fields rendered as anchors. I'll grep for `href={` against these fields before editing.
+
+### 2. Database CHECK constraints (defense in depth)
+Migration adding scheme guards mirroring the existing `pending_submissions_source_url_http` pattern:
+
+```sql
+ALTER TABLE public.trip_hotels
+  ADD CONSTRAINT trip_hotels_map_url_http
+  CHECK (map_url IS NULL OR map_url ~* '^https?://');
+
+ALTER TABLE public.activities
+  ADD CONSTRAINT activities_map_url_http
+  CHECK (map_url IS NULL OR map_url ~* '^https?://');
 ```
-planning ──save──▶ active ──submit──▶ submitted ──approve──▶ approved ──end_date passed──▶ past
-                              ▲                  │
-                              └──── reject ──────┘ (with note, back to active)
-```
 
-- `planning` / `active` = user is still editing (saved, not yet submitted).
-- `submitted` = sent to line manager, awaiting decision. Visible in user's **In progress** panel with a **Pending approval** badge.
-- `approved` = line manager approved. Trip moves to the **Approved** panel. User can still edit freely (no re-approval required).
-- `past` = `end_date < today` (any status).
+If any existing rows violate the constraint, the migration will list and null them out before adding the constraint.
 
-## Trips page panels (replaces current 3 rows)
-
-1. **In progress** — `planning` / `active` / `submitted`. Cards in `submitted` show a yellow "Pending approval" badge; rejected trips show a red "Changes requested" badge with the manager's note on hover.
-2. **Approved** — `approved` and not yet past. This is the panel the pre-trip checklist sidebar attaches to (currently "Upcoming confirmed").
-3. **Past (last 3)** — `end_date < today`, regardless of final status. Clicking opens the trip in read-friendly mode for reviewing notes/report.
-
-## Itinerary planner (single trip page)
-
-Replace the current `Save as in progress` / `Confirm itinerary` / `Reopen for edits` action group with:
-
-- **Save (in progress)** — always available; sets status to `active`. No notification.
-- **Submit for approval** — available when status is `active`. Confirms via dialog, sets status to `submitted`, creates an approval request, notifies the line manager. Disabled (with tooltip) if the user has no line manager assigned.
-- **Withdraw submission** — visible only while `submitted`; returns trip to `active`.
-- Header badge reflects status: Draft / In progress / Pending approval / Approved / Changes requested.
-- If a previous rejection exists, show the manager's note in an alert at the top of the page until the user re-submits.
-
-## Manager approval surface
-
-- **Inbox page** gets a new "Approvals" section listing trips where the signed-in user is the trip owner's line manager and status is `submitted`. Each row links to the trip and offers **Approve** / **Request changes** (with required note) buttons.
-- The same actions are also available inline on the trip page when viewed by the line manager.
-- On approve: status → `approved`, approval record stamped with approver + timestamp, owner notified by email + inbox entry.
-- On reject: status → `active`, note stored, owner notified by email + inbox entry.
-
-## Notifications (inbox + email)
-
-- New `notifications` table (recipient, type, trip_id, payload, read_at) feeds the Inbox page for both managers and owners.
-- Three transactional email templates: `trip-submitted-for-approval` (to manager), `trip-approved` (to owner), `trip-changes-requested` (to owner). Subjects include the trip title and dates; bodies include a link back to the trip page and the manager's note when applicable.
-- Sends go through the existing Lovable app-email infrastructure (idempotency key = `<trip_id>-<event>`).
-
-## Technical details (for reference)
-
-- DB migration:
-  - Extend allowed `trips.status` values: keep `planning`, `active`; add `submitted`, `approved`, `rejected_unused` (existing `confirmed` rows auto-migrated to `approved`).
-  - New `trip_approvals` table: `id`, `trip_id`, `requested_by`, `manager_id`, `decision` (`pending|approved|changes_requested`), `note`, `decided_at`, timestamps. RLS: owner can see their own; manager can see/update where `manager_id = auth.uid()`; admin full read. GRANTs for `authenticated` and `service_role`.
-  - New `notifications` table: `id`, `user_id`, `type`, `trip_id`, `title`, `body`, `read_at`, `created_at`. RLS: user sees/updates own; service_role full. GRANTs for `authenticated` and `service_role`.
-- Server functions (`src/lib/trip-approvals.functions.ts`) with `requireSupabaseAuth`:
-  - `submitTripForApproval({ tripId })` — checks owner, ensures `line_manager_id` exists, sets status `submitted`, inserts pending approval row, inserts manager notification, enqueues email.
-  - `decideTripApproval({ approvalId, decision, note })` — checks caller is `manager_id`, updates approval + trip status (`approved` or back to `active`), inserts owner notification, enqueues email.
-  - `withdrawTripSubmission({ tripId })` — owner reverts `submitted` → `active`.
-- Frontend:
-  - `src/routes/_authenticated.trips.index.tsx` — replace `bucketOf` with new four-bucket logic and rename row titles.
-  - `src/routes/_authenticated.trips.$tripId.tsx` — replace the action button group, render rejection banner, render manager approve/reject controls when applicable.
-  - `src/routes/_authenticated.inbox.tsx` — add Approvals list (queries `trip_approvals` where manager = current user, status pending) and Notifications feed (queries `notifications`).
-- Email templates added in `src/lib/email-templates/` and registered.
-- The existing pre-trip checklist sidebar keeps working — its source query simply switches from `status = 'confirmed'` to `status = 'approved'`.
+### 3. Mark finding fixed
+Call `manage_security_finding` with `mark_as_fixed` for `map_url_href_xss` after the edits + migration land.
 
 ## Out of scope
-
-- No auto-revert to "needs re-approval" when editing after approval (per your choice).
-- Bulk approvals, approval reminders, and SLA timers.
-- Marketing/recap emails.
+The three other findings shown in the scan panel (`agents_schools_branches_cross_user_read`, `form_instances_missing_select_policy`, `SUPA_anon_security_definer_function_executable`) — only the requested one is addressed here.
