@@ -22,6 +22,7 @@ import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/forma
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { safeHttpUrl } from "@/lib/safe-url";
 import { useServerFn } from "@tanstack/react-start";
 import { lookupFlight } from "@/lib/flights.functions";
 import { submitTripForApproval, withdrawTripSubmission, decideTripApproval } from "@/lib/trip-approvals.functions";
