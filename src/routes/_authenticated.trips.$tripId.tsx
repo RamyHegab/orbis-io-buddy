@@ -132,6 +132,10 @@ function TripPlanner() {
   const [editObjectives, setEditObjectives] = useState("");
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+  const [hotelSearchQuery, setHotelSearchQuery] = useState("");
+  const [hotelSearchResults, setHotelSearchResults] = useState<HotelSearchResult[] | null>(null);
+  const [hotelSearching, setHotelSearching] = useState(false);
+  const searchHotelsFn = useServerFn(searchHotels);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
