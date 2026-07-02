@@ -25,6 +25,8 @@ import { mapsSearchUrl } from "@/lib/google-maps";
 import { safeHttpUrl } from "@/lib/safe-url";
 import { useServerFn } from "@tanstack/react-start";
 import { lookupFlight } from "@/lib/flights.functions";
+import { searchHotels, type HotelSearchResult } from "@/lib/hotels.functions";
+import { Search, Star } from "lucide-react";
 import { submitTripForApproval, withdrawTripSubmission, decideTripApproval } from "@/lib/trip-approvals.functions";
 import { Loader2, AlertTriangle, Clock, Send, Undo2 } from "lucide-react";
 
@@ -130,6 +132,10 @@ function TripPlanner() {
   const [editObjectives, setEditObjectives] = useState("");
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForm, setHotelForm] = useState<HotelForm>(emptyHotel);
+  const [hotelSearchQuery, setHotelSearchQuery] = useState("");
+  const [hotelSearchResults, setHotelSearchResults] = useState<HotelSearchResult[] | null>(null);
+  const [hotelSearching, setHotelSearching] = useState(false);
+  const searchHotelsFn = useServerFn(searchHotels);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -1446,6 +1452,112 @@ function TripPlanner() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{hotelForm.id ? "Edit hotel" : "Add hotel"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
+            <div className="rounded-md border bg-muted/40 p-3 space-y-2">
+              <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                <Search className="h-3.5 w-3.5" /> Search Booking.com
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={hotelSearchQuery}
+                  onChange={(e) => setHotelSearchQuery(e.target.value)}
+                  placeholder="City or hotel name (e.g. Bangkok, Hilton Dubai)"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      (async () => {
+                        if (!hotelForm.check_in_date || !hotelForm.check_out_date) {
+                          toast.error("Set check-in and check-out dates first");
+                          return;
+                        }
+                        setHotelSearching(true);
+                        try {
+                          const res = await searchHotelsFn({ data: { query: hotelSearchQuery, checkIn: hotelForm.check_in_date, checkOut: hotelForm.check_out_date, currency: hotelForm.cost_currency || "GBP" } });
+                          setHotelSearchResults(res);
+                          if (res.length === 0) toast.info("No hotels found");
+                        } catch (err: any) {
+                          toast.error(err?.message ?? "Search failed");
+                        } finally {
+                          setHotelSearching(false);
+                        }
+                      })();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={hotelSearching || !hotelSearchQuery.trim()}
+                  onClick={async () => {
+                    if (!hotelForm.check_in_date || !hotelForm.check_out_date) {
+                      toast.error("Set check-in and check-out dates first");
+                      return;
+                    }
+                    setHotelSearching(true);
+                    try {
+                      const res = await searchHotelsFn({ data: { query: hotelSearchQuery, checkIn: hotelForm.check_in_date, checkOut: hotelForm.check_out_date, currency: hotelForm.cost_currency || "GBP" } });
+                      setHotelSearchResults(res);
+                      if (res.length === 0) toast.info("No hotels found");
+                    } catch (err: any) {
+                      toast.error(err?.message ?? "Search failed");
+                    } finally {
+                      setHotelSearching(false);
+                    }
+                  }}
+                >
+                  {hotelSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
+                </Button>
+              </div>
+              {hotelSearchResults && hotelSearchResults.length > 0 && (
+                <div className="max-h-64 overflow-y-auto space-y-1.5">
+                  {hotelSearchResults.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className="w-full text-left rounded-md border bg-background p-2 hover:bg-accent hover:border-primary transition-colors"
+                      onClick={() => {
+                        setHotelForm({
+                          ...hotelForm,
+                          name: r.name,
+                          address: r.address || `${r.city}${r.country ? ", " + r.country : ""}`,
+                          formatted_address: r.address || `${r.city}${r.country ? ", " + r.country : ""}`,
+                          lat: r.lat,
+                          lng: r.lng,
+                          cost: r.price != null ? String(r.price) : hotelForm.cost,
+                          cost_currency: r.currency || hotelForm.cost_currency,
+                          map_url:
+                            r.lat != null && r.lng != null
+                              ? `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lng}`
+                              : hotelForm.map_url,
+                        });
+                        setHotelSearchResults(null);
+                        setHotelSearchQuery("");
+                        toast.success("Hotel details filled");
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm truncate">{r.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{r.city}{r.country ? `, ${r.country}` : ""}</div>
+                          {r.review_score != null && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Star className="h-3 w-3 fill-gold text-gold" /> {r.review_score.toFixed(1)}
+                              {r.review_count ? ` (${r.review_count})` : ""}
+                            </div>
+                          )}
+                        </div>
+                        {r.price != null && (
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-semibold">{r.currency} {r.price}</div>
+                            <div className="text-[10px] text-muted-foreground">total stay</div>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">Set check-in / check-out dates below, then search. Click a result to fill the form.</p>
+            </div>
             <div>
               <Label>Hotel name</Label>
               <Input value={hotelForm.name} onChange={(e) => setHotelForm({ ...hotelForm, name: e.target.value })} placeholder="Hilton Bangkok" />
