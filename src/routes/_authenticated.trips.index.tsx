@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { format, parseISO } from "date-fns";
+import { COUNTRIES } from "@/lib/countries";
 
 export const Route = createFileRoute("/_authenticated/trips/")({
   head: () => ({ meta: [{ title: "Trips — Orbis CRM" }] }),
@@ -327,7 +329,12 @@ function TripsPage() {
                   <div className="space-y-2">
                     {legs.map((leg, i) => (
                       <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
-                        <Input placeholder="Country" value={leg.country} onChange={(e) => updateLeg(i, { country: e.target.value })} />
+                        <Select value={leg.country} onValueChange={(v) => updateLeg(i, { country: v })}>
+                          <SelectTrigger className="w-full"><SelectValue placeholder="Select country" /></SelectTrigger>
+                          <SelectContent>
+                            {COUNTRIES.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
                         <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
                         <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
                         <Button type="button" size="icon" variant="ghost" disabled={legs.length === 1} onClick={() => setLegs(legs.filter((_, idx) => idx !== i))}>
