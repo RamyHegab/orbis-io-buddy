@@ -150,7 +150,7 @@ function Dashboard() {
         .from("trips")
         .select("id, title, start_date, end_date, destinations, checklist, status")
         .gte("end_date", today)
-        .eq("status", "confirmed")
+        .in("status", ["approved", "confirmed"])
         .order("start_date", { ascending: true })
         .limit(1)
         .maybeSingle();
