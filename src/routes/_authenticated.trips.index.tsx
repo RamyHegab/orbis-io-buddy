@@ -387,7 +387,16 @@ function TripsPage() {
           <HorizontalRow
             title="In progress"
             trips={grouped.in_progress}
-            empty="No trips in progress. Click 'New trip' to start one."
+            selectedId={selectedUpcomingId}
+            onSelect={setSelectedUpcomingId}
+            empty="No trips currently underway. Trips move here automatically on their start date."
+          />
+          <HorizontalRow
+            title="Draft"
+            trips={grouped.draft}
+            selectedId={selectedUpcomingId}
+            onSelect={setSelectedUpcomingId}
+            empty="No drafts. Click 'New trip' to start planning one."
           />
           <HorizontalRow
             title="Approved"
@@ -401,6 +410,7 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
+
 
         </div>
         <aside>
