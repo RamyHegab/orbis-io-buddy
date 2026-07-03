@@ -175,7 +175,7 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   if (!trip) {
     return (
       <Card className="p-6 text-sm text-muted-foreground">
-        Select an upcoming confirmed trip to see its checklist.
+        Select a draft, in-progress, or approved trip to see its checklist.
       </Card>
     );
   }
