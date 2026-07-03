@@ -294,26 +294,32 @@ function TripsPage() {
   const previewTitle = buildTitle(legs);
 
   const grouped = useMemo(() => {
-    const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[] };
+    const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[], draft: [] as any[] };
     for (const t of trips ?? []) g[bucketOf(t)].push(t);
     g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
     g.approved.sort((a, b) => a.start_date.localeCompare(b.start_date));
+    g.draft.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
   }, [trips]);
 
   const pastLimited = grouped.past.slice(0, 3);
 
+  const checklistCandidates = useMemo(
+    () => [...grouped.in_progress, ...grouped.approved, ...grouped.draft],
+    [grouped.in_progress, grouped.approved, grouped.draft],
+  );
+
   useEffect(() => {
-    if (grouped.approved.length === 0) {
+    if (checklistCandidates.length === 0) {
       if (selectedUpcomingId !== null) setSelectedUpcomingId(null);
       return;
     }
-    if (!selectedUpcomingId || !grouped.approved.find((t) => t.id === selectedUpcomingId)) {
-      setSelectedUpcomingId(grouped.approved[0].id);
+    if (!selectedUpcomingId || !checklistCandidates.find((t) => t.id === selectedUpcomingId)) {
+      setSelectedUpcomingId(checklistCandidates[0].id);
     }
-  }, [grouped.approved, selectedUpcomingId]);
+  }, [checklistCandidates, selectedUpcomingId]);
 
-  const selectedTrip = grouped.approved.find((t) => t.id === selectedUpcomingId) ?? null;
+  const selectedTrip = checklistCandidates.find((t) => t.id === selectedUpcomingId) ?? null;
 
   return (
     <PageContainer>
