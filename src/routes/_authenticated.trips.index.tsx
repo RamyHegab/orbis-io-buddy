@@ -38,14 +38,16 @@ function buildTitle(legs: Leg[]): string {
   return `${countries} — ${format(min, "d MMM")} → ${format(max, "d MMM yyyy")}`;
 }
 
-function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "approved" {
+function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "approved" | "draft" {
   const today = format(new Date(), "yyyy-MM-dd");
   if (t.end_date < today) return "past";
+  if (t.start_date <= today && today <= t.end_date) return "in_progress";
   if (t.status === "approved" || t.status === "confirmed") return "approved";
-  return "in_progress";
+  return "draft";
 }
 
 type ChecklistKey =
+  | "save_as_draft"
   | "confirm_itinerary"
   | "itinerary_approved"
   | "freight_required"
@@ -55,6 +57,7 @@ type ChecklistKey =
   | "risk_assessment";
 
 const CHECKLIST_ITEMS: { key: ChecklistKey; label: string; hint?: string }[] = [
+  { key: "save_as_draft", label: "Save as draft", hint: "Keep working on other steps before submitting for approval" },
   { key: "confirm_itinerary", label: "Confirm itinerary" },
   { key: "itinerary_approved", label: "Itinerary approved", hint: "Line manager approves from their account" },
   { key: "freight_required", label: "Freight required?", hint: "System will remind in notifications if Yes" },
