@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 
 type ChecklistKey =
+  | "save_as_draft"
   | "confirm_itinerary"
   | "itinerary_approved"
   | "freight_required"
@@ -18,6 +19,7 @@ type ChecklistKey =
   | "risk_assessment";
 
 const ITEMS: { key: ChecklistKey; label: string }[] = [
+  { key: "save_as_draft", label: "Save as draft" },
   { key: "confirm_itinerary", label: "Confirm itinerary" },
   { key: "itinerary_approved", label: "Itinerary approved" },
   { key: "freight_required", label: "Freight required?" },

@@ -38,14 +38,16 @@ function buildTitle(legs: Leg[]): string {
   return `${countries} — ${format(min, "d MMM")} → ${format(max, "d MMM yyyy")}`;
 }
 
-function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "approved" {
+function bucketOf(t: { start_date: string; end_date: string; status: string }): "past" | "in_progress" | "approved" | "draft" {
   const today = format(new Date(), "yyyy-MM-dd");
   if (t.end_date < today) return "past";
+  if (t.start_date <= today && today <= t.end_date) return "in_progress";
   if (t.status === "approved" || t.status === "confirmed") return "approved";
-  return "in_progress";
+  return "draft";
 }
 
 type ChecklistKey =
+  | "save_as_draft"
   | "confirm_itinerary"
   | "itinerary_approved"
   | "freight_required"
@@ -55,6 +57,7 @@ type ChecklistKey =
   | "risk_assessment";
 
 const CHECKLIST_ITEMS: { key: ChecklistKey; label: string; hint?: string }[] = [
+  { key: "save_as_draft", label: "Save as draft", hint: "Keep working on other steps before submitting for approval" },
   { key: "confirm_itinerary", label: "Confirm itinerary" },
   { key: "itinerary_approved", label: "Itinerary approved", hint: "Line manager approves from their account" },
   { key: "freight_required", label: "Freight required?", hint: "System will remind in notifications if Yes" },
@@ -117,6 +120,7 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
         <div className="flex flex-wrap gap-1 mt-3">
           {(trip.status === "approved" || trip.status === "confirmed") && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Approved</Badge>}
           {trip.status === "submitted" && <Badge className="bg-amber-500 text-white hover:bg-amber-500/90">Pending approval</Badge>}
+          {(!trip.status || trip.status === "draft") && <Badge variant="outline" className="border-muted-foreground/40 text-muted-foreground">Draft</Badge>}
           {trip.destinations?.slice(0, 3).map((d: string) => (
             <Badge key={d} variant="outline" className="border-primary/40 text-primary">{d}</Badge>
           ))}
@@ -171,7 +175,7 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   if (!trip) {
     return (
       <Card className="p-6 text-sm text-muted-foreground">
-        Select an upcoming confirmed trip to see its checklist.
+        Select a draft, in-progress, or approved trip to see its checklist.
       </Card>
     );
   }
@@ -291,26 +295,32 @@ function TripsPage() {
   const previewTitle = buildTitle(legs);
 
   const grouped = useMemo(() => {
-    const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[] };
+    const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[], draft: [] as any[] };
     for (const t of trips ?? []) g[bucketOf(t)].push(t);
     g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
     g.approved.sort((a, b) => a.start_date.localeCompare(b.start_date));
+    g.draft.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
   }, [trips]);
 
   const pastLimited = grouped.past.slice(0, 3);
 
+  const checklistCandidates = useMemo(
+    () => [...grouped.in_progress, ...grouped.approved, ...grouped.draft],
+    [grouped.in_progress, grouped.approved, grouped.draft],
+  );
+
   useEffect(() => {
-    if (grouped.approved.length === 0) {
+    if (checklistCandidates.length === 0) {
       if (selectedUpcomingId !== null) setSelectedUpcomingId(null);
       return;
     }
-    if (!selectedUpcomingId || !grouped.approved.find((t) => t.id === selectedUpcomingId)) {
-      setSelectedUpcomingId(grouped.approved[0].id);
+    if (!selectedUpcomingId || !checklistCandidates.find((t) => t.id === selectedUpcomingId)) {
+      setSelectedUpcomingId(checklistCandidates[0].id);
     }
-  }, [grouped.approved, selectedUpcomingId]);
+  }, [checklistCandidates, selectedUpcomingId]);
 
-  const selectedTrip = grouped.approved.find((t) => t.id === selectedUpcomingId) ?? null;
+  const selectedTrip = checklistCandidates.find((t) => t.id === selectedUpcomingId) ?? null;
 
   return (
     <PageContainer>
@@ -378,7 +388,16 @@ function TripsPage() {
           <HorizontalRow
             title="In progress"
             trips={grouped.in_progress}
-            empty="No trips in progress. Click 'New trip' to start one."
+            selectedId={selectedUpcomingId}
+            onSelect={setSelectedUpcomingId}
+            empty="No trips currently underway. Trips move here automatically on their start date."
+          />
+          <HorizontalRow
+            title="Draft"
+            trips={grouped.draft}
+            selectedId={selectedUpcomingId}
+            onSelect={setSelectedUpcomingId}
+            empty="No drafts. Click 'New trip' to start planning one."
           />
           <HorizontalRow
             title="Approved"
@@ -392,6 +411,7 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
+
 
         </div>
         <aside>
