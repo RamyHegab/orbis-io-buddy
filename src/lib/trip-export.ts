@@ -61,11 +61,25 @@ function buildDays(trip: Trip, activities: Activity[]) {
 
 function activityRow(a: Activity) {
   const time = [a.start_time?.slice(0, 5), a.end_time?.slice(0, 5)].filter(Boolean).join(" - ") || "—";
-  const detail = [
-    ACTIVITY_TYPE_LABELS[a.type as keyof typeof ACTIVITY_TYPE_LABELS] ?? a.type,
-    a.agents?.trading_name, a.schools?.name, a.agent_branches?.branch_name, a.location,
+  const activityType = ACTIVITY_TYPE_LABELS[a.type as keyof typeof ACTIVITY_TYPE_LABELS] ?? a.type;
+  const details = [
+    a.title,
+    a.agents?.trading_name,
+    a.agent_branches?.branch_name,
+    a.schools?.name,
+    a.location,
   ].filter(Boolean).join(" • ");
-  return [time, a.title, detail];
+  const objectiveParts: string[] = [];
+  if (a.type === "travel") {
+    const flight = [a.airline, a.flight_number].filter(Boolean).join(" ");
+    if (flight) objectiveParts.push(`Flight: ${flight}`);
+    if (a.cost != null && a.cost !== "") {
+      objectiveParts.push(`Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}`);
+    }
+  }
+  if (a.objectives) objectiveParts.push(a.objectives);
+  const objectives = objectiveParts.join("\n") || "—";
+  return [time, activityType, details, objectives];
 }
 
 function computeCostTotals(activities: Activity[], hotels: Hotel[]) {
