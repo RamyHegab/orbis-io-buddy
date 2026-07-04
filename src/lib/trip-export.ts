@@ -166,11 +166,11 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     }
     autoTable(doc, {
       startY: y + 2,
-      head: [["Time", "Activity", "Details"]],
+      head: [["Time", "Activity", "Details", "Objectives"]],
       body: day.acts.map(activityRow),
-      styles: { fontSize: 9, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2, overflow: "linebreak" },
       headStyles: { fillColor: [240, 240, 240], textColor: 30 },
-      columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 } },
+      columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 32 }, 2: { cellWidth: 66 }, 3: { cellWidth: 62 } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 2;
