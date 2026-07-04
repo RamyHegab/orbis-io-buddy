@@ -275,12 +275,10 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       const linkLine = items.length
         ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`
         : "";
-      const obj = a.objectives
-        ? `<div style="margin:2px 0;font-size:12px"><strong>Objectives:</strong> ${esc(a.objectives)}</div>` : "";
       const vis = a.visit_notes
         ? `<div style="margin:2px 0 8px 0;font-size:12px"><strong>Notes during visit:</strong> ${esc(a.visit_notes)}</div>` : "";
-      if (!linkLine && !obj && !vis) return "";
-      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${obj}${vis}</div>`;
+      if (!linkLine && !vis) return "";
+      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${vis}</div>`;
     }).join("");
     return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
   }).join("");
