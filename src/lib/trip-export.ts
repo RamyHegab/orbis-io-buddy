@@ -189,7 +189,7 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
         const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
         links.push({ label: `📍 ${addr}`, url: mapUrl });
       }
-      const hasExtra = links.length || a.objectives || a.visit_notes;
+      const hasExtra = links.length || a.visit_notes;
       if (!hasExtra) continue;
       if (y > 260) { doc.addPage(); y = 20; }
       doc.setFont("helvetica", "bold");
@@ -203,14 +203,12 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
         y += 4;
       }
       doc.setTextColor(0);
-      const writeBlock = (label: string, text: string) => {
-        const lines = doc.splitTextToSize(`${label}: ${text}`, 180);
+      if (a.visit_notes) {
+        const lines = doc.splitTextToSize(`Notes during visit: ${a.visit_notes}`, 180);
         if (y + lines.length * 4 > 280) { doc.addPage(); y = 20; }
         doc.text(lines, 14, y);
         y += lines.length * 4;
-      };
-      if (a.objectives) writeBlock("Objectives", a.objectives);
-      if (a.visit_notes) writeBlock("Notes during visit", a.visit_notes);
+      }
       y += 2;
     }
     y += 2;
