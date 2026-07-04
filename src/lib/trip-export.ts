@@ -20,6 +20,8 @@ type Activity = {
   lat?: number | null;
   lng?: number | null;
   formatted_address?: string | null;
+  airline?: string | null;
+  flight_number?: string | null;
   agents?: { trading_name?: string } | null;
   schools?: { name?: string; address?: string | null; place_id?: string | null; lat?: number | null; lng?: number | null; formatted_address?: string | null } | null;
   agent_branches?: { branch_name?: string; address?: string | null; place_id?: string | null; lat?: number | null; lng?: number | null; formatted_address?: string | null } | null;
