@@ -253,11 +253,11 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
   const rows = days.map((day) => {
     const acts = day.acts.length === 0
       ? `<p style="color:#888;font-style:italic;margin:4px 0 12px 0">No activities</p>`
-      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
-          <tr style="background:#f0f0f0"><th align="left">Time</th><th align="left">Activity</th><th align="left">Details</th></tr>
+      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px;table-layout:fixed">
+          <tr style="background:#f0f0f0"><th align="left" style="width:12%">Time</th><th align="left" style="width:20%">Activity</th><th align="left" style="width:38%">Details</th><th align="left" style="width:30%">Objectives</th></tr>
           ${day.acts.map((a) => {
-            const [t, title, det] = activityRow(a);
-            return `<tr><td>${esc(t)}</td><td>${esc(title)}</td><td>${esc(det)}</td></tr>`;
+            const [t, act, det, obj] = activityRow(a);
+            return `<tr><td>${esc(t)}</td><td>${esc(act)}</td><td>${esc(det)}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
           }).join("")}
         </table>`;
     const refs = day.acts.map((a) => {
