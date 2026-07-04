@@ -20,6 +20,8 @@ type Activity = {
   lat?: number | null;
   lng?: number | null;
   formatted_address?: string | null;
+  airline?: string | null;
+  flight_number?: string | null;
   agents?: { trading_name?: string } | null;
   schools?: { name?: string; address?: string | null; place_id?: string | null; lat?: number | null; lng?: number | null; formatted_address?: string | null } | null;
   agent_branches?: { branch_name?: string; address?: string | null; place_id?: string | null; lat?: number | null; lng?: number | null; formatted_address?: string | null } | null;
@@ -59,11 +61,25 @@ function buildDays(trip: Trip, activities: Activity[]) {
 
 function activityRow(a: Activity) {
   const time = [a.start_time?.slice(0, 5), a.end_time?.slice(0, 5)].filter(Boolean).join(" - ") || "—";
-  const detail = [
-    ACTIVITY_TYPE_LABELS[a.type as keyof typeof ACTIVITY_TYPE_LABELS] ?? a.type,
-    a.agents?.trading_name, a.schools?.name, a.agent_branches?.branch_name, a.location,
+  const activityType = ACTIVITY_TYPE_LABELS[a.type as keyof typeof ACTIVITY_TYPE_LABELS] ?? a.type;
+  const details = [
+    a.title,
+    a.agents?.trading_name,
+    a.agent_branches?.branch_name,
+    a.schools?.name,
+    a.location,
   ].filter(Boolean).join(" • ");
-  return [time, a.title, detail];
+  const objectiveParts: string[] = [];
+  if (a.type === "travel") {
+    const flight = [a.airline, a.flight_number].filter(Boolean).join(" ");
+    if (flight) objectiveParts.push(`Flight: ${flight}`);
+    if (a.cost != null && a.cost !== "") {
+      objectiveParts.push(`Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}`);
+    }
+  }
+  if (a.objectives) objectiveParts.push(a.objectives);
+  const objectives = objectiveParts.join("\n") || "—";
+  return [time, activityType, details, objectives];
 }
 
 function computeCostTotals(activities: Activity[], hotels: Hotel[]) {
@@ -150,11 +166,11 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     }
     autoTable(doc, {
       startY: y + 2,
-      head: [["Time", "Activity", "Details"]],
+      head: [["Time", "Activity", "Details", "Objectives"]],
       body: day.acts.map(activityRow),
-      styles: { fontSize: 9, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2, overflow: "linebreak" },
       headStyles: { fillColor: [240, 240, 240], textColor: 30 },
-      columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 } },
+      columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 32 }, 2: { cellWidth: 66 }, 3: { cellWidth: 62 } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 2;
@@ -173,7 +189,7 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
         const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
         links.push({ label: `📍 ${addr}`, url: mapUrl });
       }
-      const hasExtra = links.length || a.objectives || a.visit_notes;
+      const hasExtra = links.length || a.visit_notes;
       if (!hasExtra) continue;
       if (y > 260) { doc.addPage(); y = 20; }
       doc.setFont("helvetica", "bold");
@@ -187,14 +203,12 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
         y += 4;
       }
       doc.setTextColor(0);
-      const writeBlock = (label: string, text: string) => {
-        const lines = doc.splitTextToSize(`${label}: ${text}`, 180);
+      if (a.visit_notes) {
+        const lines = doc.splitTextToSize(`Notes during visit: ${a.visit_notes}`, 180);
         if (y + lines.length * 4 > 280) { doc.addPage(); y = 20; }
         doc.text(lines, 14, y);
         y += lines.length * 4;
-      };
-      if (a.objectives) writeBlock("Objectives", a.objectives);
-      if (a.visit_notes) writeBlock("Notes during visit", a.visit_notes);
+      }
       y += 2;
     }
     y += 2;
@@ -237,11 +251,11 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
   const rows = days.map((day) => {
     const acts = day.acts.length === 0
       ? `<p style="color:#888;font-style:italic;margin:4px 0 12px 0">No activities</p>`
-      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px">
-          <tr style="background:#f0f0f0"><th align="left">Time</th><th align="left">Activity</th><th align="left">Details</th></tr>
+      : `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;margin-bottom:8px;table-layout:fixed">
+          <tr style="background:#f0f0f0"><th align="left" style="width:12%">Time</th><th align="left" style="width:20%">Activity</th><th align="left" style="width:38%">Details</th><th align="left" style="width:30%">Objectives</th></tr>
           ${day.acts.map((a) => {
-            const [t, title, det] = activityRow(a);
-            return `<tr><td>${esc(t)}</td><td>${esc(title)}</td><td>${esc(det)}</td></tr>`;
+            const [t, act, det, obj] = activityRow(a);
+            return `<tr><td>${esc(t)}</td><td>${esc(act)}</td><td>${esc(det)}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
           }).join("")}
         </table>`;
     const refs = day.acts.map((a) => {
@@ -261,12 +275,10 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
       const linkLine = items.length
         ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>`
         : "";
-      const obj = a.objectives
-        ? `<div style="margin:2px 0;font-size:12px"><strong>Objectives:</strong> ${esc(a.objectives)}</div>` : "";
       const vis = a.visit_notes
         ? `<div style="margin:2px 0 8px 0;font-size:12px"><strong>Notes during visit:</strong> ${esc(a.visit_notes)}</div>` : "";
-      if (!linkLine && !obj && !vis) return "";
-      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${obj}${vis}</div>`;
+      if (!linkLine && !vis) return "";
+      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${vis}</div>`;
     }).join("");
     return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
   }).join("");
