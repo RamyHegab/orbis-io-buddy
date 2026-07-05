@@ -83,7 +83,7 @@ type FormState = {
 };
 
 const emptyForm: FormState = {
-  type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
+  type: "", title: "", start_time: "", end_time: "", end_date: "",
   location: "", map_url: "", agent_id: "", branch_id: "", school_id: "",
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
@@ -1177,7 +1177,7 @@ function TripPlanner() {
               <div>
                 <Label>Activity type</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({ ...emptyForm, type: v, end_date: selectedDay ?? "" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select activity" /></SelectTrigger>
                   <SelectContent>{ACTIVITY_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
