@@ -1082,7 +1082,6 @@ function TripPlanner() {
                                   </Link>
                                 </>
                               )}
-                              {a.location && ` • ${a.location}`}
                               {(() => {
                                 const u = mapsSearchUrl({
                                   query: a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address,
@@ -1090,12 +1089,22 @@ function TripPlanner() {
                                   lat: a.lat ?? a.agent_branches?.lat ?? a.schools?.lat,
                                   lng: a.lng ?? a.agent_branches?.lng ?? a.schools?.lng,
                                 });
-                                return u ? (
-                                  <a href={u} target="_blank" rel="noreferrer" className="ml-1 inline-flex items-center underline hover:text-primary" title="Open in Google Maps">
-                                    <MapPin className="h-3 w-3" />
-                                  </a>
-                                ) : null;
+                                if (!a.location && !u) return null;
+                                const text = a.location ?? "View on Google Maps";
+                                return (
+                                  <>
+                                    {" • "}
+                                    {u ? (
+                                      <a href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                                        <MapPin className="h-3 w-3" />{text}
+                                      </a>
+                                    ) : (
+                                      <span>{text}</span>
+                                    )}
+                                  </>
+                                );
                               })()}
+
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
