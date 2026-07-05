@@ -83,7 +83,7 @@ type FormState = {
 };
 
 const emptyForm: FormState = {
-  type: "school_visit", title: "", start_time: "", end_time: "", end_date: "",
+  type: "", title: "", start_time: "", end_time: "", end_date: "",
   location: "", map_url: "", agent_id: "", branch_id: "", school_id: "",
   transport_mode: "", from_city: "", to_city: "", from_country: "", to_country: "",
   airline: "", flight_number: "", cost: "", cost_currency: "GBP",
