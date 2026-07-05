@@ -89,14 +89,16 @@ function SchoolDetail() {
               {(school.formatted_address || school.address) && (
                 <div className="text-sm flex items-start gap-1">
                   <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                  <span>{school.formatted_address || school.address}</span>
-                  {mapUrl && (
-                    <a href={mapUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline ml-1 shrink-0">
-                      Open in Maps
+                  {mapUrl ? (
+                    <a href={mapUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      {school.formatted_address || school.address}
                     </a>
+                  ) : (
+                    <span>{school.formatted_address || school.address}</span>
                   )}
                 </div>
               )}
+
               {school.general_email && (
                 <div className="text-sm flex items-center gap-1 mt-1">
                   <Mail className="h-4 w-4 text-muted-foreground" /> {school.general_email}
