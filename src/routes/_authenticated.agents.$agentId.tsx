@@ -267,15 +267,21 @@ function AgentDetail() {
                     )}
                     {b.agency_name && <div className="text-xs text-muted-foreground mt-1">{b.agency_name}</div>}
                     {(b.formatted_address || b.address) && (() => {
-                      const url = mapsSearchUrl({ query: b.formatted_address || b.address, placeId: b.place_id, lat: b.lat, lng: b.lng });
+                      const addr = b.formatted_address || b.address;
+                      const url = mapsSearchUrl({ query: addr, placeId: b.place_id, lat: b.lat, lng: b.lng });
                       return (
                         <div className="mt-1">
-                          <div className="text-xs text-muted-foreground">{b.formatted_address || b.address}</div>
-                          {url && <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> View on Google Maps</a>}
+                          {url ? (
+                            <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-start gap-1">
+                              <MapPin className="h-3 w-3 mt-0.5 shrink-0" /> {addr}
+                            </a>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">{addr}</div>
+                          )}
                         </div>
-
                       );
                     })()}
+
                     {contactName && <div className="text-sm mt-2">{contactName}{b.contact_position ? ` — ${b.contact_position}` : ""}</div>}
                     {b.contact_email && <div className="text-xs text-muted-foreground">{b.contact_email}</div>}
                     {b.contact_phone && <div className="text-xs text-muted-foreground">{b.contact_phone}</div>}
