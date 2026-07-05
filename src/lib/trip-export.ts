@@ -49,6 +49,27 @@ function activityMapUrl(a: Activity): string | null {
   });
 }
 
+// Soft tint per activity type — mirrors the on-screen itinerary palette
+const ACTIVITY_ROW_RGB: Record<string, [number, number, number]> = {
+  travel: [225, 234, 250],           // blue
+  agent_visit: [250, 236, 200],      // gold
+  school_visit: [222, 241, 226],     // green
+  recruitment_event: [244, 224, 245], // magenta
+  hotel: [232, 234, 240],            // neutral
+  resting_day: [232, 236, 240],      // slate
+  other: [232, 234, 240],
+};
+const ACTIVITY_ROW_HEX: Record<string, string> = {
+  travel: "#e1eafa",
+  agent_visit: "#faecc8",
+  school_visit: "#def1e2",
+  recruitment_event: "#f4e0f5",
+  hotel: "#e8eaf0",
+  resting_day: "#e8ecf0",
+  other: "#e8eaf0",
+};
+
+
 function buildDays(trip: Trip, activities: Activity[]) {
   const start = parseISO(trip.start_date);
   const n = differenceInDays(parseISO(trip.end_date), start) + 1;
