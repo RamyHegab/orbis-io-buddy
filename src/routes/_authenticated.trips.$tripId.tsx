@@ -1240,11 +1240,7 @@ function TripPlanner() {
                   </div>
                   <div>
                     <Label>Agent branch</Label>
-                    {filteredBranches.length === 0 ? (
-                      <div className="text-sm text-muted-foreground border rounded-md p-3">
-                        No branches yet. <Link to="/agents" className="underline text-primary">Add a branch</Link> first.
-                      </div>
-                    ) : (
+                    {filteredBranches.length > 0 && (
                       <Select value={form.branch_id} onValueChange={(v) => {
                         const b: any = filteredBranches.find((x: any) => x.id === v);
                         const agentName = b?.agents?.trading_name ?? agents?.find((a: any) => a.id === (b?.agent_id ?? form.agent_id))?.trading_name;
@@ -1260,7 +1256,23 @@ function TripPlanner() {
                         </SelectContent>
                       </Select>
                     )}
+                    <div className="mt-2">
+                      <Label className="text-xs text-muted-foreground">
+                        {filteredBranches.length === 0
+                          ? "No branches yet — type a branch name to visit"
+                          : "Or type a branch name manually"}
+                      </Label>
+                      <Input
+                        value={form.branch_id ? "" : form.title}
+                        onChange={(e) => setForm({ ...form, branch_id: "", title: e.target.value })}
+                        placeholder="e.g. Downtown office"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You can add this branch to the agent later from the Agents page.
+                      </p>
+                    </div>
                   </div>
+
                   <TimeRange form={form} setForm={setForm} />
                 </>
               )}
