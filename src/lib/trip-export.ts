@@ -194,13 +194,16 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
       columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 32 }, 2: { cellWidth: 66 }, 3: { cellWidth: 62 } },
       margin: { left: 14, right: 14 },
       didParseCell: (data) => {
-        if (data.section === "body" && data.column.index === 2) {
-          const act = day.acts[data.row.index];
-          if (act?.agent_id) {
-            data.cell.styles.textColor = [20, 80, 200];
-          }
+        if (data.section !== "body") return;
+        const act = day.acts[data.row.index];
+        if (!act) return;
+        const bg = ACTIVITY_ROW_RGB[act.type];
+        if (bg) data.cell.styles.fillColor = bg;
+        if (data.column.index === 2 && act.agent_id) {
+          data.cell.styles.textColor = [20, 80, 200];
         }
       },
+
       didDrawCell: (data) => {
         if (data.section === "body" && data.column.index === 2) {
           const act = day.acts[data.row.index];
