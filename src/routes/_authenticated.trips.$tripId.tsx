@@ -1378,9 +1378,9 @@ function TripPlanner() {
                   </div>
                   <div><Label>Location / venue</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
                   <CostInput form={form} setForm={setForm} />
-                  <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
                 </>
               )}
+
 
               <div>
                 <Label>Objectives</Label>
