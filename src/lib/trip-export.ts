@@ -167,26 +167,39 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     autoTable(doc, {
       startY: y + 2,
       head: [["Time", "Activity", "Details", "Objectives"]],
-      body: day.acts.map(activityRow),
+      body: day.acts.map((a) => activityRow(a)),
       styles: { fontSize: 9, cellPadding: 2, overflow: "linebreak" },
       headStyles: { fillColor: [240, 240, 240], textColor: 30 },
       columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 32 }, 2: { cellWidth: 66 }, 3: { cellWidth: 62 } },
       margin: { left: 14, right: 14 },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 2) {
+          const act = day.acts[data.row.index];
+          if (act?.agent_id) {
+            data.cell.styles.textColor = [20, 80, 200];
+          }
+        }
+      },
+      didDrawCell: (data) => {
+        if (data.section === "body" && data.column.index === 2) {
+          const act = day.acts[data.row.index];
+          if (act?.agent_id) {
+            doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: agentLink(act.agent_id) });
+          }
+        }
+      },
     });
     y = (doc as any).lastAutoTable.finalY + 2;
 
     for (const a of day.acts) {
+      if (a.agent_id) continue; // agent visits: branch name in Details is the link
       const links: Array<{ label: string; url: string }> = [];
-      if (a.agent_id) {
-        const name = a.agent_branches?.branch_name ?? a.agents?.trading_name ?? "Agent";
-        links.push({ label: `Agent: ${name}`, url: agentLink(a.agent_id) });
-      }
       if (a.school_id && a.schools?.name) {
         links.push({ label: `School: ${a.schools.name}`, url: schoolLink() });
       }
       const mapUrl = activityMapUrl(a);
       if (mapUrl) {
-        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        const addr = a.formatted_address || a.location || a.schools?.address || "View on Google Maps";
         links.push({ label: `📍 ${addr}`, url: mapUrl });
       }
       const hasExtra = links.length || a.visit_notes;
@@ -213,6 +226,7 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     }
     y += 2;
   }
+
   return doc;
 }
 
@@ -255,21 +269,27 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
           <tr style="background:#f0f0f0"><th align="left" style="width:12%">Time</th><th align="left" style="width:20%">Activity</th><th align="left" style="width:38%">Details</th><th align="left" style="width:30%">Objectives</th></tr>
           ${day.acts.map((a) => {
             const [t, act, det, obj] = activityRow(a);
-            return `<tr><td>${esc(t)}</td><td>${esc(act)}</td><td>${esc(det)}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
+            let detailsCell = esc(det);
+            if (a.agent_id) {
+              const branch = a.agent_branches?.branch_name;
+              const trading = a.agents?.trading_name;
+              const url = agentUrl(a.agent_id);
+              if (branch) detailsCell = detailsCell.replace(esc(branch), `<a href="${esc(url)}">${esc(branch)}</a>`);
+              else if (trading) detailsCell = detailsCell.replace(esc(trading), `<a href="${esc(url)}">${esc(trading)}</a>`);
+              else detailsCell = `<a href="${esc(url)}">${detailsCell}</a>`;
+            }
+            return `<tr><td>${esc(t)}</td><td>${esc(act)}</td><td>${detailsCell}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
           }).join("")}
         </table>`;
     const refs = day.acts.map((a) => {
+      if (a.agent_id) return ""; // agent visits: branch name in Details is the link
       const items: string[] = [];
-      if (a.agent_id) {
-        const name = a.agent_branches?.branch_name ?? a.agents?.trading_name ?? "Agent";
-        items.push(`<a href="${esc(agentUrl(a.agent_id))}">Agent: ${esc(name)}</a>`);
-      }
       if (a.school_id && a.schools?.name) {
         items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
       }
       const mapUrl = activityMapUrl(a);
       if (mapUrl) {
-        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        const addr = a.formatted_address || a.location || a.schools?.address || "View on Google Maps";
         items.push(`<a href="${esc(mapUrl)}">📍 ${esc(addr)}</a>`);
       }
       const linkLine = items.length
@@ -282,6 +302,7 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
     }).join("");
     return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
   }).join("");
+
 
   const objectivesBlock = trip.objectives
     ? `<h2>Trip objectives</h2><p style="white-space:pre-wrap">${esc(trip.objectives)}</p>` : "";
