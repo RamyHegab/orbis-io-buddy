@@ -374,9 +374,20 @@ function TripsPage() {
                     placeholder="e.g. Attending IDP fairs in Vietnam and visiting agents in HCMC to train on September intake"
                   />
                 </div>
-                <Button onClick={() => create.mutate()} disabled={!previewTitle || create.isPending} className="w-full">
+                <Button
+                  onClick={() => {
+                    if (!objectives.trim()) {
+                      const ok = window.confirm("No trip objectives added. Create trip without objectives?");
+                      if (!ok) return;
+                    }
+                    create.mutate();
+                  }}
+                  disabled={!previewTitle || create.isPending}
+                  className="w-full"
+                >
                   Create trip
                 </Button>
+
               </div>
             </DialogContent>
           </Dialog>

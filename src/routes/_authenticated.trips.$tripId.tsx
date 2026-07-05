@@ -1082,7 +1082,6 @@ function TripPlanner() {
                                   </Link>
                                 </>
                               )}
-                              {a.location && ` • ${a.location}`}
                               {(() => {
                                 const u = mapsSearchUrl({
                                   query: a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address,
@@ -1090,12 +1089,22 @@ function TripPlanner() {
                                   lat: a.lat ?? a.agent_branches?.lat ?? a.schools?.lat,
                                   lng: a.lng ?? a.agent_branches?.lng ?? a.schools?.lng,
                                 });
-                                return u ? (
-                                  <a href={u} target="_blank" rel="noreferrer" className="ml-1 inline-flex items-center underline hover:text-primary" title="Open in Google Maps">
-                                    <MapPin className="h-3 w-3" />
-                                  </a>
-                                ) : null;
+                                if (!a.location && !u) return null;
+                                const text = a.location ?? "View on Google Maps";
+                                return (
+                                  <>
+                                    {" • "}
+                                    {u ? (
+                                      <a href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                                        <MapPin className="h-3 w-3" />{text}
+                                      </a>
+                                    ) : (
+                                      <span>{text}</span>
+                                    )}
+                                  </>
+                                );
                               })()}
+
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
@@ -1240,11 +1249,7 @@ function TripPlanner() {
                   </div>
                   <div>
                     <Label>Agent branch</Label>
-                    {filteredBranches.length === 0 ? (
-                      <div className="text-sm text-muted-foreground border rounded-md p-3">
-                        No branches yet. <Link to="/agents" className="underline text-primary">Add a branch</Link> first.
-                      </div>
-                    ) : (
+                    {filteredBranches.length > 0 && (
                       <Select value={form.branch_id} onValueChange={(v) => {
                         const b: any = filteredBranches.find((x: any) => x.id === v);
                         const agentName = b?.agents?.trading_name ?? agents?.find((a: any) => a.id === (b?.agent_id ?? form.agent_id))?.trading_name;
@@ -1260,7 +1265,23 @@ function TripPlanner() {
                         </SelectContent>
                       </Select>
                     )}
+                    <div className="mt-2">
+                      <Label className="text-xs text-muted-foreground">
+                        {filteredBranches.length === 0
+                          ? "No branches yet — type a branch name to visit"
+                          : "Or type a branch name manually"}
+                      </Label>
+                      <Input
+                        value={form.branch_id ? "" : form.title}
+                        onChange={(e) => setForm({ ...form, branch_id: "", title: e.target.value })}
+                        placeholder="e.g. Downtown office"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You can add this branch to the agent later from the Agents page.
+                      </p>
+                    </div>
                   </div>
+
                   <TimeRange form={form} setForm={setForm} />
                 </>
               )}
@@ -1378,9 +1399,9 @@ function TripPlanner() {
                   </div>
                   <div><Label>Location / venue</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
                   <CostInput form={form} setForm={setForm} />
-                  <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
                 </>
               )}
+
 
               <div>
                 <Label>Objectives</Label>
@@ -1410,8 +1431,13 @@ function TripPlanner() {
                   <Button
                     onClick={() => {
                       if (validationMessage) { toast.error(validationMessage); return; }
+                      if (!form.objectives?.trim()) {
+                        const ok = window.confirm("No objectives added for this activity. Save without objectives?");
+                        if (!ok) return;
+                      }
                       create.mutate();
                     }}
+
                     disabled={create.isPending || !!outOfRange}
                     className="w-full"
                   >
@@ -1701,7 +1727,7 @@ function validateForm(f: FormState): string | null {
       if (!f.from_city) return "Enter the departure city.";
       if (!f.to_city) return "Enter the arrival city.";
       return null;
-    case "agent_visit": return f.branch_id ? null : "Pick an agent branch to visit.";
+    case "agent_visit": return (f.branch_id || f.title) ? null : "Pick a branch or type a branch name.";
     case "school_visit": return f.school_id ? null : "Pick a school to visit.";
     case "recruitment_event": return f.title ? null : "Enter an event title.";
     case "hotel": return f.title ? null : "Enter the hotel name.";
