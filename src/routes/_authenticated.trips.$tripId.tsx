@@ -1713,7 +1713,7 @@ function validateForm(f: FormState): string | null {
       if (!f.from_city) return "Enter the departure city.";
       if (!f.to_city) return "Enter the arrival city.";
       return null;
-    case "agent_visit": return f.branch_id ? null : "Pick an agent branch to visit.";
+    case "agent_visit": return (f.branch_id || f.title) ? null : "Pick a branch or type a branch name.";
     case "school_visit": return f.school_id ? null : "Pick a school to visit.";
     case "recruitment_event": return f.title ? null : "Enter an event title.";
     case "hotel": return f.title ? null : "Enter the hotel name.";
