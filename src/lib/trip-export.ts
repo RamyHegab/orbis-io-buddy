@@ -49,6 +49,27 @@ function activityMapUrl(a: Activity): string | null {
   });
 }
 
+// Soft tint per activity type — mirrors the on-screen itinerary palette
+const ACTIVITY_ROW_RGB: Record<string, [number, number, number]> = {
+  travel: [225, 234, 250],           // blue
+  agent_visit: [250, 236, 200],      // gold
+  school_visit: [222, 241, 226],     // green
+  recruitment_event: [244, 224, 245], // magenta
+  hotel: [232, 234, 240],            // neutral
+  resting_day: [232, 236, 240],      // slate
+  other: [232, 234, 240],
+};
+const ACTIVITY_ROW_HEX: Record<string, string> = {
+  travel: "#e1eafa",
+  agent_visit: "#faecc8",
+  school_visit: "#def1e2",
+  recruitment_event: "#f4e0f5",
+  hotel: "#e8eaf0",
+  resting_day: "#e8ecf0",
+  other: "#e8eaf0",
+};
+
+
 function buildDays(trip: Trip, activities: Activity[]) {
   const start = parseISO(trip.start_date);
   const n = differenceInDays(parseISO(trip.end_date), start) + 1;
@@ -173,13 +194,16 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
       columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 32 }, 2: { cellWidth: 66 }, 3: { cellWidth: 62 } },
       margin: { left: 14, right: 14 },
       didParseCell: (data) => {
-        if (data.section === "body" && data.column.index === 2) {
-          const act = day.acts[data.row.index];
-          if (act?.agent_id) {
-            data.cell.styles.textColor = [20, 80, 200];
-          }
+        if (data.section !== "body") return;
+        const act = day.acts[data.row.index];
+        if (!act) return;
+        const bg = ACTIVITY_ROW_RGB[act.type];
+        if (bg) data.cell.styles.fillColor = bg;
+        if (data.column.index === 2 && act.agent_id) {
+          data.cell.styles.textColor = [20, 80, 200];
         }
       },
+
       didDrawCell: (data) => {
         if (data.section === "body" && data.column.index === 2) {
           const act = day.acts[data.row.index];
@@ -278,7 +302,8 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
               else if (trading) detailsCell = detailsCell.replace(esc(trading), `<a href="${esc(url)}">${esc(trading)}</a>`);
               else detailsCell = `<a href="${esc(url)}">${detailsCell}</a>`;
             }
-            return `<tr><td>${esc(t)}</td><td>${esc(act)}</td><td>${detailsCell}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
+            const bg = ACTIVITY_ROW_HEX[a.type] ?? "#ffffff";
+            return `<tr style="background:${bg}"><td>${esc(t)}</td><td>${esc(act)}</td><td>${detailsCell}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
           }).join("")}
         </table>`;
     const refs = day.acts.map((a) => {
