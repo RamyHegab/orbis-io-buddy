@@ -1422,8 +1422,13 @@ function TripPlanner() {
                   <Button
                     onClick={() => {
                       if (validationMessage) { toast.error(validationMessage); return; }
+                      if (!form.objectives?.trim()) {
+                        const ok = window.confirm("No objectives added for this activity. Save without objectives?");
+                        if (!ok) return;
+                      }
                       create.mutate();
                     }}
+
                     disabled={create.isPending || !!outOfRange}
                     className="w-full"
                   >
