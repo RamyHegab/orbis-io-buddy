@@ -167,26 +167,39 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     autoTable(doc, {
       startY: y + 2,
       head: [["Time", "Activity", "Details", "Objectives"]],
-      body: day.acts.map(activityRow),
+      body: day.acts.map((a) => activityRow(a)),
       styles: { fontSize: 9, cellPadding: 2, overflow: "linebreak" },
       headStyles: { fillColor: [240, 240, 240], textColor: 30 },
       columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 32 }, 2: { cellWidth: 66 }, 3: { cellWidth: 62 } },
       margin: { left: 14, right: 14 },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 2) {
+          const act = day.acts[data.row.index];
+          if (act?.agent_id) {
+            data.cell.styles.textColor = [20, 80, 200];
+          }
+        }
+      },
+      didDrawCell: (data) => {
+        if (data.section === "body" && data.column.index === 2) {
+          const act = day.acts[data.row.index];
+          if (act?.agent_id) {
+            doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: agentLink(act.agent_id) });
+          }
+        }
+      },
     });
     y = (doc as any).lastAutoTable.finalY + 2;
 
     for (const a of day.acts) {
+      if (a.agent_id) continue; // agent visits: branch name in Details is the link
       const links: Array<{ label: string; url: string }> = [];
-      if (a.agent_id) {
-        const name = a.agent_branches?.branch_name ?? a.agents?.trading_name ?? "Agent";
-        links.push({ label: `Agent: ${name}`, url: agentLink(a.agent_id) });
-      }
       if (a.school_id && a.schools?.name) {
         links.push({ label: `School: ${a.schools.name}`, url: schoolLink() });
       }
       const mapUrl = activityMapUrl(a);
       if (mapUrl) {
-        const addr = a.formatted_address || a.location || a.agent_branches?.address || a.schools?.address || "View on Google Maps";
+        const addr = a.formatted_address || a.location || a.schools?.address || "View on Google Maps";
         links.push({ label: `📍 ${addr}`, url: mapUrl });
       }
       const hasExtra = links.length || a.visit_notes;
@@ -213,6 +226,7 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     }
     y += 2;
   }
+
   return doc;
 }
 
