@@ -302,7 +302,8 @@ export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel
               else if (trading) detailsCell = detailsCell.replace(esc(trading), `<a href="${esc(url)}">${esc(trading)}</a>`);
               else detailsCell = `<a href="${esc(url)}">${detailsCell}</a>`;
             }
-            return `<tr><td>${esc(t)}</td><td>${esc(act)}</td><td>${detailsCell}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
+            const bg = ACTIVITY_ROW_HEX[a.type] ?? "#ffffff";
+            return `<tr style="background:${bg}"><td>${esc(t)}</td><td>${esc(act)}</td><td>${detailsCell}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
           }).join("")}
         </table>`;
     const refs = day.acts.map((a) => {
