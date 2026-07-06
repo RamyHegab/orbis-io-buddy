@@ -702,6 +702,11 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          can_manage_agents: boolean
+          can_manage_schools: boolean
+          can_manage_templates: boolean
+          can_manage_users: boolean
+          can_view_all_trips: boolean
           created_at: string
           discovery_banner_dismissed_at: string | null
           email: string | null
@@ -713,6 +718,11 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          can_manage_agents?: boolean
+          can_manage_schools?: boolean
+          can_manage_templates?: boolean
+          can_manage_users?: boolean
+          can_view_all_trips?: boolean
           created_at?: string
           discovery_banner_dismissed_at?: string | null
           email?: string | null
@@ -724,6 +734,11 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          can_manage_agents?: boolean
+          can_manage_schools?: boolean
+          can_manage_templates?: boolean
+          can_manage_users?: boolean
+          can_view_all_trips?: boolean
           created_at?: string
           discovery_banner_dismissed_at?: string | null
           email?: string | null
@@ -1153,6 +1168,10 @@ export type Database = {
           template_id: string
           template_name: string
         }[]
+      }
+      has_capability: {
+        Args: { _cap: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
