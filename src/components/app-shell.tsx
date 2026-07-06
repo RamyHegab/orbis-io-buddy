@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useRole } from "@/hooks/use-auth";
+import { useAuth, useRole, useCapabilities, type Capability } from "@/hooks/use-auth";
 import {
   LayoutDashboard,
   Users,
@@ -22,7 +22,7 @@ type NavItem = {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
-  adminOnly?: boolean;
+  requiresCap?: Capability;
   showCount?: "pending_submissions";
 };
 
@@ -34,14 +34,15 @@ const navItems: NavItem[] = [
   { to: "/inbox", label: "Notifications", icon: Bell, showCount: "pending_submissions" },
   { to: "/forms", label: "Forms", icon: FileText },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
-  { to: "/users", label: "Users", icon: UserCog, adminOnly: true },
-  { to: "/templates", label: "Form Templates", icon: FileText, adminOnly: true },
+  { to: "/users", label: "Users", icon: UserCog, requiresCap: "can_manage_users" },
+  { to: "/templates", label: "Form Templates", icon: FileText, requiresCap: "can_manage_templates" },
 ];
 
 
 export function AppShell() {
   const { user, loading } = useAuth();
-  const { role, isAdmin } = useRole();
+  const { role } = useRole();
+  const { caps } = useCapabilities();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -90,7 +91,7 @@ export function AppShell() {
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems
-            .filter((i) => !i.adminOnly || isAdmin)
+            .filter((i) => !i.requiresCap || caps[i.requiresCap])
             .map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
               const Icon = item.icon;
