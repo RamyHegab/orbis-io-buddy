@@ -40,7 +40,7 @@ export type UpcomingTrip = {
 export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
   const qc = useQueryClient();
   // The trip existing IS proof the draft was saved.
-  const checklist = { save_as_draft: true, ...((trip?.checklist ?? {}) as Record<string, any>) };
+  const checklist: Record<string, any> = { save_as_draft: true, ...((trip?.checklist ?? {}) as Record<string, any>) };
 
   const update = useMutation({
     mutationFn: async (next: Record<string, any>) => {

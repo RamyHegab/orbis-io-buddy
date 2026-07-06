@@ -159,7 +159,7 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   const qc = useQueryClient();
   // The trip existing IS proof the draft was saved, so seed that step as done
   // unless the user explicitly unchecked it.
-  const checklist = { save_as_draft: true, ...((trip?.checklist ?? {}) as Record<string, any>) };
+  const checklist: Record<string, any> = { save_as_draft: true, ...((trip?.checklist ?? {}) as Record<string, any>) };
 
   const update = useMutation({
     mutationFn: async (next: Record<string, any>) => {
