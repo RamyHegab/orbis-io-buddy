@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useIsAdmin } from "@/hooks/use-auth";
+import { useAuth, useCan } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/forms")({
 
 function FormsPage() {
   const { user } = useAuth();
-  const isAdmin = useIsAdmin();
+  const isAdmin = useCan("can_manage_templates");
   const qc = useQueryClient();
   const [pickerTemplate, setPickerTemplate] = useState<{ id: string; name: string; activity_type: string } | null>(null);
   const [activityId, setActivityId] = useState<string>("");

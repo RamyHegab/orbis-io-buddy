@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageContainer, PageHeader } from "@/components/page-header";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -33,19 +34,43 @@ import {
 import { listUsers, inviteUser, updateUser, resendInvite } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  ALL_CAPABILITIES,
+  CAPABILITY_LABELS,
+  useCapabilities,
+  type Capability,
+  type CapabilityMap,
+} from "@/hooks/use-auth";
 
-type Role = "admin" | "manager" | "member";
+type Role = "admin" | "user";
+
+type UserRow = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  line_manager_id: string | null;
+  status: string;
+  role: Role;
+  last_sign_in_at: string | null;
+} & CapabilityMap;
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — Orbis CRM" }] }),
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
-    const { data } = await supabase.rpc("has_role", {
+    // Admin OR has can_manage_users capability
+    const { data: isAdmin } = await supabase.rpc("has_role", {
       _user_id: u.user.id,
       _role: "admin",
     });
-    if (!data) throw redirect({ to: "/dashboard" });
+    if (isAdmin) return;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("can_manage_users")
+      .eq("id", u.user.id)
+      .maybeSingle();
+    if (!profile?.can_manage_users) throw redirect({ to: "/dashboard" });
   },
   component: UsersPage,
 });
@@ -56,14 +81,15 @@ function UsersPage() {
   const inviteFn = useServerFn(inviteUser);
   const updateFn = useServerFn(updateUser);
   const resendFn = useServerFn(resendInvite);
+  const { caps: inviterCaps } = useCapabilities();
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading } = useQuery<UserRow[]>({
     queryKey: ["users"],
-    queryFn: () => listFn({}),
+    queryFn: () => listFn({}) as Promise<UserRow[]>,
   });
 
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [editing, setEditing] = useState<null | (typeof users)[number]>(null);
+  const [editing, setEditing] = useState<UserRow | null>(null);
 
   const invite = useMutation({
     mutationFn: (input: {
@@ -71,6 +97,7 @@ function UsersPage() {
       fullName?: string;
       role: Role;
       lineManagerId?: string | null;
+      capabilities?: Partial<CapabilityMap>;
     }) => inviteFn({ data: input }),
     onSuccess: () => {
       toast.success("Invite sent");
@@ -87,6 +114,7 @@ function UsersPage() {
       lineManagerId?: string | null;
       status?: "active" | "disabled";
       fullName?: string;
+      capabilities?: Partial<CapabilityMap>;
     }) => updateFn({ data: input }),
     onSuccess: () => {
       toast.success("User updated");
@@ -103,13 +131,17 @@ function UsersPage() {
   });
 
   const nameOf = (id: string | null) =>
-    id ? users.find((u) => u.id === id)?.full_name || users.find((u) => u.id === id)?.email || "—" : "—";
+    id
+      ? users.find((u) => u.id === id)?.full_name ||
+        users.find((u) => u.id === id)?.email ||
+        "—"
+      : "—";
 
   return (
     <PageContainer>
       <PageHeader
         title="Users"
-        description="Invite team members, assign roles, and set line managers for approvals."
+        description="Invite users, set permissions and line managers. New users can only receive permissions you already have."
         actions={<Button onClick={() => setInviteOpen(true)}>Invite user</Button>}
       />
 
@@ -127,9 +159,9 @@ function UsersPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Permissions</TableHead>
                   <TableHead>Line manager</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last sign-in</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -143,16 +175,18 @@ function UsersPage() {
                         {u.role}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-xs">
+                      {u.role === "admin" ? (
+                        <span className="text-muted-foreground">All</span>
+                      ) : (
+                        <PermissionSummary user={u} />
+                      )}
+                    </TableCell>
                     <TableCell>{nameOf(u.line_manager_id)}</TableCell>
                     <TableCell>
                       <Badge variant={u.status === "active" ? "outline" : "destructive"}>
                         {u.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {u.last_sign_in_at
-                        ? new Date(u.last_sign_in_at).toLocaleDateString()
-                        : "Never"}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       {u.status === "invited" && u.email && (
@@ -181,6 +215,7 @@ function UsersPage() {
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         users={users}
+        inviterCaps={inviterCaps}
         onSubmit={(v) => invite.mutate(v)}
         submitting={invite.isPending}
       />
@@ -189,6 +224,7 @@ function UsersPage() {
         user={editing}
         onClose={() => setEditing(null)}
         users={users}
+        inviterCaps={inviterCaps}
         onSubmit={(v) => update.mutate(v)}
         submitting={update.isPending}
       />
@@ -196,28 +232,108 @@ function UsersPage() {
   );
 }
 
+function PermissionSummary({ user }: { user: UserRow }) {
+  const active = ALL_CAPABILITIES.filter((c) => user[c]);
+  if (active.length === 0) return <span className="text-muted-foreground">None</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {active.map((c) => (
+        <Badge key={c} variant="outline" className="text-[10px]">
+          {shortLabel(c)}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
+function shortLabel(c: Capability) {
+  return {
+    can_manage_agents: "Agents",
+    can_manage_schools: "Schools",
+    can_view_all_trips: "All trips",
+    can_manage_templates: "Templates",
+    can_manage_users: "Users",
+  }[c];
+}
+
+function CapabilityChecklist({
+  value,
+  onChange,
+  inviterCaps,
+  disabled,
+}: {
+  value: CapabilityMap;
+  onChange: (v: CapabilityMap) => void;
+  inviterCaps: CapabilityMap;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-2 rounded-md border p-3">
+      {ALL_CAPABILITIES.map((c) => {
+        const allowed = inviterCaps[c];
+        return (
+          <label
+            key={c}
+            className={`flex items-start gap-2 text-sm ${!allowed ? "opacity-50" : ""}`}
+          >
+            <Checkbox
+              checked={!!value[c]}
+              disabled={disabled || !allowed}
+              onCheckedChange={(checked) =>
+                onChange({ ...value, [c]: checked === true })
+              }
+            />
+            <span>
+              {CAPABILITY_LABELS[c]}
+              {!allowed && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (you don't have this permission)
+                </span>
+              )}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+const EMPTY_CAPS: CapabilityMap = {
+  can_manage_agents: false,
+  can_manage_schools: false,
+  can_view_all_trips: false,
+  can_manage_templates: false,
+  can_manage_users: false,
+};
+
 function InviteDialog({
   open,
   onClose,
   users,
+  inviterCaps,
   onSubmit,
   submitting,
 }: {
   open: boolean;
   onClose: () => void;
   users: Array<{ id: string; full_name: string | null; email: string | null }>;
+  inviterCaps: CapabilityMap;
   onSubmit: (v: {
     email: string;
     fullName?: string;
     role: Role;
     lineManagerId?: string | null;
+    capabilities?: Partial<CapabilityMap>;
   }) => void;
   submitting: boolean;
 }) {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<Role>("member");
+  const [role, setRole] = useState<Role>("user");
   const [lineManagerId, setLineManagerId] = useState<string>("none");
+  const [caps, setCaps] = useState<CapabilityMap>(EMPTY_CAPS);
+
+  const inviterIsAdmin = ALL_CAPABILITIES.every((c) => inviterCaps[c]);
 
   return (
     <Dialog
@@ -227,12 +343,13 @@ function InviteDialog({
           onClose();
           setEmail("");
           setFullName("");
-          setRole("member");
+          setRole("user");
           setLineManagerId("none");
+          setCaps(EMPTY_CAPS);
         }
       }}
     >
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Invite user</DialogTitle>
         </DialogHeader>
@@ -257,12 +374,17 @@ function InviteDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                {inviterIsAdmin && <SelectItem value="admin">Admin</SelectItem>}
               </SelectContent>
             </Select>
           </div>
+          {role === "user" && (
+            <div>
+              <Label>Permissions</Label>
+              <CapabilityChecklist value={caps} onChange={setCaps} inviterCaps={inviterCaps} />
+            </div>
+          )}
           <div>
             <Label>Line manager</Label>
             <Select value={lineManagerId} onValueChange={setLineManagerId}>
@@ -292,6 +414,7 @@ function InviteDialog({
                 fullName: fullName || undefined,
                 role,
                 lineManagerId: lineManagerId === "none" ? null : lineManagerId,
+                capabilities: role === "user" ? caps : undefined,
               })
             }
           >
@@ -307,43 +430,48 @@ function EditDialog({
   user,
   onClose,
   users,
+  inviterCaps,
   onSubmit,
   submitting,
 }: {
-  user: null | {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-    role: Role;
-    line_manager_id: string | null;
-    status: string;
-  };
+  user: UserRow | null;
   onClose: () => void;
-  users: Array<{ id: string; full_name: string | null; email: string | null }>;
+  users: UserRow[];
+  inviterCaps: CapabilityMap;
   onSubmit: (v: {
     userId: string;
     role?: Role;
     lineManagerId?: string | null;
     status?: "active" | "disabled";
+    capabilities?: Partial<CapabilityMap>;
   }) => void;
   submitting: boolean;
 }) {
-  const [role, setRole] = useState<Role>(user?.role ?? "member");
+  const [role, setRole] = useState<Role>(user?.role ?? "user");
   const [lineManagerId, setLineManagerId] = useState<string>(user?.line_manager_id ?? "none");
   const [status, setStatus] = useState<string>(user?.status ?? "active");
+  const [caps, setCaps] = useState<CapabilityMap>(EMPTY_CAPS);
 
-  // Re-init when opening
+  const inviterIsAdmin = ALL_CAPABILITIES.every((c) => inviterCaps[c]);
+
   useStateSync(user, (u) => {
     setRole(u.role);
     setLineManagerId(u.line_manager_id ?? "none");
     setStatus(u.status);
+    setCaps({
+      can_manage_agents: u.can_manage_agents,
+      can_manage_schools: u.can_manage_schools,
+      can_view_all_trips: u.can_view_all_trips,
+      can_manage_templates: u.can_manage_templates,
+      can_manage_users: u.can_manage_users,
+    });
   });
 
   if (!user) return null;
 
   return (
     <Dialog open={!!user} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit {user.full_name || user.email}</DialogTitle>
         </DialogHeader>
@@ -355,12 +483,17 @@ function EditDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                {inviterIsAdmin && <SelectItem value="admin">Admin</SelectItem>}
               </SelectContent>
             </Select>
           </div>
+          {role === "user" && (
+            <div>
+              <Label>Permissions</Label>
+              <CapabilityChecklist value={caps} onChange={setCaps} inviterCaps={inviterCaps} />
+            </div>
+          )}
           <div>
             <Label>Line manager</Label>
             <Select value={lineManagerId} onValueChange={setLineManagerId}>
@@ -404,7 +537,9 @@ function EditDialog({
                 userId: user.id,
                 role,
                 lineManagerId: lineManagerId === "none" ? null : lineManagerId,
-                status: status === "disabled" ? "disabled" : status === "active" ? "active" : undefined,
+                status:
+                  status === "disabled" ? "disabled" : status === "active" ? "active" : undefined,
+                capabilities: role === "user" ? caps : undefined,
               })
             }
           >
@@ -416,7 +551,6 @@ function EditDialog({
   );
 }
 
-import { useEffect, useRef } from "react";
 function useStateSync<T>(value: T, apply: (v: NonNullable<T>) => void) {
   const lastId = useRef<unknown>(null);
   useEffect(() => {
