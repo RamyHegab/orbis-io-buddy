@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useIsAdmin } from "@/hooks/use-auth";
+import { useAuth, useCan } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,7 +33,7 @@ const ACTIVITY_TYPES = ["agent_visit", "school_visit", "recruitment_event", "tra
 
 function TemplatesPage() {
   const { user } = useAuth();
-  const isAdmin = useIsAdmin();
+  const canManage = useCan("can_manage_templates");
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -82,12 +82,12 @@ function TemplatesPage() {
     setFields(fields.map((f) => (f.id === id ? { ...f, ...patch } : f)));
   };
 
-  if (!isAdmin) {
+  if (!canManage) {
     return (
       <PageContainer>
         <PageHeader title="Form Templates" />
         <Card className="p-8 text-center text-muted-foreground">
-          Only administrators can manage form templates.
+          You don't have permission to manage form templates. Ask an admin to grant you the "Manage master forms" permission.
         </Card>
       </PageContainer>
     );
