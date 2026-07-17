@@ -393,6 +393,40 @@ function TimelineView({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-4">
+      {/* Top KPI tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total trips", value: stats.trips.toLocaleString() },
+          { label: "Total events", value: stats.events.toLocaleString() },
+          { label: "Countries", value: stats.countries.toLocaleString() },
+          { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }) },
+        ].map((k) => (
+          <Card key={k.label} className="p-4">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</div>
+            <div className="text-4xl font-bold mt-1 text-primary">{k.value}</div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Per-country smaller tiles */}
+      {stats.byCountry.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {stats.byCountry.map((c) => (
+            <Card key={c.country} className="p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl leading-none">{countryFlag(c.country)}</span>
+                <span className="font-medium text-sm truncate">{c.country}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 text-[11px]">
+                <div><div className="text-muted-foreground">Visits</div><div className="font-semibold">{c.visits}</div></div>
+                <div><div className="text-muted-foreground">Events</div><div className="font-semibold">{c.events}</div></div>
+                <div><div className="text-muted-foreground">Cost</div><div className="font-semibold">{c.cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
