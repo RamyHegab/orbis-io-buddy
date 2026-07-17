@@ -57,6 +57,9 @@ const STATUSES = ["proposed", "planning", "confirmed", "done"] as const;
 const STATUS_COLORS: Record<string, string> = {
   proposed: "bg-slate-500", planning: "bg-blue-500", confirmed: "bg-gold", done: "bg-green-600",
 };
+const ACADEMIC_SUPPORT_LABEL: Record<PlannedActivity["academic_support"], string> = {
+  required: "Required", preferred: "Preferred", not_required: "Not Required",
+};
 
 const sum = (...xs: (number | null | undefined)[]) => xs.reduce<number>((a, x) => a + (Number(x) || 0), 0);
 
