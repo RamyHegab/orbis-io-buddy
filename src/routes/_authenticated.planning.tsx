@@ -361,10 +361,7 @@ function TimelineView({ userId }: { userId?: string }) {
                     <div className="font-semibold">{a.title}</div>
                     <div className="text-xs text-muted-foreground">{fmtDate(a.start_date)} → {fmtDate(a.end_date)}</div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="text-xs">Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
-                    <Badge className={`${STATUS_COLORS[a.status]} text-white capitalize`}>{a.status}</Badge>
-                  </div>
+                  <Badge className={`${STATUS_COLORS[a.status]} text-white capitalize`}>{a.status}</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {a.countries.map((c) => (<Badge key={c} variant="outline" className="border-primary/40 text-primary">{c}</Badge>))}
@@ -373,6 +370,7 @@ function TimelineView({ userId }: { userId?: string }) {
                       {EVENT_TYPES.find((x) => x.value === t)?.label ?? t}
                     </Badge>
                   ))}
+                  <Badge variant="outline" className="text-xs">Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
                   <div><span className="text-muted-foreground">Events:</span> {Number(a.events_cost || 0).toLocaleString()}</div>
