@@ -2,6 +2,8 @@ import type { ComponentType } from 'react'
 import { template as tripSubmittedForApproval } from './trip-submitted-for-approval'
 import { template as tripApproved } from './trip-approved'
 import { template as tripChangesRequested } from './trip-changes-requested'
+import { template as planningItineraryReminder } from './planning-itinerary-reminder'
+import { template as planningActualCostsReminder } from './planning-actual-costs-reminder'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -16,4 +18,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'trip-submitted-for-approval': tripSubmittedForApproval,
   'trip-approved': tripApproved,
   'trip-changes-requested': tripChangesRequested,
+  'planning-itinerary-reminder': planningItineraryReminder,
+  'planning-actual-costs-reminder': planningActualCostsReminder,
 }
