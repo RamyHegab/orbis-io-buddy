@@ -206,9 +206,14 @@ export const updateUser = createServerFn({ method: "POST" })
     if (data.fullName !== undefined) patch.full_name = data.fullName;
 
     if (data.capabilities) {
-      const clamped = clampCaps(data.capabilities, inviterCaps);
-      for (const c of CAPS) patch[c] = clamped[c];
+      // Only write caps the inviter is allowed to grant/revoke. Leave the rest
+      // untouched so editors don't silently strip permissions they don't hold.
+      for (const c of CAPS) {
+        if (!inviterCaps[c]) continue;
+        patch[c] = !!data.capabilities[c];
+      }
     }
+
 
     if (data.role === "admin" && !inviterIsAdmin) {
       throw new Error("Only admins can promote users to admin");
