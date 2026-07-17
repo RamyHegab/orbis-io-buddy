@@ -1169,6 +1169,14 @@ export type Database = {
           template_name: string
         }[]
       }
+      get_user_display: {
+        Args: { _ids: string[] }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+        }[]
+      }
       has_capability: {
         Args: { _cap: string; _user_id: string }
         Returns: boolean
