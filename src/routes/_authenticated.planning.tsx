@@ -58,7 +58,7 @@ const STATUS_COLORS: Record<string, string> = {
   proposed: "bg-slate-500", planning: "bg-blue-500", confirmed: "bg-gold", done: "bg-green-600",
 };
 
-const sum = (...xs: (number | null | undefined)[]) => xs.reduce((a, x) => a + (Number(x) || 0), 0);
+const sum = (...xs: (number | null | undefined)[]) => xs.reduce<number>((a, x) => a + (Number(x) || 0), 0);
 
 // ---------- Component ----------
 function PlanningPage() {
