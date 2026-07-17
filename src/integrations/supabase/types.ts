@@ -326,6 +326,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cycle_settings: {
+        Row: {
+          created_at: string
+          cycle_end_month: number
+          cycle_end_year: number
+          cycle_start_month: number
+          cycle_start_year: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_end_month?: number
+          cycle_end_year?: number
+          cycle_start_month?: number
+          cycle_start_year?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_end_month?: number
+          cycle_end_year?: number
+          cycle_start_month?: number
+          cycle_start_year?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       discovery_jobs: {
         Row: {
           agent_id: string | null
@@ -460,6 +490,78 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      event_cities: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          city: string
+          country: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      events_catalog: {
+        Row: {
+          cities: string[]
+          cost: number | null
+          countries: string[]
+          created_at: string
+          created_by: string | null
+          currency: string
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          status: string
+          title: string
+          traveller_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cities?: string[]
+          cost?: number | null
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: string
+          title: string
+          traveller_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cities?: string[]
+          cost?: number | null
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          traveller_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -695,6 +797,101 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planned_activities: {
+        Row: {
+          academic_support: string
+          actual_cost_reminder_sent_at: string | null
+          actual_events_cost: number | null
+          actual_hotel_cost: number | null
+          actual_subsistence_cost: number | null
+          actual_travel_cost: number | null
+          countries: string[]
+          created_at: string
+          end_date: string
+          event_ids: string[]
+          event_types: string[]
+          events_cost: number | null
+          hotel_cost: number | null
+          id: string
+          notes: string | null
+          objectives: string | null
+          reminder_sent_at: string | null
+          start_date: string
+          status: string
+          subsistence_cost: number | null
+          title: string
+          travel_cost: number | null
+          traveller_id: string | null
+          trip_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_support?: string
+          actual_cost_reminder_sent_at?: string | null
+          actual_events_cost?: number | null
+          actual_hotel_cost?: number | null
+          actual_subsistence_cost?: number | null
+          actual_travel_cost?: number | null
+          countries?: string[]
+          created_at?: string
+          end_date: string
+          event_ids?: string[]
+          event_types?: string[]
+          events_cost?: number | null
+          hotel_cost?: number | null
+          id?: string
+          notes?: string | null
+          objectives?: string | null
+          reminder_sent_at?: string | null
+          start_date: string
+          status?: string
+          subsistence_cost?: number | null
+          title: string
+          travel_cost?: number | null
+          traveller_id?: string | null
+          trip_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_support?: string
+          actual_cost_reminder_sent_at?: string | null
+          actual_events_cost?: number | null
+          actual_hotel_cost?: number | null
+          actual_subsistence_cost?: number | null
+          actual_travel_cost?: number | null
+          countries?: string[]
+          created_at?: string
+          end_date?: string
+          event_ids?: string[]
+          event_types?: string[]
+          events_cost?: number | null
+          hotel_cost?: number | null
+          id?: string
+          notes?: string | null
+          objectives?: string | null
+          reminder_sent_at?: string | null
+          start_date?: string
+          status?: string
+          subsistence_cost?: number | null
+          title?: string
+          travel_cost?: number | null
+          traveller_id?: string | null
+          trip_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_activities_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]
