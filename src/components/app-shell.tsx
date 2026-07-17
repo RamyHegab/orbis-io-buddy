@@ -15,6 +15,7 @@ import {
   Globe2,
   Bell,
   UserCog,
+  CalendarRange,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/planning", label: "Planning", icon: CalendarRange },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
@@ -37,6 +39,7 @@ const navItems: NavItem[] = [
   { to: "/users", label: "Users", icon: UserCog, requiresCap: "can_manage_users" },
   { to: "/templates", label: "Form Templates", icon: FileText, requiresCap: "can_manage_templates" },
 ];
+
 
 
 export function AppShell() {
