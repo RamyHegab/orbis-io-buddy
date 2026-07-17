@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
+import { countryFlag } from "@/lib/country-flags";
 import { fmtDate } from "@/lib/format";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isWithinInterval } from "date-fns";
 import { Link, useNavigate } from "@tanstack/react-router";
