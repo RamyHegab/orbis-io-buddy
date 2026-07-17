@@ -21,6 +21,7 @@ import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated.templates'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
+import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated.planning'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated.inbox'
 import { Route as AuthenticatedFormsRouteImport } from './routes/_authenticated.forms'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authen
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicPlanningRemindersRouteImport } from './routes/api/public/planning/reminders'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
 
@@ -97,6 +99,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPlanningRoute = AuthenticatedPlanningRouteImport.update({
+  id: '/planning',
+  path: '/planning',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
@@ -188,6 +195,12 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPlanningRemindersRoute =
+  ApiPublicPlanningRemindersRouteImport.update({
+    id: '/api/public/planning/reminders',
+    path: '/api/public/planning/reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTripsTripIdReportRoute =
   AuthenticatedTripsTripIdReportRouteImport.update({
     id: '/report',
@@ -210,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
   '/inbox': typeof AuthenticatedInboxRoute
+  '/planning': typeof AuthenticatedPlanningRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
@@ -227,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -240,6 +255,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/forms': typeof AuthenticatedFormsRoute
   '/inbox': typeof AuthenticatedInboxRoute
+  '/planning': typeof AuthenticatedPlanningRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/templates': typeof AuthenticatedTemplatesRoute
@@ -256,6 +272,7 @@ export interface FileRoutesByTo {
   '/schools': typeof AuthenticatedSchoolsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -272,6 +289,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/forms': typeof AuthenticatedFormsRoute
   '/_authenticated/inbox': typeof AuthenticatedInboxRoute
+  '/_authenticated/planning': typeof AuthenticatedPlanningRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
@@ -289,6 +307,7 @@ export interface FileRoutesById {
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -305,6 +324,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forms'
     | '/inbox'
+    | '/planning'
     | '/reports'
     | '/settings'
     | '/templates'
@@ -322,6 +342,7 @@ export interface FileRouteTypes {
     | '/schools/'
     | '/trips/'
     | '/trips/$tripId/report'
+    | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -335,6 +356,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forms'
     | '/inbox'
+    | '/planning'
     | '/reports'
     | '/settings'
     | '/templates'
@@ -351,6 +373,7 @@ export interface FileRouteTypes {
     | '/schools'
     | '/trips'
     | '/trips/$tripId/report'
+    | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -366,6 +389,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/forms'
     | '/_authenticated/inbox'
+    | '/_authenticated/planning'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/templates'
@@ -383,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/schools/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
+    | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -400,6 +425,7 @@ export interface RootRouteChildren {
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
+  ApiPublicPlanningRemindersRoute: typeof ApiPublicPlanningRemindersRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -489,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/planning': {
+      id: '/_authenticated/planning'
+      path: '/planning'
+      fullPath: '/planning'
+      preLoaderRoute: typeof AuthenticatedPlanningRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/inbox': {
@@ -603,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/planning/reminders': {
+      id: '/api/public/planning/reminders'
+      path: '/api/public/planning/reminders'
+      fullPath: '/api/public/planning/reminders'
+      preLoaderRoute: typeof ApiPublicPlanningRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/trips/$tripId/report': {
       id: '/_authenticated/trips/$tripId/report'
       path: '/report'
@@ -668,6 +708,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFormsRoute: typeof AuthenticatedFormsRoute
   AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
+  AuthenticatedPlanningRoute: typeof AuthenticatedPlanningRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
@@ -682,6 +723,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFormsRoute: AuthenticatedFormsRoute,
   AuthenticatedInboxRoute: AuthenticatedInboxRoute,
+  AuthenticatedPlanningRoute: AuthenticatedPlanningRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
@@ -706,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
+  ApiPublicPlanningRemindersRoute: ApiPublicPlanningRemindersRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
@@ -713,13 +756,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
