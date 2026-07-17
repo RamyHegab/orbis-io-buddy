@@ -46,7 +46,7 @@ export const Route = createFileRoute('/api/public/planning/reminders')({
             user_id: recipientId,
             title: 'Trip planning reminder',
             body: `${a.title} starts in ~2 months. Open the itinerary planner.`,
-            kind: 'planning_reminder',
+            type: 'planning_reminder',
           }).select()
         }
 
@@ -83,7 +83,7 @@ export const Route = createFileRoute('/api/public/planning/reminders')({
             user_id: recipientId,
             title: 'Submit actual trip costs',
             body: `Log the actual costs for ${a.title}.`,
-            kind: 'actual_costs_reminder',
+            type: 'actual_costs_reminder',
           }).select()
         }
 
