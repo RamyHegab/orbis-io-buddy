@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
+import { countryFlag } from "@/lib/country-flags";
 import { fmtDate } from "@/lib/format";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isWithinInterval } from "date-fns";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -293,7 +294,69 @@ function TimelineView({ userId }: { userId?: string }) {
     },
   });
 
+  const { data: eventsCatalog = [] } = useQuery({
+    queryKey: ["events_catalog_stats"],
+    queryFn: async () => {
+      const { data } = await supabase.from("events_catalog").select("id, cost, countries");
+      return (data ?? []) as { id: string; cost: number | null; countries: string[] }[];
+    },
+  });
+
   const filtered = activities.filter((a) => statusFilter === "all" || a.status === statusFilter);
+
+  const stats = useMemo(() => {
+    const eventById = new Map(eventsCatalog.map((e) => [e.id, e]));
+    const perCountry = new Map<string, { visits: number; events: number; cost: number }>();
+    const bump = (c: string) => {
+      if (!perCountry.has(c)) perCountry.set(c, { visits: 0, events: 0, cost: 0 });
+      return perCountry.get(c)!;
+    };
+    const uniqueEventIds = new Set<string>();
+    let totalBudget = 0;
+    for (const a of activities) {
+      const countries = a.countries ?? [];
+      const n = countries.length || 1;
+      const other = sum(a.travel_cost, a.hotel_cost, a.subsistence_cost);
+      const otherPer = other / n;
+      // events cost attributed by event's own countries
+      const perCountryEventCost = new Map<string, number>();
+      const perCountryEventCount = new Map<string, number>();
+      for (const eid of a.event_ids ?? []) {
+        uniqueEventIds.add(eid);
+        const ev = eventById.get(eid);
+        const ecountries = ev?.countries?.length ? ev.countries : countries;
+        const split = ecountries.length || 1;
+        for (const c of ecountries) {
+          perCountryEventCost.set(c, (perCountryEventCost.get(c) || 0) + (Number(ev?.cost) || 0) / split);
+          perCountryEventCount.set(c, (perCountryEventCount.get(c) || 0) + 1);
+        }
+      }
+      // If activity has its own events_cost but no linked events, split across countries
+      const hasLinkedEvents = (a.event_ids ?? []).length > 0;
+      const flatEventsCost = hasLinkedEvents ? 0 : (Number(a.events_cost) || 0);
+      const flatEventsPer = flatEventsCost / n;
+
+      for (const c of countries) {
+        const row = bump(c);
+        row.visits += 1;
+        row.events += perCountryEventCount.get(c) || 0;
+        row.cost += otherPer + (perCountryEventCost.get(c) || 0) + flatEventsPer;
+      }
+      totalBudget += other + (hasLinkedEvents
+        ? Array.from(perCountryEventCost.values()).reduce((s, x) => s + x, 0)
+        : flatEventsCost);
+    }
+    const byCountry = Array.from(perCountry.entries())
+      .map(([country, v]) => ({ country, ...v }))
+      .sort((a, b) => b.cost - a.cost);
+    return {
+      trips: activities.length,
+      events: uniqueEventIds.size,
+      countries: perCountry.size,
+      budget: totalBudget,
+      byCountry,
+    };
+  }, [activities, eventsCatalog]);
 
   const del = useMutation({
     mutationFn: async (id: string) => {
@@ -330,6 +393,40 @@ function TimelineView({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-4">
+      {/* Top KPI tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total trips", value: stats.trips.toLocaleString() },
+          { label: "Total events", value: stats.events.toLocaleString() },
+          { label: "Countries", value: stats.countries.toLocaleString() },
+          { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }) },
+        ].map((k) => (
+          <Card key={k.label} className="p-4">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</div>
+            <div className="text-4xl font-bold mt-1 text-primary">{k.value}</div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Per-country smaller tiles */}
+      {stats.byCountry.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {stats.byCountry.map((c) => (
+            <Card key={c.country} className="p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl leading-none">{countryFlag(c.country)}</span>
+                <span className="font-medium text-sm truncate">{c.country}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 text-[11px]">
+                <div><div className="text-muted-foreground">Visits</div><div className="font-semibold">{c.visits}</div></div>
+                <div><div className="text-muted-foreground">Events</div><div className="font-semibold">{c.events}</div></div>
+                <div><div className="text-muted-foreground">Cost</div><div className="font-semibold">{c.cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
