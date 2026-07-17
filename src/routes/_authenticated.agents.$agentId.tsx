@@ -359,7 +359,7 @@ function VisitReports({ agentId }: { agentId: string }) {
     queryKey: ["profiles", userIds],
     enabled: userIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
+      const { data } = await supabase.rpc("get_user_display", { _ids: userIds });
       return data ?? [];
     },
   });
