@@ -294,7 +294,69 @@ function TimelineView({ userId }: { userId?: string }) {
     },
   });
 
+  const { data: eventsCatalog = [] } = useQuery({
+    queryKey: ["events_catalog_stats"],
+    queryFn: async () => {
+      const { data } = await supabase.from("events_catalog").select("id, cost, countries");
+      return (data ?? []) as { id: string; cost: number | null; countries: string[] }[];
+    },
+  });
+
   const filtered = activities.filter((a) => statusFilter === "all" || a.status === statusFilter);
+
+  const stats = useMemo(() => {
+    const eventById = new Map(eventsCatalog.map((e) => [e.id, e]));
+    const perCountry = new Map<string, { visits: number; events: number; cost: number }>();
+    const bump = (c: string) => {
+      if (!perCountry.has(c)) perCountry.set(c, { visits: 0, events: 0, cost: 0 });
+      return perCountry.get(c)!;
+    };
+    const uniqueEventIds = new Set<string>();
+    let totalBudget = 0;
+    for (const a of activities) {
+      const countries = a.countries ?? [];
+      const n = countries.length || 1;
+      const other = sum(a.travel_cost, a.hotel_cost, a.subsistence_cost);
+      const otherPer = other / n;
+      // events cost attributed by event's own countries
+      const perCountryEventCost = new Map<string, number>();
+      const perCountryEventCount = new Map<string, number>();
+      for (const eid of a.event_ids ?? []) {
+        uniqueEventIds.add(eid);
+        const ev = eventById.get(eid);
+        const ecountries = ev?.countries?.length ? ev.countries : countries;
+        const split = ecountries.length || 1;
+        for (const c of ecountries) {
+          perCountryEventCost.set(c, (perCountryEventCost.get(c) || 0) + (Number(ev?.cost) || 0) / split);
+          perCountryEventCount.set(c, (perCountryEventCount.get(c) || 0) + 1);
+        }
+      }
+      // If activity has its own events_cost but no linked events, split across countries
+      const hasLinkedEvents = (a.event_ids ?? []).length > 0;
+      const flatEventsCost = hasLinkedEvents ? 0 : (Number(a.events_cost) || 0);
+      const flatEventsPer = flatEventsCost / n;
+
+      for (const c of countries) {
+        const row = bump(c);
+        row.visits += 1;
+        row.events += perCountryEventCount.get(c) || 0;
+        row.cost += otherPer + (perCountryEventCost.get(c) || 0) + flatEventsPer;
+      }
+      totalBudget += other + (hasLinkedEvents
+        ? Array.from(perCountryEventCost.values()).reduce((s, x) => s + x, 0)
+        : flatEventsCost);
+    }
+    const byCountry = Array.from(perCountry.entries())
+      .map(([country, v]) => ({ country, ...v }))
+      .sort((a, b) => b.cost - a.cost);
+    return {
+      trips: activities.length,
+      events: uniqueEventIds.size,
+      countries: perCountry.size,
+      budget: totalBudget,
+      byCountry,
+    };
+  }, [activities, eventsCatalog]);
 
   const del = useMutation({
     mutationFn: async (id: string) => {
