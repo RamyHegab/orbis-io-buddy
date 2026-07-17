@@ -216,15 +216,17 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
     y = (doc as any).lastAutoTable.finalY + 2;
 
     for (const a of day.acts) {
-      if (a.agent_id) continue; // agent visits: branch name in Details is the link
       const links: Array<{ label: string; url: string }> = [];
-      if (a.school_id && a.schools?.name) {
-        links.push({ label: `School: ${a.schools.name}`, url: schoolLink() });
-      }
-      const mapUrl = activityMapUrl(a);
-      if (mapUrl) {
-        const addr = a.formatted_address || a.location || a.schools?.address || "View on Google Maps";
-        links.push({ label: `📍 ${addr}`, url: mapUrl });
+      if (!a.agent_id) {
+        // agent visits: branch name in Details is already the link — skip duplicate links
+        if (a.school_id && a.schools?.name) {
+          links.push({ label: `School: ${a.schools.name}`, url: schoolLink() });
+        }
+        const mapUrl = activityMapUrl(a);
+        if (mapUrl) {
+          const addr = a.formatted_address || a.location || a.schools?.address || "View on Google Maps";
+          links.push({ label: `📍 ${addr}`, url: mapUrl });
+        }
       }
       const hasExtra = links.length || a.visit_notes;
       if (!hasExtra) continue;
@@ -248,6 +250,7 @@ export function buildTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[]
       }
       y += 2;
     }
+
     y += 2;
   }
 
