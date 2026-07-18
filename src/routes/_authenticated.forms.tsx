@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,10 +6,11 @@ import { useAuth, useCan } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { FilePlus2, ExternalLink, Trash2, Plus } from "lucide-react";
+import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { dialCodeForLocation } from "@/lib/country-codes";
@@ -20,12 +21,28 @@ export const Route = createFileRoute("/_authenticated/forms")({
   component: FormsPage,
 });
 
+type FieldType = "text" | "textarea" | "number" | "phone" | "select" | "checkbox" | "rating";
+interface Field {
+  id: string;
+  type: FieldType;
+  label: string;
+  options?: string[];
+  required?: boolean;
+}
+
 function FormsPage() {
   const { user } = useAuth();
-  const isAdmin = useCan("can_manage_templates");
+  const canManageTemplates = useCan("can_manage_templates");
   const qc = useQueryClient();
+
   const [pickerTemplate, setPickerTemplate] = useState<{ id: string; name: string; activity_type: string } | null>(null);
   const [activityId, setActivityId] = useState<string>("");
+
+  // Template creation state
+  const [tplOpen, setTplOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [fields, setFields] = useState<Field[]>([]);
 
   const { data: templates } = useQuery({
     queryKey: ["templates"],
@@ -55,6 +72,40 @@ function FormsPage() {
     },
   });
 
+  const createTemplate = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Not signed in");
+      const { error } = await supabase.from("form_templates").insert({
+        created_by: user.id,
+        name, description, activity_type: "other" as any,
+        fields: fields as any,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Template created");
+      setTplOpen(false);
+      setName(""); setDescription(""); setFields([]);
+      qc.invalidateQueries({ queryKey: ["templates"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const removeTemplate = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("form_templates").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["templates"] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const addField = (type: FieldType) => {
+    setFields([...fields, { id: crypto.randomUUID(), type, label: "", required: false, options: type === "select" ? [] : undefined }]);
+  };
+  const updateField = (id: string, patch: Partial<Field>) => {
+    setFields(fields.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+  };
 
   const generate = useMutation({
     mutationFn: async () => {
@@ -69,7 +120,6 @@ function FormsPage() {
           activity_id: activity.id,
           created_by: user.id,
           name: activity.title,
-
           event_date: activity.day_date,
           country_code: dial,
         })
@@ -104,10 +154,59 @@ function FormsPage() {
         title="Forms"
         description="Generate recruitment forms from templates, share them via QR/link, and collect submissions — even offline."
         actions={
-          isAdmin ? (
-            <Button asChild variant="outline">
-              <Link to="/templates"><Plus className="h-4 w-4 mr-1.5" /> Manage templates</Link>
-            </Button>
+          canManageTemplates ? (
+            <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader><DialogTitle>New form template</DialogTitle></DialogHeader>
+                <div className="space-y-3">
+                  <div><Label>Name *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Event check-in form" /></div>
+                  <div><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+
+                  <div className="border-t pt-3">
+                    <Label className="mb-2 block">Fields</Label>
+                    <div className="space-y-2 mb-3">
+                      {fields.map((f) => (
+                        <Card key={f.id} className="p-3">
+                          <div className="flex items-start gap-2">
+                            <GripVertical className="h-4 w-4 text-muted-foreground mt-2" />
+                            <div className="flex-1 space-y-2">
+                              <div className="flex gap-2">
+                                <Input placeholder="Question label" value={f.label} onChange={(e) => updateField(f.id, { label: e.target.value })} />
+                                <span className="text-xs text-muted-foreground self-center capitalize">{f.type}</span>
+                              </div>
+                              {f.type === "select" && (
+                                <Input
+                                  placeholder="Options, comma separated"
+                                  value={f.options?.join(", ") ?? ""}
+                                  onChange={(e) => updateField(f.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                                />
+                              )}
+                            </div>
+                            <button onClick={() => setFields(fields.filter((x) => x.id !== f.id))} className="text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(["text", "textarea", "number", "phone", "select", "checkbox", "rating"] as FieldType[]).map((t) => (
+                        <Button key={t} variant="outline" size="sm" type="button" onClick={() => addField(t)}>
+                          + {t}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button onClick={() => createTemplate.mutate()} disabled={!name || fields.length === 0} className="w-full">
+                    Create template
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           ) : null
         }
       />
@@ -118,9 +217,22 @@ function FormsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {templates.map((t) => (
               <Card key={t.id} className="p-4 flex flex-col">
-                <div className="font-medium">{t.name}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{t.name}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                    </div>
+                  </div>
+                  {canManageTemplates && (
+                    <button
+                      onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete template"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
                 {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
                 <div className="mt-auto pt-3">
@@ -140,7 +252,7 @@ function FormsPage() {
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">
             No templates yet.{" "}
-            {isAdmin ? <Link to="/templates" className="underline">Create one</Link> : "Ask an admin to create one."}
+            {canManageTemplates ? "Click \"New template\" to create one." : "Ask an admin to create one, or to grant you the \"Manage master forms\" permission."}
           </Card>
         )}
       </section>
