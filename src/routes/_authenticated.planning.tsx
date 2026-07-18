@@ -39,13 +39,13 @@ type PlannedActivity = {
   traveller_id: string | null; academic_support: "required" | "preferred" | "not_required";
   events_cost: number | null; travel_cost: number | null; hotel_cost: number | null; subsistence_cost: number | null;
   actual_events_cost: number | null; actual_travel_cost: number | null; actual_hotel_cost: number | null; actual_subsistence_cost: number | null;
-  status: "proposed" | "planning" | "confirmed" | "done";
+  status: "proposed" | "planning" | "confirmed" | "done" | "canceled";
   objectives: string | null; notes: string | null; trip_id: string | null;
 };
 type EventCatalog = {
   id: string; title: string; start_date: string; end_date: string;
   countries: string[]; cities: string[]; cost: number | null; currency: string;
-  status: "proposed" | "planning" | "confirmed" | "done";
+  status: "proposed" | "planning" | "confirmed" | "done" | "canceled";
   traveller_id: string | null; notes: string | null;
 };
 
@@ -55,9 +55,13 @@ const EVENT_TYPES = [
   { value: "recruitment_events", label: "Recruitment events" },
   { value: "other", label: "Other" },
 ];
-const STATUSES = ["proposed", "planning", "confirmed", "done"] as const;
+const STATUSES = ["proposed", "planning", "confirmed", "done", "canceled"] as const;
 const STATUS_COLORS: Record<string, string> = {
-  proposed: "bg-slate-500", planning: "bg-blue-500", confirmed: "bg-gold", done: "bg-green-600",
+  proposed: "bg-academic-not-required/20 text-academic-not-required border-academic-not-required/40",
+  planning: "bg-academic-required/20 text-academic-required border-academic-required/40",
+  confirmed: "bg-academic-preferred/20 text-academic-preferred border-academic-preferred/40",
+  done: "bg-green-100 text-green-900 border-green-300",
+  canceled: "bg-status-canceled text-white border-status-canceled",
 };
 const ACADEMIC_SUPPORT_LABEL: Record<PlannedActivity["academic_support"], string> = {
   required: "Required", preferred: "Preferred", not_required: "Not Required",
@@ -498,7 +502,7 @@ function TimelineView({ userId }: { userId?: string }) {
                     <div className="font-semibold">{a.title}</div>
                     <div className="text-xs text-muted-foreground">{fmtDate(a.start_date)} → {fmtDate(a.end_date)}</div>
                   </div>
-                  <Badge className={`${STATUS_COLORS[a.status]} text-white capitalize`}>{a.status}</Badge>
+                  <Badge className={`${STATUS_COLORS[a.status]} capitalize`}>{a.status}</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {a.countries.map((c) => (<Badge key={c} variant="outline" className="border-primary/40 text-primary">{c}</Badge>))}
@@ -629,7 +633,7 @@ function CalendarView({ userId }: { userId?: string }) {
               <div className="space-y-0.5">
                 {dayActs.slice(0, 3).map((a) => (
                   <button key={a.id} onClick={() => setEditing(a)}
-                    className={`block w-full text-left truncate rounded px-1 py-0.5 text-white ${STATUS_COLORS[a.status]}`}>
+                    className={`block w-full text-left truncate rounded px-1 py-0.5 ${STATUS_COLORS[a.status]}`}>
                     {a.title}
                   </button>
                 ))}
@@ -681,7 +685,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <div className="font-medium">{e.title}</div>
-                <Badge className={`${STATUS_COLORS[e.status]} text-white capitalize text-[10px]`}>{e.status}</Badge>
+                <Badge className={`${STATUS_COLORS[e.status]} capitalize text-[10px]`}>{e.status}</Badge>
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(e.start_date)} → {fmtDate(e.end_date)}</div>
               <div className="flex flex-wrap gap-1 mt-1">

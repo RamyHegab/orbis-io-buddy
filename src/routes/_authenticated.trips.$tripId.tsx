@@ -506,7 +506,7 @@ function TripPlanner() {
   });
 
   const setStatus = useMutation({
-    mutationFn: async (status: "active") => {
+    mutationFn: async (status: "active" | "canceled") => {
       const { error } = await supabase.from("trips").update({ status }).eq("id", tripId);
       if (error) throw error;
       return status;
@@ -679,18 +679,19 @@ function TripPlanner() {
           <span className="flex items-center gap-2">
             {trip.title}
             {(trip.status === "approved" || trip.status === "confirmed") && (
-              <Badge className="bg-emerald-600 hover:bg-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Approved</Badge>
+              <Badge className="bg-academic-preferred/20 text-academic-preferred border-academic-preferred/40 hover:bg-academic-preferred/30"><CheckCircle2 className="h-3 w-3 mr-1" /> Approved</Badge>
             )}
             {trip.status === "submitted" && (
-              <Badge className="bg-amber-500 hover:bg-amber-500 text-white"><Clock className="h-3 w-3 mr-1" /> Pending approval</Badge>
+              <Badge className="bg-academic-required/20 text-academic-required border-academic-required/40 hover:bg-academic-required/30"><Clock className="h-3 w-3 mr-1" /> Pending approval</Badge>
             )}
             {trip.status === "active" && latestApproval?.decision === "changes_requested" && (
               <Badge variant="destructive">Changes requested</Badge>
             )}
             {trip.status === "active" && latestApproval?.decision !== "changes_requested" && (
-              <Badge variant="secondary">In progress</Badge>
+              <Badge className="bg-academic-required/20 text-academic-required border-academic-required/40 hover:bg-academic-required/30">In progress</Badge>
             )}
-            {trip.status === "planning" && <Badge variant="outline">Draft</Badge>}
+            {trip.status === "planning" && <Badge variant="outline" className="border-academic-not-required text-academic-not-required">Draft</Badge>}
+            {trip.status === "canceled" && <Badge className="bg-status-canceled text-white hover:bg-status-canceled">Canceled</Badge>}
           </span>
         }
         description={`${fmtDate(trip.start_date)} → ${fmtDate(trip.end_date)}`}
@@ -730,6 +731,28 @@ function TripPlanner() {
               <Button variant="outline" size="sm" onClick={() => withdrawSubmission.mutate()} disabled={withdrawSubmission.isPending}>
                 <Undo2 className="h-4 w-4 mr-1" /> Withdraw submission
               </Button>
+            )}
+
+            {isOwner && trip.status !== "canceled" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={setStatus.isPending}>
+                    Cancel trip
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel this trip?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will mark the trip as canceled. You can still reopen it later if needed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => setStatus.mutate("canceled")}>Confirm cancel</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
 
             {isManagerForThisTrip && trip.status === "submitted" && pendingApproval && (

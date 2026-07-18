@@ -78,16 +78,23 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
     onError: (e: any) => toast.error(e.message),
   });
 
+  const statusBadge = (() => {
+    if (trip.status === "canceled") return <Badge className="bg-status-canceled text-white hover:bg-status-canceled/90">Canceled</Badge>;
+    if (trip.status === "approved" || trip.status === "confirmed") return <Badge className="bg-academic-preferred/20 text-academic-preferred border-academic-preferred/40 hover:bg-academic-preferred/30">Approved</Badge>;
+    if (trip.status === "submitted") return <Badge className="bg-academic-required/20 text-academic-required border-academic-required/40 hover:bg-academic-required/30">Pending approval</Badge>;
+    return <Badge variant="outline" className="border-academic-not-required text-academic-not-required">Draft</Badge>;
+  })();
+  const topBar = trip.status === "canceled" ? "bg-status-canceled"
+    : trip.status === "approved" || trip.status === "confirmed" ? "bg-academic-preferred"
+    : trip.status === "submitted" ? "bg-academic-required"
+    : "bg-primary";
+
   return (
     <Card
       onClick={onSelect}
       className={`p-0 hover:shadow-md transition-all relative group shrink-0 w-56 cursor-pointer overflow-hidden rounded-md border-2 ${selected ? "border-gold shadow-md" : "border-primary/80"}`}
     >
-      <div className={`h-1.5 w-full ${
-        trip.status === "approved" || trip.status === "confirmed" ? "bg-gold"
-          : trip.status === "submitted" ? "bg-amber-500"
-          : "bg-primary"
-      }`} />
+      <div className={`h-1.5 w-full ${topBar}`} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
@@ -118,9 +125,7 @@ function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean;
         <div className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{trip.title}</div>
         <div className="text-xs text-muted-foreground mt-2">{fmtDate(trip.start_date)} → {fmtDate(trip.end_date)}</div>
         <div className="flex flex-wrap gap-1 mt-3">
-          {(trip.status === "approved" || trip.status === "confirmed") && <Badge className="bg-gold text-gold-foreground hover:bg-gold/90">Approved</Badge>}
-          {trip.status === "submitted" && <Badge className="bg-amber-500 text-white hover:bg-amber-500/90">Pending approval</Badge>}
-          {(!trip.status || trip.status === "draft") && <Badge variant="outline" className="border-muted-foreground/40 text-muted-foreground">Draft</Badge>}
+          {statusBadge}
           {trip.destinations?.slice(0, 3).map((d: string) => (
             <Badge key={d} variant="outline" className="border-primary/40 text-primary">{d}</Badge>
           ))}
