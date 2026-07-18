@@ -102,6 +102,8 @@ function SettingsPage() {
       />
 
       {isAdmin && <AccountSettingsCard />}
+      {isAdmin && <BrandingCard />}
+
 
 
 
