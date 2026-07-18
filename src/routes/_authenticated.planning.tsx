@@ -499,7 +499,7 @@ function TimelineView({ userId }: { userId?: string }) {
                       {EVENT_TYPES.find((x) => x.value === t)?.label ?? t}
                     </Badge>
                   ))}
-                  <Badge variant="outline" className="text-xs">Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
+                  <Badge variant="outline" className={`text-xs ${ACADEMIC_SUPPORT_COLORS[a.academic_support]}`}>Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                   <Badge
                     variant="outline"
                     className={`text-xs ${isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
