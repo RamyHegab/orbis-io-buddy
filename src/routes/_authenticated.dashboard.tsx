@@ -394,8 +394,7 @@ function Dashboard() {
         <UpcomingChecklist trip={upcomingTrip as any} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-
+      <div>
         <Card className="p-6">
           <h2 className="font-semibold mb-1">Next trip</h2>
           {upcomingTrip ? (
@@ -416,29 +415,6 @@ function Dashboard() {
             <p className="text-sm text-muted-foreground mt-2">
               No upcoming trips. <Link to="/trips" className="text-primary hover:underline">Create one</Link>.
             </p>
-          )}
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="font-semibold mb-3">Today's activities</h2>
-          {todayActivities && todayActivities.length > 0 ? (
-            <ul className="space-y-3">
-              {todayActivities.map((a: any) => (
-                <li key={a.id} className="flex items-start gap-3">
-                  <div className={`mt-1.5 h-2 w-2 rounded-full ${ACTIVITY_DOT_COLORS[a.type]}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{a.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {ACTIVITY_TYPE_LABELS[a.type]}
-                      {a.start_time && ` • ${a.start_time.slice(0, 5)}`}
-                      {a.location && ` • ${a.location}`}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nothing scheduled today.</p>
           )}
         </Card>
       </div>
