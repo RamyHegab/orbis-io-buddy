@@ -27,7 +27,6 @@ const navItems: NavItem[] = [
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
   { to: "/forms", label: "Forms", icon: FileText },
-  { to: "/templates", label: "Form Templates", icon: FileText, requiresCap: "can_manage_templates" },
 ];
 
 export function AppShell() {
