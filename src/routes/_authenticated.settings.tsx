@@ -101,6 +101,10 @@ function SettingsPage() {
         description="Workspace, team, and integration preferences."
       />
 
+      {isAdmin && <AccountSettingsCard />}
+
+
+
       {isAdmin && (
         <Card className="mb-4">
           <CardHeader>
