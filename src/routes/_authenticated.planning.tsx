@@ -243,7 +243,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
               onChange={(v) => setForm({ ...form, event_ids: v, events_cost: v.reduce((a, id) => a + (Number(events.find((x) => x.id === id)?.cost) || 0), 0) })}
               placeholder="Select events" />
             {form.event_ids && form.event_ids.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">Auto-summed events cost: {autoEventsCost.toLocaleString()} (editable below)</p>
+              <p className="text-xs text-muted-foreground mt-1">Auto-summed events cost: {money(autoEventsCost)} (editable below)</p>
             )}
           </div>
           <div>
@@ -285,7 +285,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
           </div>
           <div className="rounded-md bg-muted/40 p-3 flex justify-between text-sm">
             <span className="text-muted-foreground">Total cost</span>
-            <span className="font-semibold">{total.toLocaleString()}</span>
+            <span className="font-semibold">{money(total)}</span>
           </div>
           <div>
             <Label>Status</Label>
