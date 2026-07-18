@@ -29,6 +29,8 @@ import { searchHotels, type HotelSearchResult } from "@/lib/hotels.functions";
 import { Search, Star } from "lucide-react";
 import { submitTripForApproval, withdrawTripSubmission, decideTripApproval } from "@/lib/trip-approvals.functions";
 import { Loader2, AlertTriangle, Clock, Send, Undo2 } from "lucide-react";
+import { formatMoney } from "@/lib/currency";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId")({
   component: TripPlanner,
@@ -356,7 +358,7 @@ function TripPlanner() {
       groups.hotel[cur] = (groups.hotel[cur] ?? 0) + amount;
     }
     const fmt = (m: Record<string, number>) =>
-      Object.entries(m).map(([cur, v]) => `${cur} ${v.toFixed(2)}`).join(" · ") || "—";
+      Object.entries(m).map(([cur, v]) => formatMoney(v, cur)).join(" · ") || "—";
     return {
       travel: fmt(groups.travel),
       hotel: fmt(groups.hotel),

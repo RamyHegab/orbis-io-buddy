@@ -26,6 +26,8 @@ import { fmtDate } from "@/lib/format";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isWithinInterval } from "date-fns";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArchiveCycleDialog } from "@/components/archive-cycle-dialog";
+import { formatMoney } from "@/lib/currency";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
 
 export const Route = createFileRoute("/_authenticated/planning")({
@@ -154,6 +156,8 @@ function MultiSelect({ options, values, onChange, placeholder }: {
 // ---------- Activity dialog ----------
 function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivity | null; onClose: () => void; userId?: string }) {
   const qc = useQueryClient();
+  const settings = useAppSettings();
+  const money = (n: number) => formatMoney(n, settings.currency);
   const [form, setForm] = useState<Partial<PlannedActivity>>(activity ?? {
     title: "", start_date: "", end_date: "", countries: [], event_ids: [], event_types: [],
     traveller_id: userId ?? null, academic_support: "not_required",
@@ -239,7 +243,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
               onChange={(v) => setForm({ ...form, event_ids: v, events_cost: v.reduce((a, id) => a + (Number(events.find((x) => x.id === id)?.cost) || 0), 0) })}
               placeholder="Select events" />
             {form.event_ids && form.event_ids.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">Auto-summed events cost: {autoEventsCost.toLocaleString()} (editable below)</p>
+              <p className="text-xs text-muted-foreground mt-1">Auto-summed events cost: {money(autoEventsCost)} (editable below)</p>
             )}
           </div>
           <div>
@@ -281,7 +285,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
           </div>
           <div className="rounded-md bg-muted/40 p-3 flex justify-between text-sm">
             <span className="text-muted-foreground">Total cost</span>
-            <span className="font-semibold">{total.toLocaleString()}</span>
+            <span className="font-semibold">{money(total)}</span>
           </div>
           <div>
             <Label>Status</Label>
@@ -308,6 +312,8 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
 function TimelineView({ userId }: { userId?: string }) {
   const qc = useQueryClient();
   const nav = useNavigate();
+  const settings = useAppSettings();
+  const money = (n: number) => formatMoney(n, settings.currency);
   const [editing, setEditing] = useState<PlannedActivity | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -447,7 +453,7 @@ function TimelineView({ userId }: { userId?: string }) {
           { label: "Countries", value: stats.countries.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
-          { label: "Total Budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+          { label: "Total Budget", value: money(stats.budget),
             cls: "bg-gold border-gold",
             accentLabel: "text-primary/80", accentValue: "text-primary" },
         ].map((k) => (
@@ -476,7 +482,7 @@ function TimelineView({ userId }: { userId?: string }) {
                 <div className="grid grid-cols-3 gap-1 text-[11px]">
                   <div><div className="text-muted-foreground">Visits</div><div className="font-semibold">{c.visits}</div></div>
                   <div><div className="text-muted-foreground">Events</div><div className="font-semibold">{c.events}</div></div>
-                  <div><div className="text-muted-foreground">Cost</div><div className="font-semibold">{c.cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div></div>
+                  <div><div className="text-muted-foreground">Cost</div><div className="font-semibold">{money(c.cost)}</div></div>
                 </div>
               </Card>
             );
@@ -549,11 +555,11 @@ function TimelineView({ userId }: { userId?: string }) {
                   <Badge variant="outline" className={`text-xs ${ACADEMIC_SUPPORT_COLORS[a.academic_support]}`}>Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
-                  <div><span className="text-muted-foreground">Events:</span> {Number(a.events_cost || 0).toLocaleString()}</div>
-                  <div><span className="text-muted-foreground">Travel:</span> {Number(a.travel_cost || 0).toLocaleString()}</div>
-                  <div><span className="text-muted-foreground">Hotel:</span> {Number(a.hotel_cost || 0).toLocaleString()}</div>
-                  <div><span className="text-muted-foreground">Subsistence:</span> {Number(a.subsistence_cost || 0).toLocaleString()}</div>
-                  <div className="font-semibold"><span className="text-muted-foreground font-normal">Total:</span> {total.toLocaleString()}</div>
+                  <div><span className="text-muted-foreground">Events:</span> {money(Number(a.events_cost || 0))}</div>
+                  <div><span className="text-muted-foreground">Travel:</span> {money(Number(a.travel_cost || 0))}</div>
+                  <div><span className="text-muted-foreground">Hotel:</span> {money(Number(a.hotel_cost || 0))}</div>
+                  <div><span className="text-muted-foreground">Subsistence:</span> {money(Number(a.subsistence_cost || 0))}</div>
+                  <div className="font-semibold"><span className="text-muted-foreground font-normal">Total:</span> {money(total)}</div>
                 </div>
                 {a.objectives && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{a.objectives}</p>}
                 <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>

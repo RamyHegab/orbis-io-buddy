@@ -326,6 +326,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          created_at: string
+          currency: string
+          cycle_end_month: number
+          cycle_end_year: number
+          cycle_start_month: number
+          cycle_start_year: number
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          cycle_end_month?: number
+          cycle_end_year?: number
+          cycle_start_month?: number
+          cycle_start_year?: number
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          cycle_end_month?: number
+          cycle_end_year?: number
+          cycle_start_month?: number
+          cycle_start_year?: number
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cycle_settings: {
         Row: {
           created_at: string
