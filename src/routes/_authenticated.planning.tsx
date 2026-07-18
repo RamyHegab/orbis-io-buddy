@@ -61,6 +61,11 @@ const STATUS_COLORS: Record<string, string> = {
 const ACADEMIC_SUPPORT_LABEL: Record<PlannedActivity["academic_support"], string> = {
   required: "Required", preferred: "Preferred", not_required: "Not Required",
 };
+const ACADEMIC_SUPPORT_COLORS: Record<PlannedActivity["academic_support"], string> = {
+  required: "bg-green-600 text-white border-green-600",
+  preferred: "bg-orange-500 text-white border-orange-500",
+  not_required: "bg-red-600 text-white border-red-600",
+};
 
 const sum = (...xs: (number | null | undefined)[]) => xs.reduce<number>((a, x) => a + (Number(x) || 0), 0);
 
@@ -494,7 +499,7 @@ function TimelineView({ userId }: { userId?: string }) {
                       {EVENT_TYPES.find((x) => x.value === t)?.label ?? t}
                     </Badge>
                   ))}
-                  <Badge variant="outline" className="text-xs">Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
+                  <Badge variant="outline" className={`text-xs ${ACADEMIC_SUPPORT_COLORS[a.academic_support]}`}>Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                   <Badge
                     variant="outline"
                     className={`text-xs ${isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
