@@ -83,12 +83,13 @@ function PublicFormFill() {
 
     const payload = {
       instance_id: instance.id,
-      template_id: instance.template_id,
-      activity_id: instance.activity_id,
+      template_id: instance.template_id ?? "",
+      activity_id: instance.activity_id ?? "",
       data: values,
       submitter_name: submitterName || null,
       submitter_phone: submitterPhone,
     };
+
 
     try {
       if (!navigator.onLine) throw new Error("offline");
