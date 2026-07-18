@@ -1,4 +1,5 @@
 import { foregroundFor } from "@/components/branding-provider";
+import { cn } from "@/lib/utils";
 import { LayoutDashboard, Users, MapPin, Bell, Search, Globe2, LogOut } from "lucide-react";
 
 type Mode = "default" | "from_logo" | "custom";
