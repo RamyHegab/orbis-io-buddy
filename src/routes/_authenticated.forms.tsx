@@ -152,6 +152,45 @@ function FormsPage() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
+  const activityTypes = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of templates ?? []) if (t.activity_type) s.add(t.activity_type);
+    return Array.from(s).sort();
+  }, [templates]);
+
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (text: string) => q === "" || text.toLowerCase().includes(q);
+
+  const filteredTemplates = useMemo(() => {
+    let list = (templates ?? []).filter((t: any) => {
+      if (!matchesSearch(`${t.name ?? ""} ${t.description ?? ""}`)) return false;
+      if (activityTypeFilter !== "all" && t.activity_type !== activityTypeFilter) return false;
+      return true;
+    });
+    list = [...list];
+    if (sort === "newest") list.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+    if (sort === "oldest") list.sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime());
+    if (sort === "name_asc") list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+    if (sort === "name_desc") list.sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""));
+    return list;
+  }, [templates, search, sort, activityTypeFilter]);
+
+  const filteredInstances = useMemo(() => {
+    let list = (instances ?? []).filter((inst: any) => {
+      const template = templates?.find((t: any) => t.id === inst.template_id);
+      const hay = `${inst.name ?? ""} ${template?.name ?? ""} ${template?.activity_type ?? ""} ${inst.country_code ?? ""}`;
+      return matchesSearch(hay);
+    });
+    list = [...list];
+    if (sort === "newest") list.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+    if (sort === "oldest") list.sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime());
+    if (sort === "name_asc") list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+    if (sort === "name_desc") list.sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""));
+    return list;
+  }, [instances, templates, search, sort]);
+
+  const filtersActive = search !== "" || sort !== "newest" || activityTypeFilter !== "all";
+
   return (
     <PageContainer>
       <PageHeader
