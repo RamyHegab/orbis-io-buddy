@@ -79,8 +79,8 @@ export function AppShell() {
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors border-l-2",
                     active
-                      ? "border-gold bg-sidebar-accent text-gold"
-                      : "border-transparent text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-gold",
+                      ? "border-sidebar-accent-foreground bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "border-transparent text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
