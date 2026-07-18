@@ -47,8 +47,6 @@ function bucketOf(t: { start_date: string; end_date: string; status: string }): 
 }
 
 type ChecklistKey =
-  | "save_as_draft"
-  | "confirm_itinerary"
   | "itinerary_approved"
   | "freight_required"
   | "parcel_sent"
@@ -57,15 +55,14 @@ type ChecklistKey =
   | "risk_assessment";
 
 const CHECKLIST_ITEMS: { key: ChecklistKey; label: string; hint?: string }[] = [
-  { key: "save_as_draft", label: "Save as draft", hint: "Keep working on other steps before submitting for approval" },
-  { key: "confirm_itinerary", label: "Confirm itinerary" },
-  { key: "itinerary_approved", label: "Itinerary approved", hint: "Line manager approves from their account" },
-  { key: "freight_required", label: "Freight required?", hint: "System will remind in notifications if Yes" },
+  { key: "itinerary_approved", label: "Itinerary approved", hint: "Auto-ticked when your line manager approves" },
+  { key: "freight_required", label: "Freight required?" },
   { key: "parcel_sent", label: "Parcel sent" },
-  { key: "book_appointment", label: "Book appointment", hint: "Will prompt to email itinerary contacts" },
-  { key: "book_flights_hotels", label: "Book flights and hotels" },
-  { key: "risk_assessment", label: "Risk assessment review" },
+  { key: "book_appointment", label: "Appointments booked" },
+  { key: "book_flights_hotels", label: "Hotels and flights booked" },
+  { key: "risk_assessment", label: "Review risk assessment" },
 ];
+
 
 function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean; onSelect?: () => void }) {
   const qc = useQueryClient();
