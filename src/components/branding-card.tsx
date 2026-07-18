@@ -10,6 +10,7 @@ import { extractPaletteFromImage } from "@/components/branding-provider";
 import { toast } from "sonner";
 import { Upload, Trash2, Crop } from "lucide-react";
 import { LogoEditorDialog } from "@/components/logo-editor-dialog";
+import { BrandingPreview } from "@/components/branding-preview";
 
 type ThemeMode = "default" | "from_logo" | "custom";
 
