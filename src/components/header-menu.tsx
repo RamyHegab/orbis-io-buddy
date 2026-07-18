@@ -68,10 +68,10 @@ export function HeaderMenu() {
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <Button asChild variant="ghost" size="icon" className="relative" aria-label="Notifications">
           <Link to="/inbox">
-            <Bell className="h-5 w-5" />
+            <Bell className="h-5 w-5 text-primary" />
             {pendingCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 inline-flex min-w-[1.1rem] h-[1.1rem] items-center justify-center rounded-full bg-gold px-1 text-[10px] font-semibold text-gold-foreground">
                 {pendingCount > 99 ? "99+" : pendingCount}
@@ -79,6 +79,14 @@ export function HeaderMenu() {
             )}
           </Link>
         </Button>
+        <Button asChild variant="ghost" size="icon" aria-label="Settings">
+          <Link to="/settings"><SettingsIcon className="h-5 w-5 text-primary" /></Link>
+        </Button>
+        {caps.can_manage_users && (
+          <Button asChild variant="ghost" size="icon" aria-label="Users">
+            <Link to="/users"><UserCog className="h-5 w-5 text-primary" /></Link>
+          </Button>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
