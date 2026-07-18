@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +31,13 @@ import { formatMoney } from "@/lib/currency";
 import { useAppSettings } from "@/hooks/use-app-settings";
 
 
+const planningSearchSchema = z.object({
+  tab: z.enum(["timeline", "calendar", "events", "archive"]).optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/planning")({
   head: () => ({ meta: [{ title: "Planning — Orbis CRM" }] }),
+  validateSearch: planningSearchSchema,
   component: PlanningPage,
 });
 
@@ -95,7 +101,8 @@ function PlanningPage() {
   const { caps } = useCapabilities();
   const { isAdmin } = useRole();
   const canManageEvents = caps.can_manage_templates;
-  const [tab, setTab] = useState("timeline");
+  const search = useSearch({ from: "/_authenticated/planning" });
+  const [tab, setTab] = useState(search.tab || "timeline");
 
   return (
     <PageContainer>

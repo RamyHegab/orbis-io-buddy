@@ -429,10 +429,17 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <HistoryIcon className="h-3.5 w-3.5" />
-            Looking for older trips? See <a href="/planning?tab=archive" className="underline">Previous Cycles Activities</a>.
-          </div>
+          <Card className="p-5 border-2 border-primary/80 bg-card">
+            <Link to="/planning" search={{ tab: "archive" }} className="flex items-center gap-3 text-primary hover:text-gold transition-colors">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-gold shrink-0">
+                <HistoryIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-base">Looking for older trips?</div>
+                <div className="text-sm text-muted-foreground">View Previous Cycles Activities</div>
+              </div>
+            </Link>
+          </Card>
 
 
 
