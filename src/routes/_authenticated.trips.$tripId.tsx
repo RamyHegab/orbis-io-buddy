@@ -356,7 +356,7 @@ function TripPlanner() {
       groups.hotel[cur] = (groups.hotel[cur] ?? 0) + amount;
     }
     const fmt = (m: Record<string, number>) =>
-      Object.entries(m).map(([cur, v]) => `${cur} ${v.toFixed(2)}`).join(" · ") || "—";
+      Object.entries(m).map(([cur, v]) => formatMoney(v, cur)).join(" · ") || "—";
     return {
       travel: fmt(groups.travel),
       hotel: fmt(groups.hotel),
