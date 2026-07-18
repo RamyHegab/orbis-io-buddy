@@ -633,7 +633,7 @@ function CalendarView({ userId }: { userId?: string }) {
               <div className="space-y-0.5">
                 {dayActs.slice(0, 3).map((a) => (
                   <button key={a.id} onClick={() => setEditing(a)}
-                    className={`block w-full text-left truncate rounded px-1 py-0.5 text-white ${STATUS_COLORS[a.status]}`}>
+                    className={`block w-full text-left truncate rounded px-1 py-0.5 ${STATUS_COLORS[a.status]}`}>
                     {a.title}
                   </button>
                 ))}
