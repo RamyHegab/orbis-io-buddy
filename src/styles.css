@@ -99,6 +99,11 @@
   --gold: oklch(0.78 0.13 85);
   --gold-foreground: oklch(0.22 0.06 260);
 
+  /* Academic support colors */
+  --academic-required: #14b8a6;
+  --academic-preferred: #f59e0b;
+  --academic-not-required: #a8a29e;
+
   /* Activity colors */
   --activity-travel: oklch(0.65 0.14 250);    /* blue */
   --activity-agent: oklch(0.78 0.13 85);      /* gold */
