@@ -27,24 +27,34 @@ export function ArchiveCycleDialog() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  // Seed defaults from cycle_settings if present
+  // Seed defaults from app_settings (admin-managed recruitment cycle)
   const { data: cycle } = useQuery({
-    queryKey: ["cycle_settings_any"],
+    queryKey: ["app_settings"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("cycle_settings")
+        .from("app_settings")
         .select("cycle_start_month, cycle_start_year, cycle_end_month, cycle_end_year")
-        .limit(1)
+        .eq("id", 1)
         .maybeSingle();
       return data;
     },
   });
 
   const today = new Date();
-  const [startMonth, setStartMonth] = useState<number>(cycle?.cycle_start_month ?? 9);
-  const [startYear, setStartYear] = useState<number>(cycle?.cycle_start_year ?? today.getFullYear() - 1);
-  const [endMonth, setEndMonth] = useState<number>(cycle?.cycle_end_month ?? 8);
-  const [endYear, setEndYear] = useState<number>(cycle?.cycle_end_year ?? today.getFullYear());
+  const [startMonth, setStartMonth] = useState<number>(9);
+  const [startYear, setStartYear] = useState<number>(today.getFullYear() - 1);
+  const [endMonth, setEndMonth] = useState<number>(8);
+  const [endYear, setEndYear] = useState<number>(today.getFullYear());
+
+  // Once settings load, seed the inputs
+  const seededRef = useState({ v: false })[0];
+  if (cycle && !seededRef.v) {
+    seededRef.v = true;
+    setStartMonth(cycle.cycle_start_month);
+    setStartYear(cycle.cycle_start_year);
+    setEndMonth(cycle.cycle_end_month);
+    setEndYear(cycle.cycle_end_year);
+  }
 
   const cycleLabel = `${startYear}-${endYear}`;
   const startDate = isoDate(startYear, startMonth, 1);
