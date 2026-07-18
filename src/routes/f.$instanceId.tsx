@@ -58,24 +58,20 @@ function PublicFormFill() {
   const { data: instance, isLoading } = useQuery({
     queryKey: ["form-instance", instanceId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_form_instance", { p_id: instanceId });
-      if (error || !data || data.length === 0) return null;
-      const row = data[0] as any;
-      return {
-        id: row.id,
-        name: row.name,
-        event_date: row.event_date,
-        country_code: row.country_code,
-        template_id: row.template_id,
-        activity_id: row.activity_id,
-        template: {
-          name: row.template_name,
-          description: row.template_description,
-          fields: row.template_fields,
-        },
+      const res = await fetch(`/api/public/form-instance/${instanceId}`);
+      if (!res.ok) return null;
+      return (await res.json()) as {
+        id: string;
+        name: string;
+        event_date: string | null;
+        country_code: string | null;
+        template_id: string | null;
+        activity_id: string | null;
+        template: { name: string; description: string | null; fields: unknown } | null;
       };
     },
   });
+
 
   async function submit() {
     if (!instance) return;
@@ -87,12 +83,13 @@ function PublicFormFill() {
 
     const payload = {
       instance_id: instance.id,
-      template_id: instance.template_id,
-      activity_id: instance.activity_id,
+      template_id: instance.template_id ?? "",
+      activity_id: instance.activity_id ?? "",
       data: values,
       submitter_name: submitterName || null,
       submitter_phone: submitterPhone,
     };
+
 
     try {
       if (!navigator.onLine) throw new Error("offline");
