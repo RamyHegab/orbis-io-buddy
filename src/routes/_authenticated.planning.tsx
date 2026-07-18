@@ -336,7 +336,12 @@ function TimelineView({ userId }: { userId?: string }) {
   const filtered = activities.filter((a) => statusFilter === "all" || a.status === statusFilter);
 
   const stats = useMemo(() => {
-    const eventById = new Map(eventsCatalog.map((e) => [e.id, e]));
+    // Exclude cancelled events from all tile aggregates
+    const activeEvents = eventsCatalog.filter((e) => e.status !== "canceled" && e.status !== "not_attending");
+    const activeEventIds = new Set(activeEvents.map((e) => e.id));
+    const eventById = new Map(activeEvents.map((e) => [e.id, e]));
+    // Exclude cancelled trips from all tile aggregates
+    const activeActivities = activities.filter((a) => a.status !== "canceled");
     const perCountry = new Map<string, { visits: number; events: number; cost: number }>();
     const bump = (c: string) => {
       if (!perCountry.has(c)) perCountry.set(c, { visits: 0, events: 0, cost: 0 });
@@ -344,7 +349,7 @@ function TimelineView({ userId }: { userId?: string }) {
     };
     const uniqueEventIds = new Set<string>();
     let totalBudget = 0;
-    for (const a of activities) {
+    for (const a of activeActivities) {
       const countries = a.countries ?? [];
       const n = countries.length || 1;
       const other = sum(a.travel_cost, a.hotel_cost, a.subsistence_cost);
@@ -353,6 +358,7 @@ function TimelineView({ userId }: { userId?: string }) {
       const perCountryEventCost = new Map<string, number>();
       const perCountryEventCount = new Map<string, number>();
       for (const eid of a.event_ids ?? []) {
+        if (!activeEventIds.has(eid)) continue;
         uniqueEventIds.add(eid);
         const ev = eventById.get(eid);
         const ecountries = ev?.countries?.length ? ev.countries : countries;
@@ -362,8 +368,8 @@ function TimelineView({ userId }: { userId?: string }) {
           perCountryEventCount.set(c, (perCountryEventCount.get(c) || 0) + 1);
         }
       }
-      // If activity has its own events_cost but no linked events, split across countries
-      const hasLinkedEvents = (a.event_ids ?? []).length > 0;
+      // If activity has its own events_cost but no linked (active) events, split across countries
+      const hasLinkedEvents = (a.event_ids ?? []).some((id) => activeEventIds.has(id));
       const flatEventsCost = hasLinkedEvents ? 0 : (Number(a.events_cost) || 0);
       const flatEventsPer = flatEventsCost / n;
 
@@ -381,7 +387,7 @@ function TimelineView({ userId }: { userId?: string }) {
       .map(([country, v]) => ({ country, ...v }))
       .sort((a, b) => b.cost - a.cost);
     return {
-      trips: activities.length,
+      trips: activeActivities.length,
       events: uniqueEventIds.size,
       countries: perCountry.size,
       budget: totalBudget,
