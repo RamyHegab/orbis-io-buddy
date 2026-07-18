@@ -716,7 +716,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
   const { data: events = [] } = useQuery<EventCatalog[]>({
     queryKey: ["events_catalog"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("*").order("start_date");
+      const { data } = await supabase.from("events_catalog").select("*").eq("archived", false).order("start_date");
       return (data ?? []) as EventCatalog[];
     },
   });
