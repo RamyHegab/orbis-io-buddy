@@ -192,7 +192,7 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   );
 
   return (
-    <Card className="p-0 sticky top-4 border-2 border-primary/80 overflow-hidden rounded-md">
+    <Card className="p-0 border-2 border-primary/80 overflow-hidden rounded-md">
       <div className="bg-primary text-primary-foreground px-5 py-3">
         <div className="text-[10px] font-bold uppercase tracking-widest text-gold">Pre-trip checklist</div>
         <div className="font-semibold truncate mt-0.5">{trip.title}</div>
