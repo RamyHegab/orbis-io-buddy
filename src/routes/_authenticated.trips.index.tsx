@@ -451,7 +451,9 @@ function TripsPage() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         }
+
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
