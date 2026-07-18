@@ -501,7 +501,6 @@ function TimelineView({ userId }: { userId?: string }) {
                       {EVENT_TYPES.find((x) => x.value === t)?.label ?? t}
                     </Badge>
                   ))}
-                  <Badge variant="outline" className={`text-xs ${ACADEMIC_SUPPORT_COLORS[a.academic_support]}`}>Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                   <Badge
                     variant="outline"
                     className={`text-xs ${isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
@@ -509,6 +508,9 @@ function TimelineView({ userId }: { userId?: string }) {
                   >
                     Traveller: {travellerName}{isDelegated ? " (delegated)" : ""}
                   </Badge>
+                </div>
+                <div className="mt-2">
+                  <Badge variant="outline" className={`text-xs ${ACADEMIC_SUPPORT_COLORS[a.academic_support]}`}>Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
                   <div><span className="text-muted-foreground">Events:</span> {Number(a.events_cost || 0).toLocaleString()}</div>
