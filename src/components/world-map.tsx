@@ -103,8 +103,8 @@ export function WorldMap({ data }: Props) {
                   onMouseLeave={() => setTooltip(null)}
                   style={{
                     default: {
-                      fill: has ? "url(#activeCountry)" : "color-mix(in oklch, var(--primary) 20%, transparent)",
-                      stroke: "color-mix(in oklch, var(--primary) 40%, transparent)",
+                      fill: has ? "url(#activeCountry)" : "color-mix(in oklch, var(--primary) 55%, white)",
+                      stroke: "color-mix(in oklch, var(--primary) 70%, white)",
                       strokeWidth: 0.5,
                       outline: "none",
                       transition: "all 0.2s ease",
