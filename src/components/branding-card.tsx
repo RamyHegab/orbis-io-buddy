@@ -226,6 +226,55 @@ export function BrandingCard() {
           </RadioGroup>
         </div>
 
+        {suggested && mode !== "default" && (
+          <div className="rounded-md border p-3 bg-muted/30">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium">Suggested from your logo</div>
+              <Button size="sm" variant="outline" onClick={() => {
+                setPrimary(accent);
+                setAccent(primary);
+              }}>
+                <ArrowLeftRight className="h-3.5 w-3.5 mr-1" /> Swap Primary / Accent
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[suggested.a, suggested.b].map((hex) => {
+                const isPrimary = hex.toLowerCase() === primary.toLowerCase();
+                const isAccent = hex.toLowerCase() === accent.toLowerCase();
+                return (
+                  <div key={hex} className="flex items-center gap-2 rounded border bg-background p-2">
+                    <div className="h-8 w-8 rounded border shrink-0" style={{ background: hex }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-mono text-xs">{hex.toUpperCase()}</div>
+                      <div className="flex gap-1 mt-1">
+                        <Button
+                          size="sm"
+                          variant={isPrimary ? "default" : "outline"}
+                          className="h-6 px-2 text-[10px]"
+                          onClick={() => { if (accent.toLowerCase() === hex.toLowerCase()) setAccent(primary); setPrimary(hex); }}
+                        >
+                          Primary
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={isAccent ? "default" : "outline"}
+                          className="h-6 px-2 text-[10px]"
+                          onClick={() => { if (primary.toLowerCase() === hex.toLowerCase()) setPrimary(accent); setAccent(hex); }}
+                        >
+                          Accent
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Primary replaces navy across the app. Accent replaces gold highlights.
+            </p>
+          </div>
+        )}
+
         {mode !== "default" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <ColourPicker label="Primary" value={primary} onChange={setPrimary} />
@@ -242,11 +291,14 @@ export function BrandingCard() {
           sidebar={sidebar}
         />
 
-
-
         <div className="flex flex-wrap justify-between gap-2">
-          <Button variant="ghost" onClick={() => reset.mutate()} disabled={reset.isPending}>
-            Reset to default
+          <Button
+            variant="outline"
+            onClick={() => reset.mutate()}
+            disabled={reset.isPending}
+            className="border-2 border-gold text-gold hover:bg-gold/10 hover:text-gold"
+          >
+            <RotateCcw className="h-4 w-4 mr-1" /> Reset to default
           </Button>
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             {save.isPending ? "Saving…" : "Save branding"}
