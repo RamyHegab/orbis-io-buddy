@@ -164,10 +164,11 @@ export function BrandingCard() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) {
-                    try { await uploadLogo(f); } catch (err: any) { toast.error(err.message); }
+                    setEditorFile(f);
+                    setEditorOpen(true);
                   }
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
@@ -176,9 +177,22 @@ export function BrandingCard() {
                 <Upload className="h-4 w-4 mr-1" /> Upload
               </Button>
               {logoUrl && (
-                <Button variant="ghost" size="sm" onClick={removeLogo}>
-                  <Trash2 className="h-4 w-4 mr-1" /> Remove
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    try {
+                      const r = await fetch(logoUrl);
+                      const b = await r.blob();
+                      const f = new File([b], "current-logo.png", { type: b.type || "image/png" });
+                      setEditorFile(f);
+                      setEditorOpen(true);
+                    } catch { toast.error("Couldn't load current logo"); }
+                  }}>
+                    <Crop className="h-4 w-4 mr-1" /> Re-crop
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={removeLogo}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Remove
+                  </Button>
+                </>
               )}
             </div>
           </div>
