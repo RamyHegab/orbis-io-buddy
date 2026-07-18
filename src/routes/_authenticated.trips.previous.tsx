@@ -31,7 +31,7 @@ function PreviousTripsPage() {
   const groups = (() => {
     const map = new Map<string, any[]>();
     for (const t of trips ?? []) {
-      const key = t.archived_cycle_label || (t.start_date ? new Date(t.start_date).getFullYear().toString() : "Unknown");
+      const key = t.archived_cycle || (t.start_date ? new Date(t.start_date).getFullYear().toString() : "Unknown");
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(t);
     }

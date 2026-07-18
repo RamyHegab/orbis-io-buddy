@@ -32,6 +32,7 @@ import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenti
 import { Route as PublicIntakeTypeRouteImport } from './routes/public.intake.$type'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
+import { Route as AuthenticatedTripsPreviousRouteImport } from './routes/_authenticated.trips.previous'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated.schools.$schoolId'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated.agents.$agentId'
@@ -160,6 +161,12 @@ const FormsActivityIdTemplateIdRoute =
     path: '/forms/$activityId/$templateId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedTripsPreviousRoute =
+  AuthenticatedTripsPreviousRouteImport.update({
+    id: '/previous',
+    path: '/previous',
+    getParentRoute: () => AuthenticatedTripsRoute,
+  } as any)
 const AuthenticatedTripsTripIdRoute =
   AuthenticatedTripsTripIdRouteImport.update({
     id: '/$tripId',
@@ -241,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
+  '/trips/previous': typeof AuthenticatedTripsPreviousRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -273,6 +281,7 @@ export interface FileRoutesByTo {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
+  '/trips/previous': typeof AuthenticatedTripsPreviousRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -309,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
+  '/_authenticated/trips/previous': typeof AuthenticatedTripsPreviousRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
+    | '/trips/previous'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
+    | '/trips/previous'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -412,6 +424,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/trips/$tripId'
+    | '/_authenticated/trips/previous'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -608,6 +621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormsActivityIdTemplateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/trips/previous': {
+      id: '/_authenticated/trips/previous'
+      path: '/previous'
+      fullPath: '/trips/previous'
+      preLoaderRoute: typeof AuthenticatedTripsPreviousRouteImport
+      parentRoute: typeof AuthenticatedTripsRoute
+    }
     '/_authenticated/trips/$tripId': {
       id: '/_authenticated/trips/$tripId'
       path: '/$tripId'
@@ -713,11 +733,13 @@ const AuthenticatedTripsTripIdRouteWithChildren =
 
 interface AuthenticatedTripsRouteChildren {
   AuthenticatedTripsTripIdRoute: typeof AuthenticatedTripsTripIdRouteWithChildren
+  AuthenticatedTripsPreviousRoute: typeof AuthenticatedTripsPreviousRoute
   AuthenticatedTripsIndexRoute: typeof AuthenticatedTripsIndexRoute
 }
 
 const AuthenticatedTripsRouteChildren: AuthenticatedTripsRouteChildren = {
   AuthenticatedTripsTripIdRoute: AuthenticatedTripsTripIdRouteWithChildren,
+  AuthenticatedTripsPreviousRoute: AuthenticatedTripsPreviousRoute,
   AuthenticatedTripsIndexRoute: AuthenticatedTripsIndexRoute,
 }
 
