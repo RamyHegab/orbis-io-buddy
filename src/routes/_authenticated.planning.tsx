@@ -97,7 +97,7 @@ function PlanningPage() {
       <PageHeader
         title="Yearly Activities Timeline"
         description="Plan your recruitment cycle: activities, events, costs and travellers."
-        actions={<NotionImportDialog />}
+      />
       />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
