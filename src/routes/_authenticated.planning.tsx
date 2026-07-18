@@ -302,6 +302,15 @@ function TimelineView({ userId }: { userId?: string }) {
     },
   });
 
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles_display"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name, email");
+      return (data ?? []) as { id: string; full_name: string | null; email: string | null }[];
+    },
+  });
+  const profileById = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
+
   const filtered = activities.filter((a) => statusFilter === "all" || a.status === statusFilter);
 
   const stats = useMemo(() => {
