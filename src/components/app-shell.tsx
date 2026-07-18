@@ -89,16 +89,7 @@ export function AppShell() {
               );
             })}
         </nav>
-        <div className="mt-auto border-t border-sidebar-border px-4 py-4 space-y-3">
-          {branding?.logo_url ? (
-            <div className="flex items-center justify-center">
-              <img
-                src={branding.logo_url}
-                alt="Organisation logo"
-                className="max-h-16 w-auto max-w-full object-contain rounded-md bg-white/90 p-2"
-              />
-            </div>
-          ) : null}
+        <div className="border-t border-sidebar-border px-4 py-3">
           <button
             type="button"
             onClick={async () => {
