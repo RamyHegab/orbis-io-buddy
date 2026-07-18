@@ -10,6 +10,7 @@ import { extractPaletteFromImage } from "@/components/branding-provider";
 import { toast } from "sonner";
 import { Upload, Trash2, Crop } from "lucide-react";
 import { LogoEditorDialog } from "@/components/logo-editor-dialog";
+import { BrandingPreview } from "@/components/branding-preview";
 
 type ThemeMode = "default" | "from_logo" | "custom";
 
@@ -231,6 +232,16 @@ export function BrandingCard() {
             {mode === "custom" && <ColourPicker label="Sidebar" value={sidebar} onChange={setSidebar} />}
           </div>
         )}
+
+        <BrandingPreview
+          logoUrl={logoUrl}
+          mode={mode}
+          primary={primary}
+          accent={accent}
+          sidebar={sidebar}
+        />
+
+
 
         <div className="flex flex-wrap justify-between gap-2">
           <Button variant="ghost" onClick={() => reset.mutate()} disabled={reset.isPending}>
