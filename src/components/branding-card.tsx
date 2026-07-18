@@ -244,6 +244,14 @@ export function BrandingCard() {
           Changes apply immediately after saving. Use “Reset to default” to revert at any time.
         </p>
       </CardContent>
+      <LogoEditorDialog
+        file={editorFile}
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        onApply={async (blob, filename) => {
+          try { await uploadLogo(blob, filename); } catch (err: any) { toast.error(err.message); }
+        }}
+      />
     </Card>
   );
 }
