@@ -73,7 +73,7 @@ export function WorldMap({ data }: Props) {
         projectionConfig={{ scale: 115, center: [10, 38] }}
         width={980}
         height={520}
-        style={{ width: "100%", height: "100%", display: "block" }}
+        style={{ width: "100%", height: "100%", display: "block", transform: "scale(1.1)", transformOrigin: "center center" }}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
