@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
-import { BrandingProvider, useBranding } from "@/components/branding-provider";
+import { BrandingProvider } from "@/components/branding-provider";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -38,7 +38,6 @@ export function AppShell() {
   const { caps } = useCapabilities();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const branding = useBranding();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -57,9 +56,9 @@ export function AppShell() {
    <BrandingProvider>
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-gold-foreground shadow-sm">
-            <Globe2 className="h-5 w-5" />
+        <div className="flex items-center gap-3 px-6 py-8 border-b border-sidebar-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gold text-gold-foreground shadow-sm">
+            <Globe2 className="h-6 w-6" />
           </div>
           <div>
             <div className="font-semibold tracking-tight text-gold">Orbis CRM</div>
@@ -89,16 +88,7 @@ export function AppShell() {
               );
             })}
         </nav>
-        <div className="mt-auto border-t border-sidebar-border px-4 py-4 space-y-3">
-          {branding?.logo_url ? (
-            <div className="flex items-center justify-center">
-              <img
-                src={branding.logo_url}
-                alt="Organisation logo"
-                className="max-h-16 w-auto max-w-full object-contain rounded-md bg-white/90 p-2"
-              />
-            </div>
-          ) : null}
+        <div className="border-t border-sidebar-border px-4 py-3">
           <button
             type="button"
             onClick={async () => {
