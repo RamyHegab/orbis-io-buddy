@@ -294,41 +294,47 @@ function FormsPage() {
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-muted-foreground">Templates</h2>
         {templates && templates.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {templates.map((t) => (
-              <Card key={t.id} className="p-4 flex flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{t.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+          filteredTemplates.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredTemplates.map((t) => (
+                <Card key={t.id} className="p-4 flex flex-col">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{t.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                      </div>
                     </div>
+                    {canManageTemplates && (
+                      <button
+                        onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
+                        className="text-muted-foreground hover:text-destructive"
+                        aria-label="Delete template"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                  {canManageTemplates && (
-                    <button
-                      onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label="Delete template"
+                  {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
+                  <div className="mt-auto pt-3">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type });
+                        setActivityId("");
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
-                <div className="mt-auto pt-3">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type });
-                      setActivityId("");
-                    }}
-                  >
-                    <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
+                      <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              No templates match your search or filters.
+            </Card>
+          )
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">
             No templates yet.{" "}
