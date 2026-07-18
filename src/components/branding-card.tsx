@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { extractPaletteFromImage } from "@/components/branding-provider";
 import { toast } from "sonner";
-import { Upload, Trash2 } from "lucide-react";
+import { Upload, Trash2, Crop } from "lucide-react";
+import { LogoEditorDialog } from "@/components/logo-editor-dialog";
 
 type ThemeMode = "default" | "from_logo" | "custom";
 
@@ -45,13 +46,19 @@ export function BrandingCard() {
     if (data.theme_sidebar) setSidebar(data.theme_sidebar);
   }, [data]);
 
-  const uploadLogo = async (file: File) => {
-    const ext = file.name.split(".").pop() || "png";
+  const [editorFile, setEditorFile] = useState<File | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  const uploadLogo = async (file: File | Blob, suggestedName?: string) => {
+    const nameFromFile = (file as File).name;
+    const baseName = suggestedName ?? nameFromFile ?? "logo.png";
+    const ext = baseName.split(".").pop() || "png";
     const path = `logo-${Date.now()}.${ext}`;
+    const contentType = (file as any).type || "image/png";
     const { error } = await supabase.storage.from("branding").upload(path, file, {
       cacheControl: "3600",
       upsert: true,
-      contentType: file.type,
+      contentType,
     });
     if (error) throw error;
     // long-lived signed URL (10 years)
@@ -157,10 +164,11 @@ export function BrandingCard() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) {
-                    try { await uploadLogo(f); } catch (err: any) { toast.error(err.message); }
+                    setEditorFile(f);
+                    setEditorOpen(true);
                   }
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
@@ -169,9 +177,22 @@ export function BrandingCard() {
                 <Upload className="h-4 w-4 mr-1" /> Upload
               </Button>
               {logoUrl && (
-                <Button variant="ghost" size="sm" onClick={removeLogo}>
-                  <Trash2 className="h-4 w-4 mr-1" /> Remove
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    try {
+                      const r = await fetch(logoUrl);
+                      const b = await r.blob();
+                      const f = new File([b], "current-logo.png", { type: b.type || "image/png" });
+                      setEditorFile(f);
+                      setEditorOpen(true);
+                    } catch { toast.error("Couldn't load current logo"); }
+                  }}>
+                    <Crop className="h-4 w-4 mr-1" /> Re-crop
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={removeLogo}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Remove
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -223,6 +244,14 @@ export function BrandingCard() {
           Changes apply immediately after saving. Use “Reset to default” to revert at any time.
         </p>
       </CardContent>
+      <LogoEditorDialog
+        file={editorFile}
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        onApply={async (blob, filename) => {
+          try { await uploadLogo(blob, filename); } catch (err: any) { toast.error(err.message); }
+        }}
+      />
     </Card>
   );
 }
