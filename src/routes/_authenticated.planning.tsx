@@ -490,7 +490,11 @@ function TimelineView({ userId }: { userId?: string }) {
             ? "bg-gold/10 border-gold/40"
             : "";
         return (
-          <Card key={a.id} className={`p-4 ${cardBg}`}>
+          <Card
+            key={a.id}
+            className={`p-4 ${cardBg} cursor-pointer hover:shadow-md transition-shadow`}
+            onClick={() => { setEditing(a); setDialogOpen(true); }}
+          >
             <div className="flex items-start gap-4">
               <div className="text-center min-w-[70px] rounded-md bg-primary text-primary-foreground py-2">
                 <div className="text-[10px] uppercase tracking-wider text-gold">{format(parseISO(a.start_date), "MMM")}</div>
