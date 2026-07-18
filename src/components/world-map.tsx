@@ -58,6 +58,7 @@ export function WorldMap({ data }: Props) {
     name: string;
     stats: CountryStats | null;
   } | null>(null);
+  const [zoom, setZoom] = useState(1.1);
 
   // Build lookup by normalized name.
   const normalized = useMemo(() => {
