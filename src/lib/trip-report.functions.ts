@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { formatMoney } from "@/lib/currency";
 
 const InputSchema = z.object({ tripId: z.string().uuid() });
 
@@ -69,7 +70,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
       totals.hotel[cur] = (totals.hotel[cur] ?? 0) + amt;
     }
     const fmtTotals = (m: Record<string, number>) =>
-      Object.entries(m).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(", ") || "—";
+      Object.entries(m).map(([c, v]) => formatMoney(v, c)).join(", ") || "—";
     ctx += `\n## Cost Totals\n`;
     ctx += `- Travel: ${fmtTotals(totals.travel)}\n`;
     ctx += `- Hotels: ${fmtTotals(totals.hotel)}\n`;
@@ -98,7 +99,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
       if (a.notes) ctx += `Notes: ${a.notes}\n`;
       if (a.objectives) ctx += `Objectives: ${a.objectives}\n`;
       if (a.visit_notes) ctx += `Notes during visit: ${a.visit_notes}\n`;
-      if (a.cost != null) ctx += `Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}\n`;
+      if (a.cost != null) ctx += `Cost: ${formatMoney(Number(a.cost), a.cost_currency || "GBP")}\n`;
       const cs = commentsByAct[a.id] ?? [];
       if (cs.length) {
         ctx += `Comments:\n`;

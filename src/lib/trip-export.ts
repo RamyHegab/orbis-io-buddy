@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { formatMoney } from "@/lib/currency";
 
 type Trip = { title: string; start_date: string; end_date: string; objectives?: string | null };
 type Activity = {
@@ -95,7 +96,7 @@ function activityRow(a: Activity) {
     const flight = [a.airline, a.flight_number].filter(Boolean).join(" ");
     if (flight) objectiveParts.push(`Flight: ${flight}`);
     if (a.cost != null && a.cost !== "") {
-      objectiveParts.push(`Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}`);
+      objectiveParts.push(`Cost: ${formatMoney(Number(a.cost), a.cost_currency || "GBP")}`);
     }
   }
   if (a.objectives) objectiveParts.push(a.objectives);
@@ -105,7 +106,7 @@ function activityRow(a: Activity) {
 
 function computeCostTotals(activities: Activity[], hotels: Hotel[]) {
   const fmt = (m: Record<string, number>) =>
-    Object.entries(m).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") || "—";
+    Object.entries(m).map(([c, v]) => formatMoney(v, c)).join(" · ") || "—";
   const travel: Record<string, number> = {};
   const events: Record<string, number> = {};
   const hotelTot: Record<string, number> = {};
