@@ -67,14 +67,14 @@ export function WorldMap({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30">
+    <div className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30 p-6">
       <ComposableMap
         projection="geoMercator"
-        projectionConfig={{ scale: 130, center: [10, 38] }}
+        projectionConfig={{ scale: 115, center: [10, 38] }}
         width={980}
         height={520}
         style={{ width: "100%", height: "100%", display: "block" }}
-        preserveAspectRatio="xMidYMid slice"
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           <linearGradient id="activeCountry" x1="0%" y1="0%" x2="100%" y2="100%">
