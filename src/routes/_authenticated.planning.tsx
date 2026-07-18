@@ -523,7 +523,7 @@ function TimelineView({ userId }: { userId?: string }) {
                     <div className="font-semibold">{a.title}</div>
                     <div className="text-xs text-muted-foreground">{fmtDate(a.start_date)} → {fmtDate(a.end_date)}</div>
                   </div>
-                  <Badge className={`${STATUS_COLORS[a.status]} capitalize`}>{a.status}</Badge>
+                  <Badge className={`${STATUS_COLORS[a.status]}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {a.countries.map((c) => (<Badge key={c} variant="outline" className="border-primary/40 text-primary">{c}</Badge>))}
