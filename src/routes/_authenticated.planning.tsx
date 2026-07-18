@@ -283,7 +283,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
             <Select value={form.status ?? "proposed"} onValueChange={(v: any) => setForm({ ...form, status: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUSES.map((s) => (<SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>))}
+                {STATUSES.map((s) => (<SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
