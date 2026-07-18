@@ -18,7 +18,6 @@ import { Route as FInstanceIdRouteImport } from './routes/f.$instanceId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated.users'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
-import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated.templates'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated.planning'
@@ -87,11 +86,6 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
 const AuthenticatedTripsRoute = AuthenticatedTripsRouteImport.update({
   id: '/trips',
   path: '/trips',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -247,7 +241,6 @@ export interface FileRoutesByFullPath {
   '/planning': typeof AuthenticatedPlanningRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/templates': typeof AuthenticatedTemplatesRoute
   '/trips': typeof AuthenticatedTripsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -282,7 +275,6 @@ export interface FileRoutesByTo {
   '/planning': typeof AuthenticatedPlanningRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/templates': typeof AuthenticatedTemplatesRoute
   '/users': typeof AuthenticatedUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$instanceId': typeof FInstanceIdRoute
@@ -319,7 +311,6 @@ export interface FileRoutesById {
   '/_authenticated/planning': typeof AuthenticatedPlanningRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -357,7 +348,6 @@ export interface FileRouteTypes {
     | '/planning'
     | '/reports'
     | '/settings'
-    | '/templates'
     | '/trips'
     | '/users'
     | '/email/unsubscribe'
@@ -392,7 +382,6 @@ export interface FileRouteTypes {
     | '/planning'
     | '/reports'
     | '/settings'
-    | '/templates'
     | '/users'
     | '/email/unsubscribe'
     | '/f/$instanceId'
@@ -428,7 +417,6 @@ export interface FileRouteTypes {
     | '/_authenticated/planning'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
-    | '/_authenticated/templates'
     | '/_authenticated/trips'
     | '/_authenticated/users'
     | '/email/unsubscribe'
@@ -535,13 +523,6 @@ declare module '@tanstack/react-router' {
       path: '/trips'
       fullPath: '/trips'
       preLoaderRoute: typeof AuthenticatedTripsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/templates': {
-      id: '/_authenticated/templates'
-      path: '/templates'
-      fullPath: '/templates'
-      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings': {
@@ -775,7 +756,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPlanningRoute: typeof AuthenticatedPlanningRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedTripsRoute: typeof AuthenticatedTripsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedSchoolsSchoolIdRoute: typeof AuthenticatedSchoolsSchoolIdRoute
@@ -790,7 +770,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPlanningRoute: AuthenticatedPlanningRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedTripsRoute: AuthenticatedTripsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedSchoolsSchoolIdRoute: AuthenticatedSchoolsSchoolIdRoute,
