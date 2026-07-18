@@ -506,7 +506,7 @@ function TripPlanner() {
   });
 
   const setStatus = useMutation({
-    mutationFn: async (status: "active") => {
+    mutationFn: async (status: "active" | "canceled") => {
       const { error } = await supabase.from("trips").update({ status }).eq("id", tripId);
       if (error) throw error;
       return status;
