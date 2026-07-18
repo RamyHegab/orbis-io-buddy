@@ -35,6 +35,10 @@ function FormsPage() {
   const canManageTemplates = useCan("can_manage_templates");
   const qc = useQueryClient();
 
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest");
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
+
   const [pickerTemplate, setPickerTemplate] = useState<{ id: string; name: string; activity_type: string } | null>(null);
   const [activityId, setActivityId] = useState<string>("");
 
