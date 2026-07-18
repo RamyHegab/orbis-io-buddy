@@ -258,7 +258,7 @@ function TripsPage() {
   const { data: trips } = useQuery({
     queryKey: ["trips"],
     queryFn: async () => {
-      const { data } = await supabase.from("trips").select("*").order("start_date", { ascending: false });
+      const { data } = await supabase.from("trips").select("*").eq("archived", false).order("start_date", { ascending: false });
       return data ?? [];
     },
   });
