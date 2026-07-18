@@ -429,8 +429,9 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
-          <div className="text-xs text-muted-foreground">
-            Looking for older trips? See the <a href="/planning" className="underline">Archive tab in Planning</a>.
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <History className="h-3.5 w-3.5" />
+            Looking for older trips? See <a href="/planning?tab=archive" className="underline">Previous Cycles Activities</a>.
           </div>
 
 
