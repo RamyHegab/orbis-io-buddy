@@ -36,6 +36,7 @@ const navItems: NavItem[] = [
 export function AppShell() {
   const { user, loading } = useAuth();
   const { caps } = useCapabilities();
+  const branding = useBranding();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
