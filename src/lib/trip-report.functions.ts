@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { formatMoney } from "@/lib/currency";
 
 const InputSchema = z.object({ tripId: z.string().uuid() });
 
