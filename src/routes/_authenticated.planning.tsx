@@ -163,7 +163,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
   const { data: events = [] } = useQuery({
     queryKey: ["events_catalog_min"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("id,title,cost,start_date").order("start_date");
+      const { data } = await supabase.from("events_catalog").select("id,title,cost,start_date").eq("archived", false).order("start_date");
       return (data ?? []) as { id: string; title: string; cost: number | null; start_date: string }[];
     },
   });
