@@ -702,7 +702,7 @@ function CalendarView({ userId }: { userId?: string }) {
   );
 }
 
-// ---------- Events catalog ----------
+// ---------- Events catalogue ----------
 function EventsCatalogView({ canManage }: { canManage: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<EventCatalog | null>(null);
