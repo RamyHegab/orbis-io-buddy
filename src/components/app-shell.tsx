@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
+import { BrandingProvider, useBranding } from "@/components/branding-provider";
 
 type NavItem = {
   to: string;
