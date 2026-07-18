@@ -53,15 +53,15 @@ export function BrandingPreview({
             </div>
           </div>
           {/* Nav */}
-          <div className="flex-1 p-2 flex flex-col gap-1">
+          <div className="p-2 flex flex-col gap-1">
             <NavItem icon={<LayoutDashboard className="h-3 w-3" />} label="Dashboard" active accent={a} accentFg={af} />
             <NavItem icon={<Users className="h-3 w-3" />} label="Agents" />
             <NavItem icon={<MapPin className="h-3 w-3" />} label="Trips" />
           </div>
           {/* Logo under nav with good spacing; sign out follows */}
-          <div className="flex-1 flex flex-col items-center justify-center px-3 py-3">
+          <div className="flex flex-col items-center px-3 py-3 mt-4">
             {logoUrl ? (
-              <div className="w-full flex items-center justify-center mt-8">
+              <div className="w-full flex items-center justify-center">
                 <div className="bg-white/95 rounded p-1.5 w-full flex items-center justify-center">
                   <img src={logoUrl} alt="" className="max-h-10 max-w-full object-contain" />
                 </div>
