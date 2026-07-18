@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useCan } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical } from "lucide-react";
+import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical, Search, X, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { dialCodeForLocation } from "@/lib/country-codes";
