@@ -42,7 +42,9 @@
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
 
-
+  --color-academic-required: var(--academic-required);
+  --color-academic-preferred: var(--academic-preferred);
+  --color-academic-not-required: var(--academic-not-required);
 
   /* Activity type semantic colors */
   --color-activity-travel: var(--activity-travel);
