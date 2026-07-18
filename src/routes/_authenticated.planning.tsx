@@ -597,6 +597,14 @@ function ActualCostsButton({ activity }: { activity: PlannedActivity }) {
 }
 
 // ---------- Calendar view ----------
+const STATUS_TEXT_COLORS: Record<string, string> = {
+  proposed: "text-academic-not-required",
+  planning: "text-academic-required",
+  confirmed: "text-academic-preferred",
+  done: "text-green-800",
+  canceled: "text-status-canceled",
+};
+
 function CalendarView({ userId }: { userId?: string }) {
   const [month, setMonth] = useState<Date>(startOfMonth(new Date()));
   const { data: activities = [] } = useQuery<PlannedActivity[]>({
@@ -606,6 +614,14 @@ function CalendarView({ userId }: { userId?: string }) {
       return (data ?? []) as PlannedActivity[];
     },
   });
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles_display"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name, email");
+      return (data ?? []) as { id: string; full_name: string | null; email: string | null }[];
+    },
+  });
+  const profileById = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const startWeekday = startOfMonth(month).getDay();
   const [editing, setEditing] = useState<PlannedActivity | null>(null);
@@ -628,15 +644,32 @@ function CalendarView({ userId }: { userId?: string }) {
             isWithinInterval(d, { start: parseISO(a.start_date), end: parseISO(a.end_date) })
           );
           return (
-            <div key={d.toISOString()} className="min-h-[90px] border border-border rounded p-1 text-xs">
+            <div key={d.toISOString()} className="min-h-[110px] border border-border rounded p-1 text-[11px]">
               <div className="text-muted-foreground mb-1">{format(d, "d")}</div>
-              <div className="space-y-0.5">
-                {dayActs.slice(0, 3).map((a) => (
-                  <button key={a.id} onClick={() => setEditing(a)}
-                    className={`block w-full text-left truncate rounded px-1 py-0.5 ${STATUS_COLORS[a.status]}`}>
-                    {a.title}
-                  </button>
-                ))}
+              <div className="space-y-1">
+                {dayActs.slice(0, 3).map((a) => {
+                  const traveller = a.traveller_id ? profileById.get(a.traveller_id) : null;
+                  const travellerName = traveller?.full_name || traveller?.email || (a.traveller_id ? a.traveller_id.slice(0, 8) : "Unassigned");
+                  const isDelegated = !!a.traveller_id && a.traveller_id !== userId;
+                  const isUnassigned = !a.traveller_id;
+                  const bg = isUnassigned
+                    ? "bg-slate-200 border-slate-300"
+                    : isDelegated
+                      ? "bg-gold/20 border-gold/40"
+                      : "bg-muted border-border";
+                  const textColor = STATUS_TEXT_COLORS[a.status] ?? "";
+                  return (
+                    <button
+                      key={a.id}
+                      onClick={() => setEditing(a)}
+                      title={a.title}
+                      className={`block w-full text-left rounded px-1 py-0.5 border ${bg} ${textColor} hover:opacity-90`}
+                    >
+                      <div className="font-medium leading-tight line-clamp-2 break-words">{a.title}</div>
+                      <div className="text-[10px] leading-tight truncate opacity-80">{isUnassigned ? "(Unassigned)" : travellerName}</div>
+                    </button>
+                  );
+                })}
                 {dayActs.length > 3 && <div className="text-muted-foreground">+{dayActs.length - 3} more</div>}
               </div>
             </div>
