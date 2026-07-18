@@ -5,9 +5,22 @@ const APP_URL = 'https://orbis-io-buddy.lovable.app'
 export const Route = createFileRoute('/api/public/planning/reminders')({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        const authHeader = request.headers.get('authorization') ?? ''
+        const token = authHeader.startsWith('Bearer ')
+          ? authHeader.slice('Bearer '.length).trim()
+          : (request.headers.get('apikey') ?? '').trim()
+        if (!serviceKey || !token || token !== serviceKey) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
         const today = new Date()
+
         const iso = (d: Date) => d.toISOString().slice(0, 10)
         // 55–65 days ahead window for the 2-month reminder
         const from = new Date(today); from.setDate(from.getDate() + 55)

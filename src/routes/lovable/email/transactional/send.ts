@@ -52,12 +52,14 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
         }
 
         const token = authHeader.slice('Bearer '.length).trim()
-        const supabase = createClient(supabaseUrl, supabaseServiceKey)
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-
-        if (authError || !user) {
-          return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        // Only trusted server-side callers (holding the service role key) may
+        // invoke the transactional email relay. This prevents any signed-in
+        // user from sending arbitrary emails with attacker-controlled content.
+        if (token !== supabaseServiceKey) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 })
         }
+        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
 
         // Parse request body
         let templateName: string

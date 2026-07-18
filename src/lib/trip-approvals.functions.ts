@@ -20,10 +20,15 @@ async function sendApprovalEmail(opts: {
   try {
     const req = getRequest();
     const origin = req?.url ? new URL(req.url).origin : siteOrigin();
-    const auth = req?.headers.get("authorization") ?? "";
+    // Server-only call: authorize with the service role key, not the user's
+    // bearer token. The email relay is now restricted to service-role callers.
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
     const res = await fetch(`${origin}/lovable/email/transactional/send`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: auth },
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${serviceKey}`,
+      },
       body: JSON.stringify(opts),
     });
     if (!res.ok) {
@@ -34,6 +39,7 @@ async function sendApprovalEmail(opts: {
     console.error("approval email send threw", e);
   }
 }
+
 
 function fmtRange(start: string, end: string): string {
   try {

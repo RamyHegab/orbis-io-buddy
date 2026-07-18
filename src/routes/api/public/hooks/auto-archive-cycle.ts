@@ -7,16 +7,21 @@ export const Route = createFileRoute("/api/public/hooks/auto-archive-cycle")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const authHeader = request.headers.get("authorization") ?? request.headers.get("apikey");
-        if (!authHeader) {
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const authHeader = request.headers.get("authorization") ?? "";
+        const token = authHeader.startsWith("Bearer ")
+          ? authHeader.slice("Bearer ".length).trim()
+          : (request.headers.get("apikey") ?? "").trim();
+        if (!token || !serviceKey || token !== serviceKey) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },
           });
         }
 
+
         const url = process.env.SUPABASE_URL!;
-        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
         const admin = createClient(url, serviceKey, {
           auth: { autoRefreshToken: false, persistSession: false },
         });
