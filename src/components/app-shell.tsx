@@ -89,9 +89,9 @@ export function AppShell() {
               );
             })}
         </nav>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 min-h-0">
+        <div className="flex-1 flex flex-col items-center px-6 py-4 min-h-0">
           {branding?.logo_url ? (
-            <div className="w-full flex items-center justify-center">
+            <div className="w-full flex items-center justify-center mt-8">
               <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
                 <img
                   src={branding.logo_url}
@@ -101,7 +101,7 @@ export function AppShell() {
               </div>
             </div>
           ) : null}
-          <div className={cn("w-full", branding?.logo_url ? "mt-4" : "")}>
+          <div className={cn("w-full", branding?.logo_url ? "mt-4" : "mt-8")}>
             <button
               type="button"
               onClick={async () => {
