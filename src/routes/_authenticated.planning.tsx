@@ -415,7 +415,7 @@ function TimelineView({ userId }: { userId?: string }) {
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
           { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
-            cls: "bg-gradient-to-br from-gold via-gold/80 to-primary/60 border-gold",
+            cls: "bg-gold border-gold",
             accentLabel: "text-primary/80", accentValue: "text-primary" },
         ].map((k) => (
           <Card key={k.label} className={`p-4 border-2 shadow-md ${k.cls}`}>
