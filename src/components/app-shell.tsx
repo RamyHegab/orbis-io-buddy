@@ -35,6 +35,7 @@ export function AppShell() {
   const { caps } = useCapabilities();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const branding = useBranding();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -48,7 +49,6 @@ export function AppShell() {
     );
   }
 
-  const branding = useBranding();
 
   return (
    <BrandingProvider>
