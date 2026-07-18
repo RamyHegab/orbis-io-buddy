@@ -31,8 +31,13 @@ import { formatMoney } from "@/lib/currency";
 import { useAppSettings } from "@/hooks/use-app-settings";
 
 
+const planningSearchSchema = z.object({
+  tab: z.enum(["timeline", "calendar", "events", "archive"]).optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/planning")({
   head: () => ({ meta: [{ title: "Planning — Orbis CRM" }] }),
+  validateSearch: planningSearchSchema,
   component: PlanningPage,
 });
 
