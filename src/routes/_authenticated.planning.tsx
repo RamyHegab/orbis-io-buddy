@@ -877,3 +877,122 @@ function EventDialog({ event, onClose }: { event: EventCatalog | null; onClose: 
     </Dialog>
   );
 }
+
+function ArchiveView({ isAdmin }: { isAdmin: boolean }) {
+  const qc = useQueryClient();
+  const { data: cycles = [] } = useQuery({
+    queryKey: ["archived_cycles"],
+    queryFn: async () => {
+      const [t, p, e] = await Promise.all([
+        supabase.from("trips").select("archived_cycle").eq("archived", true),
+        supabase.from("planned_activities").select("archived_cycle").eq("archived", true),
+        supabase.from("events_catalog").select("archived_cycle").eq("archived", true),
+      ]);
+      const set = new Set<string>();
+      for (const row of [...(t.data ?? []), ...(p.data ?? []), ...(e.data ?? [])]) {
+        if (row.archived_cycle) set.add(row.archived_cycle);
+      }
+      return Array.from(set).sort().reverse();
+    },
+  });
+  const [selected, setSelected] = useState<string | null>(null);
+  const cycle = selected ?? cycles[0] ?? null;
+
+  const { data: trips = [] } = useQuery({
+    queryKey: ["archived_trips", cycle],
+    enabled: !!cycle,
+    queryFn: async () => {
+      const { data } = await supabase.from("trips").select("*").eq("archived", true).eq("archived_cycle", cycle!).order("start_date");
+      return data ?? [];
+    },
+  });
+  const { data: acts = [] } = useQuery({
+    queryKey: ["archived_activities", cycle],
+    enabled: !!cycle,
+    queryFn: async () => {
+      const { data } = await supabase.from("planned_activities").select("*").eq("archived", true).eq("archived_cycle", cycle!).order("start_date");
+      return data ?? [];
+    },
+  });
+  const { data: events = [] } = useQuery({
+    queryKey: ["archived_events", cycle],
+    enabled: !!cycle,
+    queryFn: async () => {
+      const { data } = await supabase.from("events_catalog").select("*").eq("archived", true).eq("archived_cycle", cycle!).order("start_date");
+      return data ?? [];
+    },
+  });
+
+  const restore = useMutation({
+    mutationFn: async () => {
+      if (!cycle) return;
+      const stamp = { archived: false, archived_cycle: null, archived_at: null };
+      await supabase.from("trips").update(stamp).eq("archived_cycle", cycle);
+      await supabase.from("planned_activities").update(stamp).eq("archived_cycle", cycle);
+      await supabase.from("events_catalog").update(stamp).eq("archived_cycle", cycle);
+    },
+    onSuccess: () => {
+      toast.success(`Cycle ${cycle} restored`);
+      qc.invalidateQueries();
+      setSelected(null);
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to restore"),
+  });
+
+  if (cycles.length === 0) {
+    return <Card className="p-8 text-center text-muted-foreground">No archived cycles yet.</Card>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Label className="mr-1">Cycle:</Label>
+        {cycles.map((c) => (
+          <Button key={c} size="sm" variant={c === cycle ? "default" : "outline"} onClick={() => setSelected(c)}>{c}</Button>
+        ))}
+        {isAdmin && cycle && (
+          <Button size="sm" variant="outline" className="ml-auto" onClick={() => restore.mutate()} disabled={restore.isPending}>
+            <RotateCcw className="h-4 w-4 mr-1" /> Restore cycle
+          </Button>
+        )}
+      </div>
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">Trips ({trips.length})</h3>
+        <div className="space-y-1 text-sm">
+          {trips.map((t: any) => (
+            <div key={t.id} className="flex justify-between border-b py-1">
+              <span>{t.title}</span>
+              <span className="text-muted-foreground">{t.start_date} → {t.end_date}</span>
+            </div>
+          ))}
+          {trips.length === 0 && <div className="text-muted-foreground">None</div>}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">Planned activities ({acts.length})</h3>
+        <div className="space-y-1 text-sm">
+          {acts.map((a: any) => (
+            <div key={a.id} className="flex justify-between border-b py-1">
+              <span>{a.title}</span>
+              <span className="text-muted-foreground">{a.start_date} → {a.end_date}</span>
+            </div>
+          ))}
+          {acts.length === 0 && <div className="text-muted-foreground">None</div>}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">Events ({events.length})</h3>
+        <div className="space-y-1 text-sm">
+          {events.map((e: any) => (
+            <div key={e.id} className="flex justify-between border-b py-1">
+              <span>{e.title}</span>
+              <span className="text-muted-foreground">{e.start_date} → {e.end_date}</span>
+            </div>
+          ))}
+          {events.length === 0 && <div className="text-muted-foreground">None</div>}
+        </div>
+      </Card>
+      <p className="text-xs text-muted-foreground">Archived items are read-only. Restore the whole cycle to make them editable again.</p>
+    </div>
+  );
+}
