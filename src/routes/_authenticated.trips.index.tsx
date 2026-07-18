@@ -300,16 +300,37 @@ function TripsPage() {
 
   const previewTitle = buildTitle(legs);
 
+  const availableCountries = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of trips ?? []) for (const c of (t.destinations ?? [])) if (c) s.add(c);
+    return Array.from(s).sort();
+  }, [trips]);
+
+  const filteredTrips = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (trips ?? []).filter((t: any) => {
+      if (q) {
+        const hay = `${t.title ?? ""} ${(t.destinations ?? []).join(" ")}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (countryFilter !== "all" && !(t.destinations ?? []).includes(countryFilter)) return false;
+      if (statusFilter !== "all" && bucketOf(t) !== statusFilter) return false;
+      return true;
+    });
+  }, [trips, search, countryFilter, statusFilter]);
+
   const grouped = useMemo(() => {
     const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[], draft: [] as any[] };
-    for (const t of trips ?? []) g[bucketOf(t)].push(t);
+    for (const t of filteredTrips) g[bucketOf(t)].push(t);
     g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
     g.approved.sort((a, b) => a.start_date.localeCompare(b.start_date));
     g.draft.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
-  }, [trips]);
+  }, [filteredTrips]);
 
   const pastLimited = grouped.past.slice(0, 3);
+  const filtersActive = search !== "" || statusFilter !== "all" || countryFilter !== "all";
+
 
   const checklistCandidates = useMemo(
     () => [...grouped.in_progress, ...grouped.approved, ...grouped.draft],
