@@ -315,7 +315,7 @@ function TimelineView({ userId }: { userId?: string }) {
   const { data: activities = [] } = useQuery<PlannedActivity[]>({
     queryKey: ["planned_activities"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("planned_activities").select("*").order("start_date");
+      const { data, error } = await supabase.from("planned_activities").select("*").eq("archived", false).order("start_date");
       if (error) throw error;
       return (data ?? []) as PlannedActivity[];
     },
@@ -324,7 +324,7 @@ function TimelineView({ userId }: { userId?: string }) {
   const { data: eventsCatalog = [] } = useQuery({
     queryKey: ["events_catalog_stats"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("id, cost, countries, status");
+      const { data } = await supabase.from("events_catalog").select("id, cost, countries, status").eq("archived", false);
       return (data ?? []) as { id: string; cost: number | null; countries: string[]; status: string }[];
     },
   });
