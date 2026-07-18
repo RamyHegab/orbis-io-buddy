@@ -96,7 +96,7 @@ function activityRow(a: Activity) {
     const flight = [a.airline, a.flight_number].filter(Boolean).join(" ");
     if (flight) objectiveParts.push(`Flight: ${flight}`);
     if (a.cost != null && a.cost !== "") {
-      objectiveParts.push(`Cost: ${a.cost_currency || "GBP"} ${Number(a.cost).toFixed(2)}`);
+      objectiveParts.push(`Cost: ${formatMoney(Number(a.cost), a.cost_currency || "GBP")}`);
     }
   }
   if (a.objectives) objectiveParts.push(a.objectives);
