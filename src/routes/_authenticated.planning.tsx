@@ -946,7 +946,7 @@ function ArchiveView({ isAdmin }: { isAdmin: boolean }) {
   });
 
   if (cycles.length === 0) {
-    return <Card className="p-8 text-center text-muted-foreground">No archived cycles yet.</Card>;
+    return <Card className="p-8 text-center text-muted-foreground">No previous cycles yet.</Card>;
   }
 
   return (
