@@ -49,6 +49,7 @@ export function BrandingCard() {
 
   const [editorFile, setEditorFile] = useState<File | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [suggested, setSuggested] = useState<{ a: string; b: string } | null>(null);
 
   const uploadLogo = async (file: File | Blob, suggestedName?: string) => {
     const nameFromFile = (file as File).name;
@@ -62,26 +63,26 @@ export function BrandingCard() {
       contentType,
     });
     if (error) throw error;
-    // long-lived signed URL (10 years)
     const { data: signed, error: sErr } = await supabase.storage
       .from("branding")
       .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
     if (sErr) throw sErr;
-    // remove previous file
     if (logoPath && logoPath !== path) {
       await supabase.storage.from("branding").remove([logoPath]);
     }
     setLogoUrl(signed.signedUrl);
     setLogoPath(path);
-    // If mode is 'from_logo', derive colours now
-    if (mode === "from_logo") {
-      const palette = await extractPaletteFromImage(signed.signedUrl);
-      if (palette) {
+    // Always suggest a palette after upload
+    const palette = await extractPaletteFromImage(signed.signedUrl);
+    if (palette) {
+      setSuggested({ a: palette.primary, b: palette.accent });
+      if (mode !== "custom") {
+        setMode("from_logo");
         setPrimary(palette.primary);
         setAccent(palette.accent);
       }
     }
-    toast.success("Logo uploaded");
+    toast.success("Logo uploaded — pick your Primary and Accent below");
   };
 
   const removeLogo = async () => {
