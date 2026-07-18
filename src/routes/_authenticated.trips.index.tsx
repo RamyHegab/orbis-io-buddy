@@ -192,7 +192,7 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   );
 
   return (
-    <Card className="p-0 sticky top-4 border-2 border-primary/80 overflow-hidden rounded-md">
+    <Card className="p-0 border-2 border-primary/80 overflow-hidden rounded-md">
       <div className="bg-primary text-primary-foreground px-5 py-3">
         <div className="text-[10px] font-bold uppercase tracking-widest text-gold">Pre-trip checklist</div>
         <div className="font-semibold truncate mt-0.5">{trip.title}</div>
@@ -430,7 +430,7 @@ function TripsPage() {
             empty="No past trips yet."
           />
         </div>
-        <aside className="space-y-4">
+        <aside className="space-y-4 sticky top-4 self-start h-fit">
           <ChecklistPanel trip={selectedTrip} />
           <Card className="p-5 border-2 border-primary/80 bg-card">
             <Link to="/planning" search={{ tab: "archive" }} className="flex items-center gap-3 text-primary hover:text-gold transition-colors">
