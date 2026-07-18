@@ -46,6 +46,8 @@
   --color-academic-preferred: var(--academic-preferred);
   --color-academic-not-required: var(--academic-not-required);
 
+  --color-status-canceled: var(--status-canceled);
+
   /* Activity type semantic colors */
   --color-activity-travel: var(--activity-travel);
   --color-activity-agent: var(--activity-agent);
@@ -103,6 +105,9 @@
   --academic-required: #14b8a6;
   --academic-preferred: #f59e0b;
   --academic-not-required: #a8a29e;
+
+  /* Status colors */
+  --status-canceled: oklch(0.52 0.19 25);
 
   /* Activity colors */
   --activity-travel: oklch(0.65 0.14 250);    /* blue */
