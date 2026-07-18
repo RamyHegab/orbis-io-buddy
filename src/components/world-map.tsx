@@ -143,7 +143,38 @@ export function WorldMap({ data }: Props) {
             })
           }
         </Geographies>
+        </ZoomableGroup>
       </ComposableMap>
+
+      <div className="absolute bottom-3 right-3 flex flex-col gap-1 z-10">
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7 shadow-sm"
+          onClick={() => setZoom((z) => Math.min(8, Number((z + 0.3).toFixed(2))))}
+          aria-label="Zoom in"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7 shadow-sm"
+          onClick={() => setZoom((z) => Math.max(1, Number((z - 0.3).toFixed(2))))}
+          aria-label="Zoom out"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7 shadow-sm"
+          onClick={() => setZoom(1.1)}
+          aria-label="Reset map"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
 
       {tooltip && (
         <div
