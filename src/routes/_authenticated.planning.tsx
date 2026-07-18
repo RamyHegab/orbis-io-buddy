@@ -98,7 +98,6 @@ function PlanningPage() {
         title="Yearly Activities Timeline"
         description="Plan your recruitment cycle: activities, events, costs and travellers."
       />
-      />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="timeline"><LayoutList className="h-4 w-4 mr-1" /> Timeline</TabsTrigger>
