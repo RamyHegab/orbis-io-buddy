@@ -9,10 +9,13 @@ import {
   FileText,
   Globe2,
   CalendarRange,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
 import { BrandingProvider, useBranding } from "@/components/branding-provider";
+import { supabase } from "@/integrations/supabase/client";
+
 
 type NavItem = {
   to: string;
