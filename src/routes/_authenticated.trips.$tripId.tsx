@@ -733,6 +733,28 @@ function TripPlanner() {
               </Button>
             )}
 
+            {isOwner && trip.status !== "canceled" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={setStatus.isPending}>
+                    Cancel trip
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel this trip?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will mark the trip as canceled. You can still reopen it later if needed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => setStatus.mutate("canceled")}>Confirm cancel</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
             {isManagerForThisTrip && trip.status === "submitted" && pendingApproval && (
               <>
                 <AlertDialog>
