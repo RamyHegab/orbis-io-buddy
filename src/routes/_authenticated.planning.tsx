@@ -479,8 +479,14 @@ function TimelineView({ userId }: { userId?: string }) {
         const traveller = a.traveller_id ? profileById.get(a.traveller_id) : null;
         const travellerName = traveller?.full_name || traveller?.email || (a.traveller_id ? a.traveller_id.slice(0, 8) : "Unassigned");
         const isDelegated = !!a.traveller_id && a.traveller_id !== userId;
+        const isUnassigned = !a.traveller_id;
+        const cardBg = isUnassigned
+          ? "bg-slate-100 border-slate-300"
+          : isDelegated
+            ? "bg-gold/10 border-gold/40"
+            : "";
         return (
-          <Card key={a.id} className={`p-4 ${isDelegated ? "bg-gold/10 border-gold/40" : ""}`}>
+          <Card key={a.id} className={`p-4 ${cardBg}`}>
             <div className="flex items-start gap-4">
               <div className="text-center min-w-[70px] rounded-md bg-primary text-primary-foreground py-2">
                 <div className="text-[10px] uppercase tracking-wider text-gold">{format(parseISO(a.start_date), "MMM")}</div>
@@ -501,15 +507,15 @@ function TimelineView({ userId }: { userId?: string }) {
                       {EVENT_TYPES.find((x) => x.value === t)?.label ?? t}
                     </Badge>
                   ))}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
                   <Badge
                     variant="outline"
-                    className={`text-xs ${isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
-                    title={isDelegated ? "Delegated to another user" : "You are the traveller"}
+                    className={`text-xs ${isUnassigned ? "border-slate-400 bg-slate-200 text-slate-800 font-medium" : isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
+                    title={isUnassigned ? "No traveller assigned" : isDelegated ? "Delegated to another user" : "You are the traveller"}
                   >
                     Traveller: {travellerName}{isDelegated ? " (delegated)" : ""}
                   </Badge>
-                </div>
-                <div className="mt-2">
                   <Badge variant="outline" className={`text-xs ${ACADEMIC_SUPPORT_COLORS[a.academic_support]}`}>Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
