@@ -1,0 +1,2 @@
+ALTER TABLE public.events_catalog DROP CONSTRAINT IF EXISTS events_catalog_status_check;
+ALTER TABLE public.events_catalog ADD CONSTRAINT events_catalog_status_check CHECK (status = ANY (ARRAY['proposed'::text, 'planning'::text, 'confirmed'::text, 'done'::text, 'canceled'::text, 'not_attending'::text]));

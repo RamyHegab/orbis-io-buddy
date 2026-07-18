@@ -45,7 +45,7 @@ type PlannedActivity = {
 type EventCatalog = {
   id: string; title: string; start_date: string; end_date: string;
   countries: string[]; cities: string[]; cost: number | null; currency: string;
-  status: "proposed" | "planning" | "confirmed" | "done" | "canceled";
+  status: "proposed" | "planning" | "confirmed" | "done" | "canceled" | "not_attending";
   traveller_id: string | null; notes: string | null;
 };
 
@@ -56,15 +56,26 @@ const EVENT_TYPES = [
   { value: "other", label: "Other" },
 ];
 const STATUSES = ["proposed", "planning", "confirmed", "done", "canceled"] as const;
+const EVENT_STATUSES = ["proposed", "planning", "confirmed", "done", "canceled", "not_attending"] as const;
+const STATUS_LABEL: Record<string, string> = {
+  proposed: "Proposed",
+  planning: "Planning",
+  confirmed: "Confirmed",
+  done: "Done",
+  canceled: "Cancelled",
+  not_attending: "Not attending",
+  all: "All statuses",
+};
 const STATUS_COLORS: Record<string, string> = {
   proposed: "bg-academic-not-required/20 text-academic-not-required border-academic-not-required/40",
   planning: "bg-academic-required/20 text-academic-required border-academic-required/40",
   confirmed: "bg-academic-preferred/20 text-academic-preferred border-academic-preferred/40",
   done: "bg-green-100 text-green-900 border-green-300",
   canceled: "bg-status-canceled text-white border-status-canceled",
+  not_attending: "bg-status-canceled/70 text-white border-status-canceled/70",
 };
 const ACADEMIC_SUPPORT_LABEL: Record<PlannedActivity["academic_support"], string> = {
-  required: "Required", preferred: "Preferred", not_required: "Not Required",
+  required: "Required", preferred: "Preferred", not_required: "Not required",
 };
 const ACADEMIC_SUPPORT_COLORS: Record<PlannedActivity["academic_support"], string> = {
   required: "bg-academic-required/15 text-academic-required border-academic-required/40",
@@ -92,7 +103,7 @@ function PlanningPage() {
         <TabsList>
           <TabsTrigger value="timeline"><LayoutList className="h-4 w-4 mr-1" /> Timeline</TabsTrigger>
           <TabsTrigger value="calendar"><CalendarIcon className="h-4 w-4 mr-1" /> Calendar</TabsTrigger>
-          <TabsTrigger value="events"><ListChecks className="h-4 w-4 mr-1" /> Events catalog</TabsTrigger>
+          <TabsTrigger value="events"><ListChecks className="h-4 w-4 mr-1" /> Events Catalogue</TabsTrigger>
         </TabsList>
         <TabsContent value="timeline" className="pt-4"><TimelineView userId={user?.id} /></TabsContent>
         <TabsContent value="calendar" className="pt-4"><CalendarView userId={user?.id} /></TabsContent>
@@ -272,7 +283,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
             <Select value={form.status ?? "proposed"} onValueChange={(v: any) => setForm({ ...form, status: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUSES.map((s) => (<SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>))}
+                {STATUSES.map((s) => (<SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
@@ -308,8 +319,8 @@ function TimelineView({ userId }: { userId?: string }) {
   const { data: eventsCatalog = [] } = useQuery({
     queryKey: ["events_catalog_stats"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("id, cost, countries");
-      return (data ?? []) as { id: string; cost: number | null; countries: string[] }[];
+      const { data } = await supabase.from("events_catalog").select("id, cost, countries, status");
+      return (data ?? []) as { id: string; cost: number | null; countries: string[]; status: string }[];
     },
   });
 
@@ -325,7 +336,12 @@ function TimelineView({ userId }: { userId?: string }) {
   const filtered = activities.filter((a) => statusFilter === "all" || a.status === statusFilter);
 
   const stats = useMemo(() => {
-    const eventById = new Map(eventsCatalog.map((e) => [e.id, e]));
+    // Exclude cancelled events from all tile aggregates
+    const activeEvents = eventsCatalog.filter((e) => e.status !== "canceled" && e.status !== "not_attending");
+    const activeEventIds = new Set(activeEvents.map((e) => e.id));
+    const eventById = new Map(activeEvents.map((e) => [e.id, e]));
+    // Exclude cancelled trips from all tile aggregates
+    const activeActivities = activities.filter((a) => a.status !== "canceled");
     const perCountry = new Map<string, { visits: number; events: number; cost: number }>();
     const bump = (c: string) => {
       if (!perCountry.has(c)) perCountry.set(c, { visits: 0, events: 0, cost: 0 });
@@ -333,7 +349,7 @@ function TimelineView({ userId }: { userId?: string }) {
     };
     const uniqueEventIds = new Set<string>();
     let totalBudget = 0;
-    for (const a of activities) {
+    for (const a of activeActivities) {
       const countries = a.countries ?? [];
       const n = countries.length || 1;
       const other = sum(a.travel_cost, a.hotel_cost, a.subsistence_cost);
@@ -342,6 +358,7 @@ function TimelineView({ userId }: { userId?: string }) {
       const perCountryEventCost = new Map<string, number>();
       const perCountryEventCount = new Map<string, number>();
       for (const eid of a.event_ids ?? []) {
+        if (!activeEventIds.has(eid)) continue;
         uniqueEventIds.add(eid);
         const ev = eventById.get(eid);
         const ecountries = ev?.countries?.length ? ev.countries : countries;
@@ -351,8 +368,8 @@ function TimelineView({ userId }: { userId?: string }) {
           perCountryEventCount.set(c, (perCountryEventCount.get(c) || 0) + 1);
         }
       }
-      // If activity has its own events_cost but no linked events, split across countries
-      const hasLinkedEvents = (a.event_ids ?? []).length > 0;
+      // If activity has its own events_cost but no linked (active) events, split across countries
+      const hasLinkedEvents = (a.event_ids ?? []).some((id) => activeEventIds.has(id));
       const flatEventsCost = hasLinkedEvents ? 0 : (Number(a.events_cost) || 0);
       const flatEventsPer = flatEventsCost / n;
 
@@ -370,7 +387,7 @@ function TimelineView({ userId }: { userId?: string }) {
       .map(([country, v]) => ({ country, ...v }))
       .sort((a, b) => b.cost - a.cost);
     return {
-      trips: activities.length,
+      trips: activeActivities.length,
       events: uniqueEventIds.size,
       countries: perCountry.size,
       budget: totalBudget,
@@ -416,16 +433,16 @@ function TimelineView({ userId }: { userId?: string }) {
       {/* Top KPI tiles — navy & gold */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total trips", value: stats.trips.toLocaleString(),
+          { label: "Total Trips", value: stats.trips.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
-          { label: "Total events", value: stats.events.toLocaleString(),
+          { label: "Total Events", value: stats.events.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
           { label: "Countries", value: stats.countries.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
-          { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+          { label: "Total Budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
             cls: "bg-gold border-gold",
             accentLabel: "text-primary/80", accentValue: "text-primary" },
         ].map((k) => (
@@ -467,7 +484,7 @@ function TimelineView({ userId }: { userId?: string }) {
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            {STATUSES.map((s) => (<SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>))}
+            {STATUSES.map((s) => (<SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>))}
           </SelectContent>
         </Select>
         <div className="flex-1" />
@@ -506,7 +523,7 @@ function TimelineView({ userId }: { userId?: string }) {
                     <div className="font-semibold">{a.title}</div>
                     <div className="text-xs text-muted-foreground">{fmtDate(a.start_date)} → {fmtDate(a.end_date)}</div>
                   </div>
-                  <Badge className={`${STATUS_COLORS[a.status]} capitalize`}>{a.status}</Badge>
+                  <Badge className={`${STATUS_COLORS[a.status]}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {a.countries.map((c) => (<Badge key={c} variant="outline" className="border-primary/40 text-primary">{c}</Badge>))}
@@ -607,6 +624,7 @@ const STATUS_TEXT_COLORS: Record<string, string> = {
   confirmed: "text-academic-preferred",
   done: "text-green-800",
   canceled: "text-status-canceled",
+  not_attending: "text-status-canceled/70",
 };
 
 function CalendarView({ userId }: { userId?: string }) {
@@ -685,7 +703,7 @@ function CalendarView({ userId }: { userId?: string }) {
   );
 }
 
-// ---------- Events catalog ----------
+// ---------- Events catalogue ----------
 function EventsCatalogView({ canManage }: { canManage: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<EventCatalog | null>(null);
@@ -714,7 +732,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
         </div>
       )}
       {events.length === 0 && (
-        <Card className="p-6 text-center text-muted-foreground text-sm">No events in the catalog yet.</Card>
+        <Card className="p-6 text-center text-muted-foreground text-sm">No events in the catalogue yet.</Card>
       )}
       <div className="space-y-2">
         {events.map((e) => (
@@ -726,7 +744,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <div className="font-medium">{e.title}</div>
-                <Badge className={`${STATUS_COLORS[e.status]} capitalize text-[10px]`}>{e.status}</Badge>
+                <Badge className={`${STATUS_COLORS[e.status]} text-[10px]`}>{STATUS_LABEL[e.status] ?? e.status}</Badge>
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(e.start_date)} → {fmtDate(e.end_date)}</div>
               <div className="flex flex-wrap gap-1 mt-1">
@@ -750,7 +768,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
   );
 }
 
-// ---------- Event catalog dialog ----------
+// ---------- Event catalogue dialog ----------
 function EventDialog({ event, onClose }: { event: EventCatalog | null; onClose: () => void }) {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -840,7 +858,7 @@ function EventDialog({ event, onClose }: { event: EventCatalog | null; onClose: 
               <Label>Status</Label>
               <Select value={form.status ?? "proposed"} onValueChange={(v: any) => setForm({ ...form, status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STATUSES.map((s) => (<SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>))}</SelectContent>
+                <SelectContent>{EVENT_STATUSES.map((s) => (<SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>))}</SelectContent>
               </Select>
             </div>
           </div>
