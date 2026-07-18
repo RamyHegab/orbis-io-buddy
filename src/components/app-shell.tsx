@@ -89,7 +89,18 @@ export function AppShell() {
               );
             })}
         </nav>
-        <div className="border-t border-sidebar-border px-4 py-3">
+        {branding?.logo_url && (
+          <div className="px-6 pt-5 pb-4 flex items-center justify-center">
+            <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
+              <img
+                src={branding.logo_url}
+                alt="University logo"
+                className="max-h-16 max-w-full object-contain"
+              />
+            </div>
+          </div>
+        )}
+        <div className="border-t border-sidebar-border px-4 py-4">
           <button
             type="button"
             onClick={async () => {
