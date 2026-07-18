@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/public/hooks/auto-archive-cycle")({
 
 
         const url = process.env.SUPABASE_URL!;
-        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
         const admin = createClient(url, serviceKey, {
           auth: { autoRefreshToken: false, persistSession: false },
         });
