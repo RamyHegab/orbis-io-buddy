@@ -101,7 +101,7 @@ export function AppShell() {
               </div>
             </div>
           ) : null}
-          <div className={cn("w-full mt-8", branding?.logo_url ? "mt-4" : "mt-8")}>
+          <div className={cn("w-full", branding?.logo_url ? "mt-4" : "mt-8")}>
             <button
               type="button"
               onClick={async () => {
