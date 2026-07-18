@@ -258,7 +258,7 @@ function TripsPage() {
   const { data: trips } = useQuery({
     queryKey: ["trips"],
     queryFn: async () => {
-      const { data } = await supabase.from("trips").select("*").order("start_date", { ascending: false });
+      const { data } = await supabase.from("trips").select("*").eq("archived", false).order("start_date", { ascending: false });
       return data ?? [];
     },
   });
@@ -429,6 +429,11 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
+          <div className="text-xs text-muted-foreground">
+            Looking for older trips? See the <a href="/planning" className="underline">Archive tab in Planning</a>.
+          </div>
+
+
 
 
         </div>

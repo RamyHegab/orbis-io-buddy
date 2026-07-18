@@ -1,44 +1,50 @@
-Plan: Import Notion yearly cycle planning data into the CRM
+# Archive past cycles and trips
 
-Goal
-----
-Pull the two Notion databases (trips/activities and events) into the existing CRM Yearly Activities Timeline feature as `planned_activities` and `events_catalog` records.
+Give users a way to close out a completed cycle so old trips and planned activities disappear from the active Planning/Trips views but stay fully browsable in a read-only Archive.
 
-Current state
--------------
-- The planning feature is live at `/planning` in `src/routes/_authenticated.planning.tsx`.
-- Data is stored in `planned_activities` (26 columns) and `events_catalog` (14 columns).
-- There is no active Notion integration; a previous Notion sync was removed and only unused `schools` columns remain as scaffolding.
-- The existing generic importer (`src/components/import-list-dialog.tsx` + `src/lib/import-mapping.ts`) only supports `school`, `agent`, and `agent_branch` — not planning data.
+## Concept
 
-Approach
---------
-Build a Notion-to-planning import flow that works from the shared Notion links you provide. The cleanest way is to use the Notion API behind a server function: you make the two databases public, create a Notion integration, share the databases with the integration, and the CRM fetches the rows, maps them to CRM fields, and inserts them.
+- A "cycle" is the recruitment year already defined in `cycle_settings` (start/end month + year).
+- Users can **archive** a cycle when it ends. Everything dated inside that cycle window becomes read-only and hidden from the default Planning + Trips views.
+- Nothing is deleted. Archived items remain visible under a new **Archive** tab, filterable by cycle.
 
-Steps
------
-1. Collect the two Notion links/IDs from you and the database schema you want mapped.
-2. Add a new `import-notion` server function in `src/lib/notion-planning.functions.ts` that:
-   - Reads `NOTION_API_KEY` and the two database IDs from environment variables.
-   - Queries each Notion database via `https://api.notion.com/v1/databases/{id}/query`.
-   - Maps Notion properties to CRM fields:
-     - Trips → `planned_activities`: title, start_date, end_date, countries, event_types, traveller, academic_support, costs, status, objectives, notes.
-     - Events → `events_catalog`: title, start_date, end_date, countries, cities, cost, currency, status, traveller, notes.
-3. Add a new UI section in the Planning page (e.g., "Import from Notion" button) that calls the server function and shows progress/errors.
-4. Add `NOTION_API_KEY` to project secrets via the secure secrets form.
-5. Run the import once and verify the records appear in the Timeline and Events catalog tabs.
+## User-facing changes
 
-Fallback / alternative
-----------------------
-If you prefer not to create a Notion integration, you can export each Notion database to CSV/Excel and we can extend the existing `ImportListDialog` to support `planned_activity` and `event_catalog` with the same column-mapping UI used for schools/agents.
+1. **Planning page → "Archive cycle" button** (admins only)
+   - Opens a small dialog: "Archive cycle {Sep 2024 – Aug 2025}? This will move all trips and planned activities in this window to the archive."
+   - On confirm: stamps affected rows with the cycle label and marks them archived.
+   - After archiving, the cycle settings roll forward to the next year automatically (user can adjust).
 
-What I need from you
---------------------
-- The two Notion links (or database IDs) for trips and events.
-- A quick description of the column names in each Notion database (e.g., "Trip name", "Start date", "Countries", "Cost", etc.) so the mapping is accurate.
-- Confirm whether you want the direct Notion API import or a CSV/Excel upload import.
+2. **New "Archive" tab** on both Planning and Trips pages
+   - Cycle picker at the top (e.g. "2024–2025", "2023–2024").
+   - Shows the same timeline/calendar/trip cards, but read-only: no edit, delete, cancel, status-change, or "Create trip from activity" buttons. Detail dialogs open in view-only mode.
+   - KPI tiles + per-country breakdown still render for the selected archived cycle.
 
-Notes
------
-- The direct Notion API import is a one-time operation; it does not keep the data in sync after the first import.
-- No new tables or schema changes are needed unless you also want to store the original Notion page IDs for future reference.
+3. **Default views hide archived rows**
+   - Planning timeline/calendar/events and Trips index (Draft / In progress / Approved / Past) filter out `archived = true`.
+   - "Past trips" in Trips index keeps its current meaning (completed, non-archived). Once archived, they leave "Past trips" and appear under Archive.
+
+4. **Manual archive/restore per item** (admin only, from the item's detail dialog)
+   - "Move to archive" / "Restore from archive" — useful for one-off cleanup outside a full-cycle archive.
+
+## Technical details
+
+Schema (single migration):
+- Add to `trips`, `planned_activities`, `events_catalog`:
+  - `archived boolean NOT NULL DEFAULT false`
+  - `archived_cycle text` (e.g. "2024-2025")
+  - `archived_at timestamptz`
+- Index `(archived, archived_cycle)` on each table.
+- RLS: keep existing policies; add no new access, admins archive/restore via existing update policies.
+
+Server functions (`src/lib/archive.functions.ts`):
+- `archiveCycle({ startMonth, startYear, endMonth, endYear })` — admin-gated via `has_role`; sets `archived=true`, `archived_cycle`, `archived_at` on rows whose date falls in the window.
+- `restoreCycle(cycle)` — reverse.
+- `archiveItem` / `restoreItem` for single-row toggles.
+
+UI:
+- `src/routes/_authenticated.planning.tsx`: add `archived=false` filter to all queries; add "Archive" tab + cycle picker; add "Archive cycle" action button; read-only rendering when viewing archive.
+- `src/routes/_authenticated.trips.index.tsx` + `_authenticated.trips.$tripId.tsx`: same filter + read-only mode when `archived=true`.
+- Reuse existing dialogs with an `isReadOnly` prop that hides mutation buttons.
+
+Out of scope: deleting archived data, exporting archives, multi-tenant cycle definitions.

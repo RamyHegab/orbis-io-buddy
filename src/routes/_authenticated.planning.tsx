@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useCapabilities } from "@/hooks/use-auth";
+import { useAuth, useCapabilities, useRole } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X } from "lucide-react";
+import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X, Archive as ArchiveIcon, RotateCcw } from "lucide-react";
 
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
@@ -25,6 +25,8 @@ import { countryFlag, countryFlagUrl } from "@/lib/country-flags";
 import { fmtDate } from "@/lib/format";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isWithinInterval } from "date-fns";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ArchiveCycleDialog } from "@/components/archive-cycle-dialog";
+
 
 export const Route = createFileRoute("/_authenticated/planning")({
   head: () => ({ meta: [{ title: "Planning — Orbis CRM" }] }),
@@ -89,6 +91,7 @@ const sum = (...xs: (number | null | undefined)[]) => xs.reduce<number>((a, x) =
 function PlanningPage() {
   const { user } = useAuth();
   const { caps } = useCapabilities();
+  const { isAdmin } = useRole();
   const canManageEvents = caps.can_manage_templates;
   const [tab, setTab] = useState("timeline");
 
@@ -97,16 +100,19 @@ function PlanningPage() {
       <PageHeader
         title="Yearly Activities Timeline"
         description="Plan your recruitment cycle: activities, events, costs and travellers."
+        actions={isAdmin ? <ArchiveCycleDialog /> : undefined}
       />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="timeline"><LayoutList className="h-4 w-4 mr-1" /> Timeline</TabsTrigger>
           <TabsTrigger value="calendar"><CalendarIcon className="h-4 w-4 mr-1" /> Calendar</TabsTrigger>
           <TabsTrigger value="events"><ListChecks className="h-4 w-4 mr-1" /> Events Catalogue</TabsTrigger>
+          <TabsTrigger value="archive"><ArchiveIcon className="h-4 w-4 mr-1" /> Archive</TabsTrigger>
         </TabsList>
         <TabsContent value="timeline" className="pt-4"><TimelineView userId={user?.id} /></TabsContent>
         <TabsContent value="calendar" className="pt-4"><CalendarView userId={user?.id} /></TabsContent>
         <TabsContent value="events" className="pt-4"><EventsCatalogView canManage={!!canManageEvents} /></TabsContent>
+        <TabsContent value="archive" className="pt-4"><ArchiveView isAdmin={!!isAdmin} /></TabsContent>
       </Tabs>
     </PageContainer>
   );
@@ -157,7 +163,7 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
   const { data: events = [] } = useQuery({
     queryKey: ["events_catalog_min"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("id,title,cost,start_date").order("start_date");
+      const { data } = await supabase.from("events_catalog").select("id,title,cost,start_date").eq("archived", false).order("start_date");
       return (data ?? []) as { id: string; title: string; cost: number | null; start_date: string }[];
     },
   });
@@ -309,7 +315,7 @@ function TimelineView({ userId }: { userId?: string }) {
   const { data: activities = [] } = useQuery<PlannedActivity[]>({
     queryKey: ["planned_activities"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("planned_activities").select("*").order("start_date");
+      const { data, error } = await supabase.from("planned_activities").select("*").eq("archived", false).order("start_date");
       if (error) throw error;
       return (data ?? []) as PlannedActivity[];
     },
@@ -318,7 +324,7 @@ function TimelineView({ userId }: { userId?: string }) {
   const { data: eventsCatalog = [] } = useQuery({
     queryKey: ["events_catalog_stats"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("id, cost, countries, status");
+      const { data } = await supabase.from("events_catalog").select("id, cost, countries, status").eq("archived", false);
       return (data ?? []) as { id: string; cost: number | null; countries: string[]; status: string }[];
     },
   });
@@ -631,7 +637,7 @@ function CalendarView({ userId }: { userId?: string }) {
   const { data: activities = [] } = useQuery<PlannedActivity[]>({
     queryKey: ["planned_activities"],
     queryFn: async () => {
-      const { data } = await supabase.from("planned_activities").select("*").order("start_date");
+      const { data } = await supabase.from("planned_activities").select("*").eq("archived", false).order("start_date");
       return (data ?? []) as PlannedActivity[];
     },
   });
@@ -710,7 +716,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
   const { data: events = [] } = useQuery<EventCatalog[]>({
     queryKey: ["events_catalog"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("*").order("start_date");
+      const { data } = await supabase.from("events_catalog").select("*").eq("archived", false).order("start_date");
       return (data ?? []) as EventCatalog[];
     },
   });
@@ -869,5 +875,124 @@ function EventDialog({ event, onClose }: { event: EventCatalog | null; onClose: 
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ArchiveView({ isAdmin }: { isAdmin: boolean }) {
+  const qc = useQueryClient();
+  const { data: cycles = [] } = useQuery({
+    queryKey: ["archived_cycles"],
+    queryFn: async () => {
+      const [t, p, e] = await Promise.all([
+        supabase.from("trips").select("archived_cycle").eq("archived", true),
+        supabase.from("planned_activities").select("archived_cycle").eq("archived", true),
+        supabase.from("events_catalog").select("archived_cycle").eq("archived", true),
+      ]);
+      const set = new Set<string>();
+      for (const row of [...(t.data ?? []), ...(p.data ?? []), ...(e.data ?? [])]) {
+        if (row.archived_cycle) set.add(row.archived_cycle);
+      }
+      return Array.from(set).sort().reverse();
+    },
+  });
+  const [selected, setSelected] = useState<string | null>(null);
+  const cycle = selected ?? cycles[0] ?? null;
+
+  const { data: trips = [] } = useQuery({
+    queryKey: ["archived_trips", cycle],
+    enabled: !!cycle,
+    queryFn: async () => {
+      const { data } = await supabase.from("trips").select("*").eq("archived", true).eq("archived_cycle", cycle!).order("start_date");
+      return data ?? [];
+    },
+  });
+  const { data: acts = [] } = useQuery({
+    queryKey: ["archived_activities", cycle],
+    enabled: !!cycle,
+    queryFn: async () => {
+      const { data } = await supabase.from("planned_activities").select("*").eq("archived", true).eq("archived_cycle", cycle!).order("start_date");
+      return data ?? [];
+    },
+  });
+  const { data: events = [] } = useQuery({
+    queryKey: ["archived_events", cycle],
+    enabled: !!cycle,
+    queryFn: async () => {
+      const { data } = await supabase.from("events_catalog").select("*").eq("archived", true).eq("archived_cycle", cycle!).order("start_date");
+      return data ?? [];
+    },
+  });
+
+  const restore = useMutation({
+    mutationFn: async () => {
+      if (!cycle) return;
+      const stamp = { archived: false, archived_cycle: null, archived_at: null };
+      await supabase.from("trips").update(stamp).eq("archived_cycle", cycle);
+      await supabase.from("planned_activities").update(stamp).eq("archived_cycle", cycle);
+      await supabase.from("events_catalog").update(stamp).eq("archived_cycle", cycle);
+    },
+    onSuccess: () => {
+      toast.success(`Cycle ${cycle} restored`);
+      qc.invalidateQueries();
+      setSelected(null);
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to restore"),
+  });
+
+  if (cycles.length === 0) {
+    return <Card className="p-8 text-center text-muted-foreground">No archived cycles yet.</Card>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Label className="mr-1">Cycle:</Label>
+        {cycles.map((c) => (
+          <Button key={c} size="sm" variant={c === cycle ? "default" : "outline"} onClick={() => setSelected(c)}>{c}</Button>
+        ))}
+        {isAdmin && cycle && (
+          <Button size="sm" variant="outline" className="ml-auto" onClick={() => restore.mutate()} disabled={restore.isPending}>
+            <RotateCcw className="h-4 w-4 mr-1" /> Restore cycle
+          </Button>
+        )}
+      </div>
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">Trips ({trips.length})</h3>
+        <div className="space-y-1 text-sm">
+          {trips.map((t: any) => (
+            <div key={t.id} className="flex justify-between border-b py-1">
+              <span>{t.title}</span>
+              <span className="text-muted-foreground">{t.start_date} → {t.end_date}</span>
+            </div>
+          ))}
+          {trips.length === 0 && <div className="text-muted-foreground">None</div>}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">Planned activities ({acts.length})</h3>
+        <div className="space-y-1 text-sm">
+          {acts.map((a: any) => (
+            <div key={a.id} className="flex justify-between border-b py-1">
+              <span>{a.title}</span>
+              <span className="text-muted-foreground">{a.start_date} → {a.end_date}</span>
+            </div>
+          ))}
+          {acts.length === 0 && <div className="text-muted-foreground">None</div>}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">Events ({events.length})</h3>
+        <div className="space-y-1 text-sm">
+          {events.map((e: any) => (
+            <div key={e.id} className="flex justify-between border-b py-1">
+              <span>{e.title}</span>
+              <span className="text-muted-foreground">{e.start_date} → {e.end_date}</span>
+            </div>
+          ))}
+          {events.length === 0 && <div className="text-muted-foreground">None</div>}
+        </div>
+      </Card>
+      <p className="text-xs text-muted-foreground">Archived items are read-only. Restore the whole cycle to make them editable again.</p>
+    </div>
   );
 }
