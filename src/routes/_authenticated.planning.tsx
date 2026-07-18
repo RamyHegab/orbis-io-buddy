@@ -857,7 +857,7 @@ function EventDialog({ event, onClose }: { event: EventCatalog | null; onClose: 
               <Label>Status</Label>
               <Select value={form.status ?? "proposed"} onValueChange={(v: any) => setForm({ ...form, status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STATUSES.map((s) => (<SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>))}</SelectContent>
+                <SelectContent>{EVENT_STATUSES.map((s) => (<SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>))}</SelectContent>
               </Select>
             </div>
           </div>
