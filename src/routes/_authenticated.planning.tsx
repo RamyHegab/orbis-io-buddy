@@ -26,7 +26,7 @@ import { fmtDate } from "@/lib/format";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isWithinInterval } from "date-fns";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArchiveCycleDialog } from "@/components/archive-cycle-dialog";
-import { useRole } from "@/hooks/use-role";
+import { useRole } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/planning")({
   head: () => ({ meta: [{ title: "Planning — Orbis CRM" }] }),
