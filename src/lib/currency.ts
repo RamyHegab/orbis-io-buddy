@@ -13,16 +13,16 @@ export function currencySymbol(code?: string | null): string {
 
 export function formatMoney(amount: number | null | undefined, currency?: string | null): string {
   if (amount == null || Number.isNaN(Number(amount))) return "—";
-  const n = Number(amount);
+  const n = Math.ceil(Number(amount));
   const code = (currency || "GBP").toUpperCase();
   try {
     return new Intl.NumberFormat("en-GB", {
       style: "currency",
       currency: code,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 0,
     }).format(n);
   } catch {
-    return `${currencySymbol(code)}${n.toFixed(2)}`;
+    return `${currencySymbol(code)}${n}`;
   }
 }
 
