@@ -197,11 +197,47 @@ function FormsPage() {
         title="Forms"
         description="Generate recruitment forms from templates, share them via QR/link, and collect submissions — even offline."
         actions={
-          canManageTemplates ? (
-            <Dialog open={tplOpen} onOpenChange={setTplOpen}>
-              <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
-              </DialogTrigger>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search forms…"
+                className="pl-8 h-9 w-48"
+              />
+            </div>
+            <Select value={sort} onValueChange={(v) => setSort(v as any)}>
+              <SelectTrigger className="h-9 w-36">
+                <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="name_asc">Name A–Z</SelectItem>
+                <SelectItem value="name_desc">Name Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
+              <SelectTrigger className="h-9 w-40"><SelectValue placeholder="Activity type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {activityTypes.map((t) => (
+                  <SelectItem key={t} value={t}>{ACTIVITY_TYPE_LABELS[t] ?? t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setSort("newest"); setActivityTypeFilter("all"); }}>
+                <X className="h-4 w-4 mr-1" /> Clear
+              </Button>
+            )}
+            {canManageTemplates ? (
+              <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader><DialogTitle>New form template</DialogTitle></DialogHeader>
                 <div className="space-y-3">
