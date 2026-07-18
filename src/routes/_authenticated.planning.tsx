@@ -469,8 +469,11 @@ function TimelineView({ userId }: { userId?: string }) {
       )}
       {filtered.map((a) => {
         const total = sum(a.events_cost, a.travel_cost, a.hotel_cost, a.subsistence_cost);
+        const traveller = a.traveller_id ? profileById.get(a.traveller_id) : null;
+        const travellerName = traveller?.full_name || traveller?.email || (a.traveller_id ? a.traveller_id.slice(0, 8) : "Unassigned");
+        const isDelegated = !!a.traveller_id && a.traveller_id !== userId;
         return (
-          <Card key={a.id} className="p-4">
+          <Card key={a.id} className={`p-4 ${isDelegated ? "bg-gold/10 border-gold/40" : ""}`}>
             <div className="flex items-start gap-4">
               <div className="text-center min-w-[70px] rounded-md bg-primary text-primary-foreground py-2">
                 <div className="text-[10px] uppercase tracking-wider text-gold">{format(parseISO(a.start_date), "MMM")}</div>
@@ -492,6 +495,13 @@ function TimelineView({ userId }: { userId?: string }) {
                     </Badge>
                   ))}
                   <Badge variant="outline" className="text-xs">Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-xs ${isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
+                    title={isDelegated ? "Delegated to another user" : "You are the traveller"}
+                  >
+                    Traveller: {travellerName}{isDelegated ? " (delegated)" : ""}
+                  </Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
                   <div><span className="text-muted-foreground">Events:</span> {Number(a.events_cost || 0).toLocaleString()}</div>
