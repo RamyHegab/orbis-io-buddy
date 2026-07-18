@@ -1,5 +1,5 @@
 import { foregroundFor } from "@/components/branding-provider";
-import { LayoutDashboard, Users, MapPin, Bell, Search } from "lucide-react";
+import { LayoutDashboard, Users, MapPin, Bell, Search, Globe2, LogOut } from "lucide-react";
 
 type Mode = "default" | "from_logo" | "custom";
 
@@ -38,22 +38,37 @@ export function BrandingPreview({
       </div>
 
       {/* App shell mock */}
-      <div className="grid grid-cols-[140px_1fr] rounded-md overflow-hidden border bg-background shadow-sm min-h-[280px]">
+      <div className="grid grid-cols-[160px_1fr] rounded-md overflow-hidden border bg-background shadow-sm min-h-[340px]">
         {/* Sidebar */}
-        <div style={{ background: s, color: sf }} className="p-2.5 flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 pb-2 border-b" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
-            <div className="h-7 w-7 rounded-md bg-white/90 flex items-center justify-center overflow-hidden shrink-0">
-              {logoUrl ? (
-                <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" />
-              ) : (
-                <span className="text-[9px] font-bold text-slate-600">LOGO</span>
-              )}
+        <div style={{ background: s, color: sf }} className="flex flex-col">
+          {/* Top: Orbis lockup (fixed) */}
+          <div className="flex items-center gap-2 px-3 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+            <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0" style={{ background: a, color: af }}>
+              <Globe2 className="h-4 w-4" />
             </div>
-            <div className="text-[11px] font-semibold truncate">Orbis CRM</div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold truncate" style={{ color: a }}>Orbis CRM</div>
+              <div className="text-[9px] opacity-70 truncate">The IO Buddy</div>
+            </div>
           </div>
-          <NavItem icon={<LayoutDashboard className="h-3 w-3" />} label="Dashboard" active accent={a} accentFg={af} />
-          <NavItem icon={<Users className="h-3 w-3" />} label="Agents" />
-          <NavItem icon={<MapPin className="h-3 w-3" />} label="Trips" />
+          {/* Nav */}
+          <div className="flex-1 p-2 flex flex-col gap-1">
+            <NavItem icon={<LayoutDashboard className="h-3 w-3" />} label="Dashboard" active accent={a} accentFg={af} />
+            <NavItem icon={<Users className="h-3 w-3" />} label="Agents" />
+            <NavItem icon={<MapPin className="h-3 w-3" />} label="Trips" />
+          </div>
+          {/* Bottom: uploaded logo above logout */}
+          {logoUrl && (
+            <div className="px-3 pt-3 pb-2 flex justify-center">
+              <div className="bg-white/95 rounded p-1.5 w-full flex items-center justify-center">
+                <img src={logoUrl} alt="" className="max-h-10 max-w-full object-contain" />
+              </div>
+            </div>
+          )}
+          <div className="border-t px-3 py-2 flex items-center gap-1.5 text-[10px] opacity-80" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+            <LogOut className="h-3 w-3" />
+            <span>Log out</span>
+          </div>
         </div>
 
         {/* Main */}
