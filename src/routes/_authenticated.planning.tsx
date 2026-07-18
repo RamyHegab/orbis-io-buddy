@@ -637,7 +637,7 @@ function CalendarView({ userId }: { userId?: string }) {
   const { data: activities = [] } = useQuery<PlannedActivity[]>({
     queryKey: ["planned_activities"],
     queryFn: async () => {
-      const { data } = await supabase.from("planned_activities").select("*").order("start_date");
+      const { data } = await supabase.from("planned_activities").select("*").eq("archived", false).order("start_date");
       return (data ?? []) as PlannedActivity[];
     },
   });
