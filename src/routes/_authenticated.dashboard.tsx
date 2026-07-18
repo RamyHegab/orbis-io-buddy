@@ -284,7 +284,6 @@ function Dashboard() {
       options: schoolCountryOptions,
     },
     { label: "Trips", value: stats?.trips ?? 0, icon: Plane, to: "/trips" as const },
-    { label: "Activities", value: stats?.activities ?? 0, icon: CalendarDays, to: "/trips" as const },
   ] as Array<{
     label: string;
     value: number;
@@ -301,56 +300,81 @@ function Dashboard() {
 
       <DiscoveryBanner />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {cards.map((c) => (
-          <Card key={c.label} className="p-5 hover:shadow-md transition-shadow relative">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">{c.label}</span>
-              <div className="flex items-center gap-1">
-                {c.setFilter && c.options && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Filter ${c.label} by country`}
-                      >
-                        <Filter
-                          className={`h-3.5 w-3.5 ${
-                            c.filter !== "all" ? "text-primary" : "text-muted-foreground"
-                          }`}
+      <div className="grid lg:grid-cols-[2fr_1fr] gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-3">
+          {cards.map((c) => (
+            <Card key={c.label} className="p-3 hover:shadow-md transition-shadow relative">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-muted-foreground">{c.label}</span>
+                <div className="flex items-center gap-1">
+                  {c.setFilter && c.options && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Filter ${c.label} by country`}
+                        >
+                          <Filter
+                            className={`h-3 w-3 ${
+                              c.filter !== "all" ? "text-primary" : "text-muted-foreground"
+                            }`}
+                          />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-64 p-3 space-y-2">
+                        <div className="text-xs font-medium text-muted-foreground">
+                          Filter {c.label.toLowerCase()} by country
+                        </div>
+                        <CountryFilter
+                          options={c.options}
+                          value={c.filter}
+                          onChange={c.setFilter}
+                          displayMap={displayMap}
                         />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64 p-3 space-y-2">
-                      <div className="text-xs font-medium text-muted-foreground">
-                        Filter {c.label.toLowerCase()} by country
-                      </div>
-                      <CountryFilter
-                        options={c.options}
-                        value={c.filter}
-                        onChange={c.setFilter}
-                        displayMap={displayMap}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-                <c.icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-            <Link to={c.to as any} className="block">
-              <div className="text-3xl font-semibold tracking-tight">{c.value}</div>
-              {c.filter && c.filter !== "all" && (
-                <div className="text-xs text-muted-foreground mt-1 truncate">
-                  in {displayMap[c.filter] ?? c.filter}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  <c.icon className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
-              )}
-            </Link>
-          </Card>
-        ))}
+              </div>
+              <Link to={c.to as any} className="block">
+                <div className="text-2xl font-semibold tracking-tight">{c.value}</div>
+                {c.filter && c.filter !== "all" && (
+                  <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                    in {displayMap[c.filter] ?? c.filter}
+                  </div>
+                )}
+              </Link>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="p-4">
+          <h2 className="font-semibold mb-2 text-sm">Today's activities</h2>
+          {todayActivities && todayActivities.length > 0 ? (
+            <ul className="space-y-2 max-h-32 overflow-y-auto">
+              {todayActivities.map((a: any) => (
+                <li key={a.id} className="flex items-start gap-2">
+                  <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${ACTIVITY_DOT_COLORS[a.type]}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-xs truncate">{a.title}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {ACTIVITY_TYPE_LABELS[a.type]}
+                      {a.start_time && ` • ${a.start_time.slice(0, 5)}`}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-muted-foreground">Nothing scheduled today.</p>
+          )}
+        </Card>
       </div>
+
 
 
       <div className="grid lg:grid-cols-[2fr_1fr] gap-6 mb-6 lg:h-[420px]">
