@@ -1,50 +1,50 @@
-# Archive past cycles and trips
+## Goal
 
-Give users a way to close out a completed cycle so old trips and planned activities disappear from the active Planning/Trips views but stay fully browsable in a read-only Archive.
+Let an Admin upload a University logo and set the app's colour scheme — either auto-derived from the logo, or manually set (pickers). Applied app-wide (sidebar, header, buttons, accents). Non-admins see the branding but can't change it. Fully revertable from the same settings card.
 
-## Concept
+## Where it plugs in
 
-- A "cycle" is the recruitment year already defined in `cycle_settings` (start/end month + year).
-- Users can **archive** a cycle when it ends. Everything dated inside that cycle window becomes read-only and hidden from the default Planning + Trips views.
-- Nothing is deleted. Archived items remain visible under a new **Archive** tab, filterable by cycle.
+- **Settings page** (`src/routes/_authenticated.settings.tsx`): new "Branding" card, Admin-only, alongside existing "Account" card.
+- **Storage**: reuse existing private `avatars` bucket with a `branding/` prefix (or add a `branding` bucket if you'd prefer public URLs — I'll default to a new **public** `branding` bucket so the logo renders in the sidebar/header without signed URLs).
+- **DB**: extend the existing `app_settings` singleton (id=1) — no new table.
+- **Theme application**: a small `BrandingProvider` mounted in `src/routes/__root.tsx` that reads settings and injects CSS variable overrides (`--primary`, `--accent`, `--sidebar`, `--ring`, `--gold`) onto `:root`. Overrides only when set; otherwise the current navy/gold theme stands.
+- **Logo display**: sidebar header in `src/components/app-shell.tsx` (and the top header) shows the uploaded logo when present.
 
-## User-facing changes
+## Changes
 
-1. **Planning page → "Archive cycle" button** (admins only)
-   - Opens a small dialog: "Archive cycle {Sep 2024 – Aug 2025}? This will move all trips and planned activities in this window to the archive."
-   - On confirm: stamps affected rows with the cycle label and marks them archived.
-   - After archiving, the cycle settings roll forward to the next year automatically (user can adjust).
+1. **DB migration** — add to `app_settings`:
+   - `logo_url text`
+   - `logo_path text` (storage path for delete/replace)
+   - `theme_mode text default 'default'` — `'default' | 'from_logo' | 'custom'`
+   - `theme_primary text`, `theme_accent text`, `theme_sidebar text` (hex, nullable)
+   - RLS already restricts writes to admin; unchanged.
 
-2. **New "Archive" tab** on both Planning and Trips pages
-   - Cycle picker at the top (e.g. "2024–2025", "2023–2024").
-   - Shows the same timeline/calendar/trip cards, but read-only: no edit, delete, cancel, status-change, or "Create trip from activity" buttons. Detail dialogs open in view-only mode.
-   - KPI tiles + per-country breakdown still render for the selected archived cycle.
+2. **Storage** — create public `branding` bucket via storage tool; RLS: public SELECT, admin-only INSERT/UPDATE/DELETE (via `has_role(auth.uid(),'admin')`).
 
-3. **Default views hide archived rows**
-   - Planning timeline/calendar/events and Trips index (Draft / In progress / Approved / Past) filter out `archived = true`.
-   - "Past trips" in Trips index keeps its current meaning (completed, non-archived). Once archived, they leave "Past trips" and appear under Archive.
+3. **Branding card** (`_authenticated.settings.tsx`, Admin-only):
+   - Logo upload (drag/drop or file picker), preview, "Remove logo".
+   - Radio: **Use default theme** / **Derive from logo** / **Custom colours**.
+   - Derive-from-logo: client-side extract dominant + accent colour from the uploaded image using a tiny palette function (canvas + downsample; no dependency needed — or add `colorthief` if you'd prefer).
+   - Custom: three colour pickers (Primary, Accent, Sidebar) with hex input.
+   - "Preview" applies live via the provider; "Save" persists; "Reset to default" clears everything (this is your revert).
 
-4. **Manual archive/restore per item** (admin only, from the item's detail dialog)
-   - "Move to archive" / "Restore from archive" — useful for one-off cleanup outside a full-cycle archive.
+4. **BrandingProvider** (`src/components/branding-provider.tsx`):
+   - Reads `app_settings` (via existing `useAppSettings` extended).
+   - Converts hex → oklch and sets CSS vars on `document.documentElement` so Tailwind tokens pick them up automatically.
+   - No override when `theme_mode='default'`.
 
-## Technical details
+5. **Logo rendering**:
+   - `app-shell.tsx` sidebar brand area: show logo if `logo_url` else current text mark.
+   - Optional: header-menu left slot mirrors the same.
 
-Schema (single migration):
-- Add to `trips`, `planned_activities`, `events_catalog`:
-  - `archived boolean NOT NULL DEFAULT false`
-  - `archived_cycle text` (e.g. "2024-2025")
-  - `archived_at timestamptz`
-- Index `(archived, archived_cycle)` on each table.
-- RLS: keep existing policies; add no new access, admins archive/restore via existing update policies.
+## Revert path
 
-Server functions (`src/lib/archive.functions.ts`):
-- `archiveCycle({ startMonth, startYear, endMonth, endYear })` — admin-gated via `has_role`; sets `archived=true`, `archived_cycle`, `archived_at` on rows whose date falls in the window.
-- `restoreCycle(cycle)` — reverse.
-- `archiveItem` / `restoreItem` for single-row toggles.
+Everything lives behind `theme_mode` and `logo_url`. Clicking **"Reset to default"** clears the fields — theme + logo revert instantly across the app, no code changes needed. If you dislike the feature entirely, revert this chat message from history and the migration/UI go away together.
 
-UI:
-- `src/routes/_authenticated.planning.tsx`: add `archived=false` filter to all queries; add "Archive" tab + cycle picker; add "Archive cycle" action button; read-only rendering when viewing archive.
-- `src/routes/_authenticated.trips.index.tsx` + `_authenticated.trips.$tripId.tsx`: same filter + read-only mode when `archived=true`.
-- Reuse existing dialogs with an `isReadOnly` prop that hides mutation buttons.
+## Out of scope
 
-Out of scope: deleting archived data, exporting archives, multi-tenant cycle definitions.
+- Dark-mode-specific overrides (we'll override the light theme only; dark stays as-is unless you want both).
+- Per-user themes.
+- Full brand kit (typography, favicons) — logo + 3 colours only for this pass.
+
+Shall I build it?

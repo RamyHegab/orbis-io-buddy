@@ -335,6 +335,12 @@ export type Database = {
           cycle_start_month: number
           cycle_start_year: number
           id: number
+          logo_path: string | null
+          logo_url: string | null
+          theme_accent: string | null
+          theme_mode: string
+          theme_primary: string | null
+          theme_sidebar: string | null
           updated_at: string
         }
         Insert: {
@@ -345,6 +351,12 @@ export type Database = {
           cycle_start_month?: number
           cycle_start_year?: number
           id?: number
+          logo_path?: string | null
+          logo_url?: string | null
+          theme_accent?: string | null
+          theme_mode?: string
+          theme_primary?: string | null
+          theme_sidebar?: string | null
           updated_at?: string
         }
         Update: {
@@ -355,6 +367,12 @@ export type Database = {
           cycle_start_month?: number
           cycle_start_year?: number
           id?: number
+          logo_path?: string | null
+          logo_url?: string | null
+          theme_accent?: string | null
+          theme_mode?: string
+          theme_primary?: string | null
+          theme_sidebar?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/use-auth";
 import { CURRENCY_OPTIONS, currencySymbol } from "@/lib/currency";
 import { toast } from "sonner";
+import { BrandingCard } from "@/components/branding-card";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -102,6 +103,8 @@ function SettingsPage() {
       />
 
       {isAdmin && <AccountSettingsCard />}
+      {isAdmin && <BrandingCard />}
+
 
 
 
