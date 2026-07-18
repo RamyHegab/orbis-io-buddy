@@ -70,7 +70,7 @@ export const generateTripReport = createServerFn({ method: "POST" })
       totals.hotel[cur] = (totals.hotel[cur] ?? 0) + amt;
     }
     const fmtTotals = (m: Record<string, number>) =>
-      Object.entries(m).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(", ") || "—";
+      Object.entries(m).map(([c, v]) => formatMoney(v, c)).join(", ") || "—";
     ctx += `\n## Cost Totals\n`;
     ctx += `- Travel: ${fmtTotals(totals.travel)}\n`;
     ctx += `- Hotels: ${fmtTotals(totals.hotel)}\n`;
