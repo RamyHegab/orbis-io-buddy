@@ -242,6 +242,10 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
             Good luck and enjoy your trip! ✈️
           </div>
         )}
+        <div className="pt-4 mt-2 border-t border-primary/20 text-xs text-muted-foreground flex items-center gap-1">
+          <HistoryIcon className="h-3.5 w-3.5" />
+          Looking for older trips? See <a href="/planning?tab=archive" className="underline">Previous Cycles Activities</a>.
+        </div>
       </div>
     </Card>
   );
@@ -429,14 +433,6 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <HistoryIcon className="h-3.5 w-3.5" />
-            Looking for older trips? See <a href="/planning?tab=archive" className="underline">Previous Cycles Activities</a>.
-          </div>
-
-
-
-
         </div>
         <aside>
           <ChecklistPanel trip={selectedTrip} />
