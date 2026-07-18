@@ -47,8 +47,6 @@ function bucketOf(t: { start_date: string; end_date: string; status: string }): 
 }
 
 type ChecklistKey =
-  | "save_as_draft"
-  | "confirm_itinerary"
   | "itinerary_approved"
   | "freight_required"
   | "parcel_sent"
@@ -57,15 +55,14 @@ type ChecklistKey =
   | "risk_assessment";
 
 const CHECKLIST_ITEMS: { key: ChecklistKey; label: string; hint?: string }[] = [
-  { key: "save_as_draft", label: "Save as draft", hint: "Keep working on other steps before submitting for approval" },
-  { key: "confirm_itinerary", label: "Confirm itinerary" },
-  { key: "itinerary_approved", label: "Itinerary approved", hint: "Line manager approves from their account" },
-  { key: "freight_required", label: "Freight required?", hint: "System will remind in notifications if Yes" },
+  { key: "itinerary_approved", label: "Itinerary approved", hint: "Auto-ticked when your line manager approves" },
+  { key: "freight_required", label: "Freight required?" },
   { key: "parcel_sent", label: "Parcel sent" },
-  { key: "book_appointment", label: "Book appointment", hint: "Will prompt to email itinerary contacts" },
-  { key: "book_flights_hotels", label: "Book flights and hotels" },
-  { key: "risk_assessment", label: "Risk assessment review" },
+  { key: "book_appointment", label: "Appointments booked" },
+  { key: "book_flights_hotels", label: "Hotels and flights booked" },
+  { key: "risk_assessment", label: "Review risk assessment" },
 ];
+
 
 function TripCard({ trip, selected, onSelect }: { trip: any; selected?: boolean; onSelect?: () => void }) {
   const qc = useQueryClient();
@@ -162,9 +159,11 @@ function HorizontalRow({ title, trips, selectedId, onSelect, empty }: { title: s
 
 function ChecklistPanel({ trip }: { trip: any | null }) {
   const qc = useQueryClient();
-  // The trip existing IS proof the draft was saved, so seed that step as done
-  // unless the user explicitly unchecked it.
-  const checklist: Record<string, any> = { save_as_draft: true, ...((trip?.checklist ?? {}) as Record<string, any>) };
+  const approvedByStatus = trip?.status === "approved" || trip?.status === "confirmed";
+  const checklist: Record<string, any> = {
+    ...((trip?.checklist ?? {}) as Record<string, any>),
+    ...(approvedByStatus ? { itinerary_approved: true } : {}),
+  };
 
   const update = useMutation({
     mutationFn: async (next: Record<string, any>) => {
@@ -176,6 +175,7 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
   });
 
   const setVal = (key: ChecklistKey, value: any) => {
+    if (key === "itinerary_approved" && approvedByStatus) return;
     update.mutate({ ...checklist, [key]: value });
   };
 
@@ -202,50 +202,45 @@ function ChecklistPanel({ trip }: { trip: any | null }) {
         {CHECKLIST_ITEMS.map((item) => {
           if (item.key === "freight_required") {
             const v = checklist[item.key];
+            const answered = v === "yes" || v === "no";
             return (
-              <div key={item.key} className="space-y-1 rounded-md border border-primary/30 bg-muted/40 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm font-medium">{item.label}</div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant={v === "yes" ? "default" : "outline"} className={`h-7 px-2 ${v === "yes" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "yes")}>Yes</Button>
-                    <Button size="sm" variant={v === "no" ? "default" : "outline"} className={`h-7 px-2 ${v === "no" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "no")}>No</Button>
-                  </div>
+              <div key={item.key} className="flex items-center justify-between gap-2">
+                <div className={`text-sm font-medium ${answered ? "line-through text-muted-foreground" : ""}`}>{item.label}</div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant={v === "yes" ? "default" : "outline"} className={`h-7 px-2 ${v === "yes" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "yes")}>Yes</Button>
+                  <Button size="sm" variant={v === "no" ? "default" : "outline"} className={`h-7 px-2 ${v === "no" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "no")}>No</Button>
                 </div>
-                {item.hint && <div className="text-xs text-muted-foreground">{item.hint}</div>}
               </div>
             );
           }
           const done = !!checklist[item.key];
+          const locked = item.key === "itinerary_approved" && approvedByStatus;
           return (
             <label key={item.key} className="flex items-start gap-3 cursor-pointer">
               <Checkbox
                 checked={done}
+                disabled={locked}
                 onCheckedChange={(c) => setVal(item.key, !!c)}
                 className="mt-0.5 data-[state=checked]:bg-gold data-[state=checked]:text-gold-foreground data-[state=checked]:border-gold"
               />
               <div className="flex-1">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  {item.label}
-                  {done ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-gold-foreground bg-gold rounded-sm px-1.5 py-0.5"><CheckCircle2 className="h-3 w-3" /> Done</span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Circle className="h-3 w-3" /> Open</span>
-                  )}
-                </div>
+                <div className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>{item.label}</div>
                 {item.hint && <div className="text-xs text-muted-foreground">{item.hint}</div>}
               </div>
+              {done ? <CheckCircle2 className="h-4 w-4 text-gold mt-0.5" /> : <Circle className="h-4 w-4 text-muted-foreground mt-0.5" />}
             </label>
           );
         })}
         {allDone && (
           <div className="rounded-md border-2 border-gold bg-gold/15 p-3 text-sm font-semibold text-primary text-center">
-            Good luck and enjoy your trip! ✈️
+            All checks done — Have a safe journey. Good luck! ✈️
           </div>
         )}
       </div>
     </Card>
   );
 }
+
 
 function TripsPage() {
   const { user } = useAuth();

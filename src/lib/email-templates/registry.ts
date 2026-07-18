@@ -4,6 +4,8 @@ import { template as tripApproved } from './trip-approved'
 import { template as tripChangesRequested } from './trip-changes-requested'
 import { template as planningItineraryReminder } from './planning-itinerary-reminder'
 import { template as planningActualCostsReminder } from './planning-actual-costs-reminder'
+import { template as checklistReminder } from './checklist-reminder'
+
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -20,4 +22,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'trip-changes-requested': tripChangesRequested,
   'planning-itinerary-reminder': planningItineraryReminder,
   'planning-actual-costs-reminder': planningActualCostsReminder,
+  'checklist-reminder': checklistReminder,
 }

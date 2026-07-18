@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 
 type ChecklistKey =
-  | "save_as_draft"
-  | "confirm_itinerary"
   | "itinerary_approved"
   | "freight_required"
   | "parcel_sent"
@@ -19,14 +17,12 @@ type ChecklistKey =
   | "risk_assessment";
 
 const ITEMS: { key: ChecklistKey; label: string }[] = [
-  { key: "save_as_draft", label: "Save as draft" },
-  { key: "confirm_itinerary", label: "Confirm itinerary" },
   { key: "itinerary_approved", label: "Itinerary approved" },
   { key: "freight_required", label: "Freight required?" },
   { key: "parcel_sent", label: "Parcel sent" },
-  { key: "book_appointment", label: "Book appointment" },
-  { key: "book_flights_hotels", label: "Book flights and hotels" },
-  { key: "risk_assessment", label: "Risk assessment review" },
+  { key: "book_appointment", label: "Appointments booked" },
+  { key: "book_flights_hotels", label: "Hotels and flights booked" },
+  { key: "risk_assessment", label: "Review risk assessment" },
 ];
 
 export type UpcomingTrip = {
@@ -34,13 +30,17 @@ export type UpcomingTrip = {
   title: string;
   start_date: string;
   end_date: string;
+  status?: string | null;
   checklist: Record<string, any> | null;
 } | null;
 
 export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
   const qc = useQueryClient();
-  // The trip existing IS proof the draft was saved.
-  const checklist: Record<string, any> = { save_as_draft: true, ...((trip?.checklist ?? {}) as Record<string, any>) };
+  const approvedByStatus = trip?.status === "approved" || trip?.status === "confirmed";
+  const checklist: Record<string, any> = {
+    ...((trip?.checklist ?? {}) as Record<string, any>),
+    ...(approvedByStatus ? { itinerary_approved: true } : {}),
+  };
 
   const update = useMutation({
     mutationFn: async (next: Record<string, any>) => {
@@ -57,6 +57,7 @@ export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
 
   const setVal = (key: ChecklistKey, value: any) => {
     if (!trip) return;
+    if (key === "itinerary_approved" && approvedByStatus) return;
     update.mutate({ ...checklist, [key]: value });
   };
 
@@ -75,6 +76,7 @@ export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
     return !!checklist[i.key];
   }).length;
   const pct = Math.round((doneCount / ITEMS.length) * 100);
+  const allDone = doneCount === ITEMS.length;
 
   return (
     <Card className="p-0 border-2 border-primary/80 overflow-hidden h-full flex flex-col">
@@ -92,9 +94,10 @@ export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
         {ITEMS.map((item) => {
           if (item.key === "freight_required") {
             const v = checklist[item.key];
+            const answered = v === "yes" || v === "no";
             return (
               <div key={item.key} className="flex items-center justify-between gap-2">
-                <span className="text-sm">{item.label}</span>
+                <span className={`text-sm ${answered ? "line-through text-muted-foreground" : ""}`}>{item.label}</span>
                 <div className="flex gap-1">
                   <Button size="sm" variant={v === "yes" ? "default" : "outline"} className={`h-6 text-xs px-2 ${v === "yes" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "yes")}>Yes</Button>
                   <Button size="sm" variant={v === "no" ? "default" : "outline"} className={`h-6 text-xs px-2 ${v === "no" ? "bg-gold text-gold-foreground hover:bg-gold/90" : ""}`} onClick={() => setVal(item.key, "no")}>No</Button>
@@ -103,10 +106,12 @@ export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
             );
           }
           const done = !!checklist[item.key];
+          const locked = item.key === "itinerary_approved" && approvedByStatus;
           return (
             <label key={item.key} className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={done}
+                disabled={locked}
                 onCheckedChange={(c) => setVal(item.key, !!c)}
                 className="data-[state=checked]:bg-gold data-[state=checked]:text-gold-foreground data-[state=checked]:border-gold"
               />
@@ -115,6 +120,11 @@ export function UpcomingChecklist({ trip }: { trip: UpcomingTrip }) {
             </label>
           );
         })}
+        {allDone && (
+          <div className="rounded-md border-2 border-gold bg-gold/15 p-2 text-xs font-semibold text-primary text-center">
+            All checks done — Have a safe journey. Good luck! ✈️
+          </div>
+        )}
       </div>
     </Card>
   );
