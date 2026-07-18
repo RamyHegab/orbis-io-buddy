@@ -624,6 +624,7 @@ const STATUS_TEXT_COLORS: Record<string, string> = {
   confirmed: "text-academic-preferred",
   done: "text-green-800",
   canceled: "text-status-canceled",
+  not_attending: "text-status-canceled/70",
 };
 
 function CalendarView({ userId }: { userId?: string }) {
