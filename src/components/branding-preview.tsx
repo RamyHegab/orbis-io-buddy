@@ -67,7 +67,7 @@ export function BrandingPreview({
           )}
           <div className="border-t px-3 py-2 flex items-center gap-1.5 text-[10px] opacity-80" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
             <LogOut className="h-3 w-3" />
-            <span>Log out</span>
+            <span>Sign out</span>
           </div>
         </div>
 
