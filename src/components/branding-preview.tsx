@@ -57,14 +57,16 @@ export function BrandingPreview({
             <NavItem icon={<Users className="h-3 w-3" />} label="Agents" />
             <NavItem icon={<MapPin className="h-3 w-3" />} label="Trips" />
           </div>
-          {/* Bottom: uploaded logo above logout */}
-          {logoUrl && (
-            <div className="px-3 pt-3 pb-2 flex justify-center">
-              <div className="bg-white/95 rounded p-1.5 w-full flex items-center justify-center">
-                <img src={logoUrl} alt="" className="max-h-10 max-w-full object-contain" />
+          {/* Middle: uploaded logo centered above logout */}
+          <div className="flex-1 flex flex-col items-center justify-center px-3 py-3">
+            {logoUrl ? (
+              <div className="w-full flex items-center justify-center">
+                <div className="bg-white/95 rounded p-1.5 w-full flex items-center justify-center">
+                  <img src={logoUrl} alt="" className="max-h-10 max-w-full object-contain" />
+                </div>
               </div>
-            </div>
-          )}
+            ) : null}
+          </div>
           <div className="border-t px-3 py-2 flex items-center gap-1.5 text-[10px] opacity-80" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
             <LogOut className="h-3 w-3" />
             <span>Sign out</span>
