@@ -233,6 +233,16 @@ export function BrandingCard() {
           </div>
         )}
 
+        <BrandingPreview
+          logoUrl={logoUrl}
+          mode={mode}
+          primary={primary}
+          accent={accent}
+          sidebar={sidebar}
+        />
+
+
+
         <div className="flex flex-wrap justify-between gap-2">
           <Button variant="ghost" onClick={() => reset.mutate()} disabled={reset.isPending}>
             Reset to default
