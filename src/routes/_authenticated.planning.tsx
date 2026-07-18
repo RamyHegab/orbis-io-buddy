@@ -310,6 +310,8 @@ function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivi
 function TimelineView({ userId }: { userId?: string }) {
   const qc = useQueryClient();
   const nav = useNavigate();
+  const settings = useAppSettings();
+  const money = (n: number) => formatMoney(n, settings.currency);
   const [editing, setEditing] = useState<PlannedActivity | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
