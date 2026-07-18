@@ -126,7 +126,7 @@ export function BrandingCard() {
         theme_sidebar: null,
       }, { onConflict: "id" });
       if (error) throw error;
-      setLogoUrl(null); setLogoPath(null); setMode("default");
+      setLogoUrl(null); setLogoPath(null); setMode("default"); setSuggested(null);
     },
     onSuccess: () => {
       toast.success("Reverted to default");
