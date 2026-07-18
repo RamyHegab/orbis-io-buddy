@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X } from "lucide-react";
+import { NotionImportDialog } from "@/components/notion-import-dialog";
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
 import { countryFlag, countryFlagUrl } from "@/lib/country-flags";
@@ -81,6 +82,7 @@ function PlanningPage() {
       <PageHeader
         title="Yearly Activities Timeline"
         description="Plan your recruitment cycle: activities, events, costs and travellers."
+        actions={<NotionImportDialog />}
       />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
