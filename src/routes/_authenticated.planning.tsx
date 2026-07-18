@@ -17,7 +17,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X, Archive as ArchiveIcon, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X, History, RotateCcw } from "lucide-react";
 
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
@@ -109,7 +109,7 @@ function PlanningPage() {
           <TabsTrigger value="timeline"><LayoutList className="h-4 w-4 mr-1" /> Timeline</TabsTrigger>
           <TabsTrigger value="calendar"><CalendarIcon className="h-4 w-4 mr-1" /> Calendar</TabsTrigger>
           <TabsTrigger value="events"><ListChecks className="h-4 w-4 mr-1" /> Events Catalogue</TabsTrigger>
-          <TabsTrigger value="archive"><ArchiveIcon className="h-4 w-4 mr-1" /> Archive</TabsTrigger>
+          <TabsTrigger value="archive"><History className="h-4 w-4 mr-1" /> Previous Cycles</TabsTrigger>
         </TabsList>
         <TabsContent value="timeline" className="pt-4"><TimelineView userId={user?.id} /></TabsContent>
         <TabsContent value="calendar" className="pt-4"><CalendarView userId={user?.id} /></TabsContent>
@@ -946,7 +946,7 @@ function ArchiveView({ isAdmin }: { isAdmin: boolean }) {
   });
 
   if (cycles.length === 0) {
-    return <Card className="p-8 text-center text-muted-foreground">No archived cycles yet.</Card>;
+    return <Card className="p-8 text-center text-muted-foreground">No previous cycles yet.</Card>;
   }
 
   return (
@@ -998,7 +998,7 @@ function ArchiveView({ isAdmin }: { isAdmin: boolean }) {
           {events.length === 0 && <div className="text-muted-foreground">None</div>}
         </div>
       </Card>
-      <p className="text-xs text-muted-foreground">Archived items are read-only. Restore the whole cycle to make them editable again.</p>
+      <p className="text-xs text-muted-foreground">Previous cycles are read-only.{isAdmin ? " Restore the whole cycle to make items editable again." : ""}</p>
     </div>
   );
 }

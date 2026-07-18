@@ -89,15 +89,15 @@ export function ArchiveCycleDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Archive className="h-4 w-4 mr-1" /> Archive cycle
+          <Archive className="h-4 w-4 mr-1" /> Close cycle
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Archive a completed cycle</DialogTitle>
+          <DialogTitle>Close a completed cycle</DialogTitle>
           <DialogDescription>
-            Move trips, planned activities and events with a start date in this window into the archive.
-            They stay browsable in the Archive tab and are read-only afterwards.
+            Move trips, planned activities and events with a start date in this window into Previous Cycles.
+            They stay browsable there and are read-only afterwards.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">

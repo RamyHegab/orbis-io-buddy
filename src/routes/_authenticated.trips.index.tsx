@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Plane, Trash2, CheckCircle2, Circle } from "lucide-react";
+import { Plus, Plane, Trash2, CheckCircle2, Circle, History as HistoryIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
@@ -429,8 +429,9 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
-          <div className="text-xs text-muted-foreground">
-            Looking for older trips? See the <a href="/planning" className="underline">Archive tab in Planning</a>.
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <HistoryIcon className="h-3.5 w-3.5" />
+            Looking for older trips? See <a href="/planning?tab=archive" className="underline">Previous Cycles Activities</a>.
           </div>
 
 
