@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
-import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import worldData from "@/assets/world-countries-110m.json";
+import { Button } from "@/components/ui/button";
+import { Plus, Minus, RotateCcw } from "lucide-react";
 
 export type CountryStats = {
   agents: number;
@@ -56,6 +58,7 @@ export function WorldMap({ data }: Props) {
     name: string;
     stats: CountryStats | null;
   } | null>(null);
+  const [zoom, setZoom] = useState(1.1);
 
   // Build lookup by normalized name.
   const normalized = useMemo(() => {
@@ -67,13 +70,20 @@ export function WorldMap({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30 p-6">
+    <div
+      className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30 p-6"
+      onWheel={(e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.15 : 0.15;
+        setZoom((z) => Math.min(8, Math.max(1, Number((z + delta).toFixed(2)))));
+      }}
+    >
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{ scale: 115, center: [10, 38] }}
         width={980}
         height={520}
-        style={{ width: "100%", height: "100%", display: "block", transform: "scale(1.1)", transformOrigin: "center center" }}
+        style={{ width: "100%", height: "100%", display: "block" }}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -82,26 +92,33 @@ export function WorldMap({ data }: Props) {
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.9" />
           </linearGradient>
         </defs>
-        <Geographies geography={worldData as any}>
-          {({ geographies }: { geographies: any[] }) =>
-            geographies.map((geo) => {
-              const name = geo.properties?.name as string;
-              const stats = normalized[normalizeCountry(name)] ?? null;
-              const has = !!stats && (stats.agents + stats.schools + stats.trips > 0);
-              return (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  onMouseEnter={(evt) => {
-                    setTooltip({ x: evt.clientX, y: evt.clientY, name, stats });
-                  }}
-                  onMouseMove={(evt) => {
-                    setTooltip((t) =>
-                      t ? { ...t, x: evt.clientX, y: evt.clientY } : t,
-                    );
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
-                  style={{
+        <ZoomableGroup
+          zoom={zoom}
+          minZoom={1}
+          maxZoom={8}
+          center={[10, 38]}
+          onMoveEnd={({ zoom: z }) => setZoom(z)}
+        >
+          <Geographies geography={worldData as any}>
+            {({ geographies }: { geographies: any[] }) =>
+              geographies.map((geo) => {
+                const name = geo.properties?.name as string;
+                const stats = normalized[normalizeCountry(name)] ?? null;
+                const has = !!stats && (stats.agents + stats.schools + stats.trips > 0);
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    onMouseEnter={(evt) => {
+                      setTooltip({ x: evt.clientX, y: evt.clientY, name, stats });
+                    }}
+                    onMouseMove={(evt) => {
+                      setTooltip((t) =>
+                        t ? { ...t, x: evt.clientX, y: evt.clientY } : t,
+                      );
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                    style={{
                     default: {
                       fill: has ? "url(#activeCountry)" : "color-mix(in oklch, var(--primary) 80%, black)",
                       stroke: "color-mix(in oklch, var(--primary) 95%, black)",
@@ -126,7 +143,38 @@ export function WorldMap({ data }: Props) {
             })
           }
         </Geographies>
+        </ZoomableGroup>
       </ComposableMap>
+
+      <div className="absolute bottom-3 right-3 flex flex-col gap-1 z-10">
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7 shadow-sm"
+          onClick={() => setZoom((z) => Math.min(8, Number((z + 0.3).toFixed(2))))}
+          aria-label="Zoom in"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7 shadow-sm"
+          onClick={() => setZoom((z) => Math.max(1, Number((z - 0.3).toFixed(2))))}
+          aria-label="Zoom out"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7 shadow-sm"
+          onClick={() => setZoom(1.1)}
+          aria-label="Reset map"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
 
       {tooltip && (
         <div
