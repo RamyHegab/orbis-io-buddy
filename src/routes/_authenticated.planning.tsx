@@ -732,7 +732,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
         </div>
       )}
       {events.length === 0 && (
-        <Card className="p-6 text-center text-muted-foreground text-sm">No events in the catalog yet.</Card>
+        <Card className="p-6 text-center text-muted-foreground text-sm">No events in the catalogue yet.</Card>
       )}
       <div className="space-y-2">
         {events.map((e) => (
