@@ -41,6 +41,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicPlanningRemindersRouteImport } from './routes/api/public/planning/reminders'
 import { Route as ApiPublicHooksChecklistRemindersRouteImport } from './routes/api/public/hooks/checklist-reminders'
 import { Route as ApiPublicHooksAutoArchiveCycleRouteImport } from './routes/api/public/hooks/auto-archive-cycle'
+import { Route as ApiPublicFormInstanceIdRouteImport } from './routes/api/public/form-instance.$id'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
 
@@ -216,6 +217,11 @@ const ApiPublicHooksAutoArchiveCycleRoute =
     path: '/api/public/hooks/auto-archive-cycle',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicFormInstanceIdRoute = ApiPublicFormInstanceIdRouteImport.update({
+  id: '/api/public/form-instance/$id',
+  path: '/api/public/form-instance/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTripsTripIdReportRoute =
   AuthenticatedTripsTripIdReportRouteImport.update({
     id: '/report',
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -289,6 +296,7 @@ export interface FileRoutesByTo {
   '/schools': typeof AuthenticatedSchoolsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
+  '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
     | '/schools/'
     | '/trips/'
     | '/trips/$tripId/report'
+    | '/api/public/form-instance/$id'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/schools'
     | '/trips'
     | '/trips/$tripId/report'
+    | '/api/public/form-instance/$id'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/_authenticated/schools/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
+    | '/api/public/form-instance/$id'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -452,6 +464,7 @@ export interface RootRouteChildren {
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
+  ApiPublicFormInstanceIdRoute: typeof ApiPublicFormInstanceIdRoute
   ApiPublicHooksAutoArchiveCycleRoute: typeof ApiPublicHooksAutoArchiveCycleRoute
   ApiPublicHooksChecklistRemindersRoute: typeof ApiPublicHooksChecklistRemindersRoute
   ApiPublicPlanningRemindersRoute: typeof ApiPublicPlanningRemindersRoute
@@ -686,6 +699,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoArchiveCycleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/form-instance/$id': {
+      id: '/api/public/form-instance/$id'
+      path: '/api/public/form-instance/$id'
+      fullPath: '/api/public/form-instance/$id'
+      preLoaderRoute: typeof ApiPublicFormInstanceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/trips/$tripId/report': {
       id: '/_authenticated/trips/$tripId/report'
       path: '/report'
@@ -791,6 +811,7 @@ const rootRouteChildren: RootRouteChildren = {
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
+  ApiPublicFormInstanceIdRoute: ApiPublicFormInstanceIdRoute,
   ApiPublicHooksAutoArchiveCycleRoute: ApiPublicHooksAutoArchiveCycleRoute,
   ApiPublicHooksChecklistRemindersRoute: ApiPublicHooksChecklistRemindersRoute,
   ApiPublicPlanningRemindersRoute: ApiPublicPlanningRemindersRoute,
