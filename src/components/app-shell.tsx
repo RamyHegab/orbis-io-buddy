@@ -66,7 +66,7 @@ export function AppShell() {
             <div className="text-xs text-sidebar-foreground/60">The IO Buddy</div>
           </div>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="px-3 py-4 space-y-1">
           {navItems
             .filter((i) => !i.requiresCap || caps[i.requiresCap])
             .map((item) => {
@@ -89,9 +89,9 @@ export function AppShell() {
               );
             })}
         </nav>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 min-h-0">
+        <div className="flex flex-col items-center px-6 py-4 mt-6">
           {branding?.logo_url ? (
-            <div className="w-full flex items-center justify-center mt-8">
+            <div className="w-full flex items-center justify-center">
               <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
                 <img
                   src={branding.logo_url}
