@@ -89,17 +89,19 @@ export function AppShell() {
               );
             })}
         </nav>
-        {branding?.logo_url && (
-          <div className="px-6 pt-2 pb-3 flex items-center justify-center">
-            <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
-              <img
-                src={branding.logo_url}
-                alt="University logo"
-                className="max-h-16 max-w-full object-contain"
-              />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 min-h-0">
+          {branding?.logo_url ? (
+            <div className="w-full flex items-center justify-center">
+              <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
+                <img
+                  src={branding.logo_url}
+                  alt="University logo"
+                  className="max-h-16 max-w-full object-contain"
+                />
+              </div>
             </div>
-          </div>
-        )}
+          ) : null}
+        </div>
         <div className="border-t border-sidebar-border px-4 py-3">
           <button
             type="button"
