@@ -429,6 +429,11 @@ function TripsPage() {
             trips={pastLimited}
             empty="No past trips yet."
           />
+          <div className="text-xs text-muted-foreground">
+            Looking for older trips? See the <a href="/planning" className="underline">Archive tab in Planning</a>.
+          </div>
+
+
 
 
         </div>
