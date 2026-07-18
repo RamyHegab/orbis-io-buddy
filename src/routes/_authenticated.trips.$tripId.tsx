@@ -29,6 +29,8 @@ import { searchHotels, type HotelSearchResult } from "@/lib/hotels.functions";
 import { Search, Star } from "lucide-react";
 import { submitTripForApproval, withdrawTripSubmission, decideTripApproval } from "@/lib/trip-approvals.functions";
 import { Loader2, AlertTriangle, Clock, Send, Undo2 } from "lucide-react";
+import { formatMoney } from "@/lib/currency";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId")({
   component: TripPlanner,
