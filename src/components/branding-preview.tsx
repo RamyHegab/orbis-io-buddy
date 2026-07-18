@@ -59,7 +59,7 @@ export function BrandingPreview({
             <NavItem icon={<MapPin className="h-3 w-3" />} label="Trips" />
           </div>
           {/* Logo under nav with good spacing; sign out follows */}
-          <div className="flex-1 flex flex-col items-center px-3 py-3">
+          <div className="flex-1 flex flex-col items-center justify-center px-3 py-3">
             {logoUrl ? (
               <div className="w-full flex items-center justify-center mt-8">
                 <div className="bg-white/95 rounded p-1.5 w-full flex items-center justify-center">
@@ -67,7 +67,7 @@ export function BrandingPreview({
                 </div>
               </div>
             ) : null}
-            <div className={cn("w-full flex items-center justify-center gap-1.5 text-[10px] opacity-80", logoUrl ? "mt-4" : "mt-8")} style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+            <div className={cn("w-full flex items-center justify-center gap-1.5 text-[10px] opacity-80", logoUrl ? "mt-4" : "")} style={{ borderColor: "rgba(255,255,255,0.15)" }}>
               <LogOut className="h-3 w-3" />
               <span>Sign out</span>
             </div>
