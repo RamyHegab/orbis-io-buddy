@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { extractPaletteFromImage } from "@/components/branding-provider";
 import { toast } from "sonner";
-import { Upload, Trash2, Crop } from "lucide-react";
+import { Upload, Trash2, Crop, ArrowLeftRight, RotateCcw } from "lucide-react";
 import { LogoEditorDialog } from "@/components/logo-editor-dialog";
 import { BrandingPreview } from "@/components/branding-preview";
 
