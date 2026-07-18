@@ -64,7 +64,7 @@ export const Route = createFileRoute('/api/public/hooks/checklist-reminders')({
           })
           await supabaseAdmin
             .from('trips')
-            .update({ checklist: { ...(t.checklist ?? {}), _reminder_last_sent_at: nowIso } })
+            .update({ checklist: { ...((t.checklist as Record<string, any>) ?? {}), _reminder_last_sent_at: nowIso } })
             .eq('id', t.id)
           await supabaseAdmin.from('notifications').insert({
             user_id: t.user_id,

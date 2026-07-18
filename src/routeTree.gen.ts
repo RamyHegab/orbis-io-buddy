@@ -40,6 +40,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPlanningRemindersRouteImport } from './routes/api/public/planning/reminders'
+import { Route as ApiPublicHooksChecklistRemindersRouteImport } from './routes/api/public/hooks/checklist-reminders'
 import { Route as ApiPublicHooksAutoArchiveCycleRouteImport } from './routes/api/public/hooks/auto-archive-cycle'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
@@ -209,6 +210,12 @@ const ApiPublicPlanningRemindersRoute =
     path: '/api/public/planning/reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksChecklistRemindersRoute =
+  ApiPublicHooksChecklistRemindersRouteImport.update({
+    id: '/api/public/hooks/checklist-reminders',
+    path: '/api/public/hooks/checklist-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoArchiveCycleRoute =
   ApiPublicHooksAutoArchiveCycleRouteImport.update({
     id: '/api/public/hooks/auto-archive-cycle',
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
+  '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -290,6 +298,7 @@ export interface FileRoutesByTo {
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
+  '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -327,6 +336,7 @@ export interface FileRoutesById {
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
+  '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/trips/'
     | '/trips/$tripId/report'
     | '/api/public/hooks/auto-archive-cycle'
+    | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/trips'
     | '/trips/$tripId/report'
     | '/api/public/hooks/auto-archive-cycle'
+    | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -433,6 +445,7 @@ export interface FileRouteTypes {
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
     | '/api/public/hooks/auto-archive-cycle'
+    | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -452,6 +465,7 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
   ApiPublicHooksAutoArchiveCycleRoute: typeof ApiPublicHooksAutoArchiveCycleRoute
+  ApiPublicHooksChecklistRemindersRoute: typeof ApiPublicHooksChecklistRemindersRoute
   ApiPublicPlanningRemindersRoute: typeof ApiPublicPlanningRemindersRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -677,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPlanningRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/checklist-reminders': {
+      id: '/api/public/hooks/checklist-reminders'
+      path: '/api/public/hooks/checklist-reminders'
+      fullPath: '/api/public/hooks/checklist-reminders'
+      preLoaderRoute: typeof ApiPublicHooksChecklistRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-archive-cycle': {
       id: '/api/public/hooks/auto-archive-cycle'
       path: '/api/public/hooks/auto-archive-cycle'
@@ -792,6 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
   ApiPublicHooksAutoArchiveCycleRoute: ApiPublicHooksAutoArchiveCycleRoute,
+  ApiPublicHooksChecklistRemindersRoute: ApiPublicHooksChecklistRemindersRoute,
   ApiPublicPlanningRemindersRoute: ApiPublicPlanningRemindersRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
