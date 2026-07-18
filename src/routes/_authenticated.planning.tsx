@@ -45,7 +45,7 @@ type PlannedActivity = {
 type EventCatalog = {
   id: string; title: string; start_date: string; end_date: string;
   countries: string[]; cities: string[]; cost: number | null; currency: string;
-  status: "proposed" | "planning" | "confirmed" | "done" | "canceled";
+  status: "proposed" | "planning" | "confirmed" | "done" | "canceled" | "not_attending";
   traveller_id: string | null; notes: string | null;
 };
 
@@ -56,15 +56,26 @@ const EVENT_TYPES = [
   { value: "other", label: "Other" },
 ];
 const STATUSES = ["proposed", "planning", "confirmed", "done", "canceled"] as const;
+const EVENT_STATUSES = ["proposed", "planning", "confirmed", "done", "canceled", "not_attending"] as const;
+const STATUS_LABEL: Record<string, string> = {
+  proposed: "Proposed",
+  planning: "Planning",
+  confirmed: "Confirmed",
+  done: "Done",
+  canceled: "Cancelled",
+  not_attending: "Not attending",
+  all: "All statuses",
+};
 const STATUS_COLORS: Record<string, string> = {
   proposed: "bg-academic-not-required/20 text-academic-not-required border-academic-not-required/40",
   planning: "bg-academic-required/20 text-academic-required border-academic-required/40",
   confirmed: "bg-academic-preferred/20 text-academic-preferred border-academic-preferred/40",
   done: "bg-green-100 text-green-900 border-green-300",
   canceled: "bg-status-canceled text-white border-status-canceled",
+  not_attending: "bg-status-canceled/70 text-white border-status-canceled/70",
 };
 const ACADEMIC_SUPPORT_LABEL: Record<PlannedActivity["academic_support"], string> = {
-  required: "Required", preferred: "Preferred", not_required: "Not Required",
+  required: "Required", preferred: "Preferred", not_required: "Not required",
 };
 const ACADEMIC_SUPPORT_COLORS: Record<PlannedActivity["academic_support"], string> = {
   required: "bg-academic-required/15 text-academic-required border-academic-required/40",
