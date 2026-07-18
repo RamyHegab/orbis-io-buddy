@@ -101,7 +101,8 @@ function PlanningPage() {
   const { caps } = useCapabilities();
   const { isAdmin } = useRole();
   const canManageEvents = caps.can_manage_templates;
-  const [tab, setTab] = useState("timeline");
+  const search = useSearch({ from: "/_authenticated/planning" });
+  const [tab, setTab] = useState(search.tab || "timeline");
 
   return (
     <PageContainer>
