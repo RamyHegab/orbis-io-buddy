@@ -63,9 +63,9 @@ const ACADEMIC_SUPPORT_LABEL: Record<PlannedActivity["academic_support"], string
   required: "Required", preferred: "Preferred", not_required: "Not Required",
 };
 const ACADEMIC_SUPPORT_COLORS: Record<PlannedActivity["academic_support"], string> = {
-  required: "bg-emerald-100 text-emerald-900 border-emerald-300",
-  preferred: "bg-gold/20 text-gold-foreground border-gold/50",
-  not_required: "bg-rose-100 text-rose-900 border-rose-300",
+  required: "bg-academic-required/15 text-academic-required border-academic-required/40",
+  preferred: "bg-academic-preferred/15 text-academic-preferred border-academic-preferred/40",
+  not_required: "bg-academic-not-required/15 text-academic-not-required border-academic-not-required/40",
 };
 
 const sum = (...xs: (number | null | undefined)[]) => xs.reduce<number>((a, x) => a + (Number(x) || 0), 0);
