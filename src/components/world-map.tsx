@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
-import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import worldData from "@/assets/world-countries-110m.json";
+import { Button } from "@/components/ui/button";
+import { Plus, Minus, RotateCcw } from "lucide-react";
 
 export type CountryStats = {
   agents: number;
