@@ -998,7 +998,7 @@ function ArchiveView({ isAdmin }: { isAdmin: boolean }) {
           {events.length === 0 && <div className="text-muted-foreground">None</div>}
         </div>
       </Card>
-      <p className="text-xs text-muted-foreground">Archived items are read-only. Restore the whole cycle to make them editable again.</p>
+      <p className="text-xs text-muted-foreground">Previous cycles are read-only.{isAdmin ? " Restore the whole cycle to make items editable again." : ""}</p>
     </div>
   );
 }
