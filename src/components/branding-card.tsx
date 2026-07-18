@@ -46,13 +46,19 @@ export function BrandingCard() {
     if (data.theme_sidebar) setSidebar(data.theme_sidebar);
   }, [data]);
 
-  const uploadLogo = async (file: File) => {
-    const ext = file.name.split(".").pop() || "png";
+  const [editorFile, setEditorFile] = useState<File | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  const uploadLogo = async (file: File | Blob, suggestedName?: string) => {
+    const nameFromFile = (file as File).name;
+    const baseName = suggestedName ?? nameFromFile ?? "logo.png";
+    const ext = baseName.split(".").pop() || "png";
     const path = `logo-${Date.now()}.${ext}`;
+    const contentType = (file as any).type || "image/png";
     const { error } = await supabase.storage.from("branding").upload(path, file, {
       cacheControl: "3600",
       upsert: true,
-      contentType: file.type,
+      contentType,
     });
     if (error) throw error;
     // long-lived signed URL (10 years)
