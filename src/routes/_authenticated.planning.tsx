@@ -156,6 +156,8 @@ function MultiSelect({ options, values, onChange, placeholder }: {
 // ---------- Activity dialog ----------
 function ActivityDialog({ activity, onClose, userId }: { activity: PlannedActivity | null; onClose: () => void; userId?: string }) {
   const qc = useQueryClient();
+  const settings = useAppSettings();
+  const money = (n: number) => formatMoney(n, settings.currency);
   const [form, setForm] = useState<Partial<PlannedActivity>>(activity ?? {
     title: "", start_date: "", end_date: "", countries: [], event_ids: [], event_types: [],
     traveller_id: userId ?? null, academic_support: "not_required",
