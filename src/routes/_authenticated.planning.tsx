@@ -743,7 +743,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <div className="font-medium">{e.title}</div>
-                <Badge className={`${STATUS_COLORS[e.status]} capitalize text-[10px]`}>{e.status}</Badge>
+                <Badge className={`${STATUS_COLORS[e.status]} text-[10px]`}>{STATUS_LABEL[e.status] ?? e.status}</Badge>
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(e.start_date)} → {fmtDate(e.end_date)}</div>
               <div className="flex flex-wrap gap-1 mt-1">
