@@ -534,7 +534,7 @@ function TimelineView({ userId }: { userId?: string }) {
                   <div className="font-semibold"><span className="text-muted-foreground font-normal">Total:</span> {total.toLocaleString()}</div>
                 </div>
                 {a.objectives && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{a.objectives}</p>}
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                   <Button size="sm" variant="outline" onClick={() => { setEditing(a); setDialogOpen(true); }}>
                     <Edit2 className="h-3 w-3 mr-1" /> Edit
                   </Button>
