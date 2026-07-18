@@ -17,7 +17,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X, Archive as ArchiveIcon, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Calendar as CalendarIcon, LayoutList, ListChecks, Edit2, ArrowRight, Check, X, History, RotateCcw } from "lucide-react";
 
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
