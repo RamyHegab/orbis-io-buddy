@@ -91,6 +91,7 @@ const sum = (...xs: (number | null | undefined)[]) => xs.reduce<number>((a, x) =
 function PlanningPage() {
   const { user } = useAuth();
   const { caps } = useCapabilities();
+  const { isAdmin } = useRole();
   const canManageEvents = caps.can_manage_templates;
   const [tab, setTab] = useState("timeline");
 
@@ -99,16 +100,19 @@ function PlanningPage() {
       <PageHeader
         title="Yearly Activities Timeline"
         description="Plan your recruitment cycle: activities, events, costs and travellers."
+        actions={isAdmin ? <ArchiveCycleDialog /> : undefined}
       />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="timeline"><LayoutList className="h-4 w-4 mr-1" /> Timeline</TabsTrigger>
           <TabsTrigger value="calendar"><CalendarIcon className="h-4 w-4 mr-1" /> Calendar</TabsTrigger>
           <TabsTrigger value="events"><ListChecks className="h-4 w-4 mr-1" /> Events Catalogue</TabsTrigger>
+          <TabsTrigger value="archive"><ArchiveIcon className="h-4 w-4 mr-1" /> Archive</TabsTrigger>
         </TabsList>
         <TabsContent value="timeline" className="pt-4"><TimelineView userId={user?.id} /></TabsContent>
         <TabsContent value="calendar" className="pt-4"><CalendarView userId={user?.id} /></TabsContent>
         <TabsContent value="events" className="pt-4"><EventsCatalogView canManage={!!canManageEvents} /></TabsContent>
+        <TabsContent value="archive" className="pt-4"><ArchiveView isAdmin={!!isAdmin} /></TabsContent>
       </Tabs>
     </PageContainer>
   );
