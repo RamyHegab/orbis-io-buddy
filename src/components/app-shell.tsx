@@ -101,6 +101,7 @@ export function AppShell() {
         </div>
       </main>
     </div>
+   </BrandingProvider>
   );
 }
 
