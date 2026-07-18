@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { mapsSearchUrl } from "@/lib/google-maps";
+import { formatMoney } from "@/lib/currency";
 
 type Trip = { title: string; start_date: string; end_date: string; objectives?: string | null };
 type Activity = {
