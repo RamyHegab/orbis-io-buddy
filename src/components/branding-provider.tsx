@@ -46,21 +46,42 @@ export function foregroundFor(hex: string): string {
   return yiq >= 160 ? "oklch(0.22 0.06 260)" : "oklch(0.97 0.02 90)";
 }
 
+// Mix a hex colour toward white (amount 0..1) or toward black (negative amount).
+function mixHex(hex: string, amount: number): string | null {
+  const m = hex.replace("#", "");
+  if (!/^([0-9a-f]{6})$/i.test(m)) return null;
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  const target = amount >= 0 ? 255 : 0;
+  const t = Math.abs(amount);
+  const mix = (c: number) => Math.round(c + (target - c) * t);
+  const toHex = (n: number) => n.toString(16).padStart(2, "0");
+  return "#" + toHex(mix(r)) + toHex(mix(g)) + toHex(mix(b));
+}
+
 function applyBranding(b: Branding | null | undefined) {
   const root = typeof document !== "undefined" ? document.documentElement : null;
   if (!root) return;
-  const clear = () => {
-    ["--primary", "--primary-foreground", "--accent", "--accent-foreground", "--sidebar", "--ring", "--gold", "--gold-foreground"].forEach(
-      (k) => root.style.removeProperty(k),
-    );
-  };
+  const keys = [
+    "--primary", "--primary-foreground", "--accent", "--accent-foreground",
+    "--sidebar", "--sidebar-foreground", "--sidebar-border", "--sidebar-accent",
+    "--ring", "--gold", "--gold-foreground",
+    "--background", "--foreground", "--card", "--card-foreground",
+    "--popover", "--popover-foreground", "--secondary", "--secondary-foreground",
+    "--muted",
+  ];
+  const clear = () => keys.forEach((k) => root.style.removeProperty(k));
   if (!b || b.theme_mode === "default") {
     clear();
     return;
   }
   const primary = b.theme_primary;
   const accent = b.theme_accent;
-  const sidebar = b.theme_sidebar;
+  // In "from_logo" mode, derive the sidebar from the primary if not explicitly set.
+  const sidebar =
+    b.theme_sidebar ??
+    (b.theme_mode === "from_logo" && primary ? mixHex(primary, -0.35) : null);
   clear();
   if (primary) {
     const v = hexToOklch(primary);
@@ -68,6 +89,34 @@ function applyBranding(b: Branding | null | undefined) {
       root.style.setProperty("--primary", v);
       root.style.setProperty("--primary-foreground", foregroundFor(primary));
       root.style.setProperty("--ring", v);
+    }
+    // Tint page background as a very light wash of the primary.
+    const bgHex = mixHex(primary, 0.94);
+    if (bgHex) {
+      const bgV = hexToOklch(bgHex);
+      if (bgV) {
+        root.style.setProperty("--background", bgV);
+        root.style.setProperty("--foreground", foregroundFor(bgHex));
+      }
+    }
+    const cardHex = mixHex(primary, 0.97);
+    if (cardHex) {
+      const cardV = hexToOklch(cardHex);
+      if (cardV) {
+        root.style.setProperty("--card", cardV);
+        root.style.setProperty("--card-foreground", foregroundFor(cardHex));
+        root.style.setProperty("--popover", cardV);
+        root.style.setProperty("--popover-foreground", foregroundFor(cardHex));
+      }
+    }
+    const secHex = mixHex(primary, 0.88);
+    if (secHex) {
+      const secV = hexToOklch(secHex);
+      if (secV) {
+        root.style.setProperty("--secondary", secV);
+        root.style.setProperty("--secondary-foreground", foregroundFor(secHex));
+        root.style.setProperty("--muted", secV);
+      }
     }
   }
   if (accent) {
@@ -81,7 +130,20 @@ function applyBranding(b: Branding | null | undefined) {
   }
   if (sidebar) {
     const v = hexToOklch(sidebar);
-    if (v) root.style.setProperty("--sidebar", v);
+    if (v) {
+      root.style.setProperty("--sidebar", v);
+      root.style.setProperty("--sidebar-foreground", foregroundFor(sidebar));
+      const border = mixHex(sidebar, 0.15);
+      const sAccent = mixHex(sidebar, 0.2);
+      if (border) {
+        const bv = hexToOklch(border);
+        if (bv) root.style.setProperty("--sidebar-border", bv);
+      }
+      if (sAccent) {
+        const av = hexToOklch(sAccent);
+        if (av) root.style.setProperty("--sidebar-accent", av);
+      }
+    }
   }
 }
 
