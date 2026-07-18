@@ -70,13 +70,20 @@ export function WorldMap({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30 p-6">
+    <div
+      className="relative w-full h-full overflow-hidden rounded-lg bg-gradient-to-br from-background via-background to-muted/30 p-6"
+      onWheel={(e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.15 : 0.15;
+        setZoom((z) => Math.min(8, Math.max(1, Number((z + delta).toFixed(2)))));
+      }}
+    >
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{ scale: 115, center: [10, 38] }}
         width={980}
         height={520}
-        style={{ width: "100%", height: "100%", display: "block", transform: "scale(1.1)", transformOrigin: "center center" }}
+        style={{ width: "100%", height: "100%", display: "block" }}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -85,26 +92,33 @@ export function WorldMap({ data }: Props) {
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.9" />
           </linearGradient>
         </defs>
-        <Geographies geography={worldData as any}>
-          {({ geographies }: { geographies: any[] }) =>
-            geographies.map((geo) => {
-              const name = geo.properties?.name as string;
-              const stats = normalized[normalizeCountry(name)] ?? null;
-              const has = !!stats && (stats.agents + stats.schools + stats.trips > 0);
-              return (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  onMouseEnter={(evt) => {
-                    setTooltip({ x: evt.clientX, y: evt.clientY, name, stats });
-                  }}
-                  onMouseMove={(evt) => {
-                    setTooltip((t) =>
-                      t ? { ...t, x: evt.clientX, y: evt.clientY } : t,
-                    );
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
-                  style={{
+        <ZoomableGroup
+          zoom={zoom}
+          minZoom={1}
+          maxZoom={8}
+          center={[10, 38]}
+          onMoveEnd={({ zoom: z }) => setZoom(z)}
+        >
+          <Geographies geography={worldData as any}>
+            {({ geographies }: { geographies: any[] }) =>
+              geographies.map((geo) => {
+                const name = geo.properties?.name as string;
+                const stats = normalized[normalizeCountry(name)] ?? null;
+                const has = !!stats && (stats.agents + stats.schools + stats.trips > 0);
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    onMouseEnter={(evt) => {
+                      setTooltip({ x: evt.clientX, y: evt.clientY, name, stats });
+                    }}
+                    onMouseMove={(evt) => {
+                      setTooltip((t) =>
+                        t ? { ...t, x: evt.clientX, y: evt.clientY } : t,
+                      );
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                    style={{
                     default: {
                       fill: has ? "url(#activeCountry)" : "color-mix(in oklch, var(--primary) 80%, black)",
                       stroke: "color-mix(in oklch, var(--primary) 95%, black)",
