@@ -31,7 +31,7 @@ const NAME_TO_ISO2: Record<string, string> = {
   Somalia: "SO", "South Africa": "ZA", "South Korea": "KR", "South Sudan": "SS", Spain: "ES",
   "Sri Lanka": "LK", Sudan: "SD", Suriname: "SR", Sweden: "SE", Switzerland: "CH",
   Syria: "SY", Taiwan: "TW", Tajikistan: "TJ", Tanzania: "TZ", Thailand: "TH",
-  "Timor-Leste": "TL", Togo: "TG", "Trinidad and Tobago": "TT", Tunisia: "TN", Turkey: "TR",
+  "Timor-Leste": "TL", Togo: "TG", "Trinidad and Tobago": "TT", Tunisia: "TN", "Türkiye": "TR", Turkey: "TR",
   Turkmenistan: "TM", Uganda: "UG", Ukraine: "UA", "United Arab Emirates": "AE",
   "United Kingdom": "GB", "United States": "US", Uruguay: "UY", Uzbekistan: "UZ",
   Venezuela: "VE", Vietnam: "VN", Yemen: "YE", Zambia: "ZM", Zimbabwe: "ZW",

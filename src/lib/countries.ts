@@ -158,7 +158,7 @@ export const COUNTRIES = [
   "Togo",
   "Trinidad and Tobago",
   "Tunisia",
-  "Turkey",
+  "Türkiye",
   "Turkmenistan",
   "Uganda",
   "Ukraine",

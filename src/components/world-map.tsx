@@ -39,6 +39,8 @@ const ALIASES: Record<string, string> = {
   "congo": "republic of the congo",
   "drc": "democratic republic of the congo",
   "dr congo": "democratic republic of the congo",
+  "turkey": "türkiye",
+  "türkiye": "türkiye",
 };
 
 export function normalizeCountry(name: string | null | undefined): string {
