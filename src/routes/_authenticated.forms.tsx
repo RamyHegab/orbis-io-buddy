@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useCan } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical } from "lucide-react";
+import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical, Search, X, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { dialCodeForLocation } from "@/lib/country-codes";
@@ -34,6 +34,10 @@ function FormsPage() {
   const { user } = useAuth();
   const canManageTemplates = useCan("can_manage_templates");
   const qc = useQueryClient();
+
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest");
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
 
   const [pickerTemplate, setPickerTemplate] = useState<{ id: string; name: string; activity_type: string } | null>(null);
   const [activityId, setActivityId] = useState<string>("");
@@ -148,17 +152,92 @@ function FormsPage() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
+  const activityTypes = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of templates ?? []) if (t.activity_type) s.add(t.activity_type);
+    return Array.from(s).sort();
+  }, [templates]);
+
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (text: string) => q === "" || text.toLowerCase().includes(q);
+
+  const filteredTemplates = useMemo(() => {
+    let list = (templates ?? []).filter((t: any) => {
+      if (!matchesSearch(`${t.name ?? ""} ${t.description ?? ""}`)) return false;
+      if (activityTypeFilter !== "all" && t.activity_type !== activityTypeFilter) return false;
+      return true;
+    });
+    list = [...list];
+    if (sort === "newest") list.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+    if (sort === "oldest") list.sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime());
+    if (sort === "name_asc") list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+    if (sort === "name_desc") list.sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""));
+    return list;
+  }, [templates, search, sort, activityTypeFilter]);
+
+  const filteredInstances = useMemo(() => {
+    let list = (instances ?? []).filter((inst: any) => {
+      const template = templates?.find((t: any) => t.id === inst.template_id);
+      const hay = `${inst.name ?? ""} ${template?.name ?? ""} ${template?.activity_type ?? ""} ${inst.country_code ?? ""}`;
+      return matchesSearch(hay);
+    });
+    list = [...list];
+    if (sort === "newest") list.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+    if (sort === "oldest") list.sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime());
+    if (sort === "name_asc") list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+    if (sort === "name_desc") list.sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""));
+    return list;
+  }, [instances, templates, search, sort]);
+
+  const filtersActive = search !== "" || sort !== "newest" || activityTypeFilter !== "all";
+
   return (
     <PageContainer>
       <PageHeader
         title="Forms"
         description="Generate recruitment forms from templates, share them via QR/link, and collect submissions — even offline."
         actions={
-          canManageTemplates ? (
-            <Dialog open={tplOpen} onOpenChange={setTplOpen}>
-              <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
-              </DialogTrigger>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search forms…"
+                className="pl-8 h-9 w-48"
+              />
+            </div>
+            <Select value={sort} onValueChange={(v) => setSort(v as any)}>
+              <SelectTrigger className="h-9 w-36">
+                <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="name_asc">Name A–Z</SelectItem>
+                <SelectItem value="name_desc">Name Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
+              <SelectTrigger className="h-9 w-40"><SelectValue placeholder="Activity type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {activityTypes.map((t) => (
+                  <SelectItem key={t} value={t}>{ACTIVITY_TYPE_LABELS[t] ?? t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setSort("newest"); setActivityTypeFilter("all"); }}>
+                <X className="h-4 w-4 mr-1" /> Clear
+              </Button>
+            )}
+            {canManageTemplates ? (
+              <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader><DialogTitle>New form template</DialogTitle></DialogHeader>
                 <div className="space-y-3">
@@ -207,48 +286,55 @@ function FormsPage() {
                 </div>
               </DialogContent>
             </Dialog>
-          ) : null
+          ) : null}
+          </div>
         }
       />
 
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-muted-foreground">Templates</h2>
         {templates && templates.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {templates.map((t) => (
-              <Card key={t.id} className="p-4 flex flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{t.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+          filteredTemplates.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredTemplates.map((t) => (
+                <Card key={t.id} className="p-4 flex flex-col">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{t.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                      </div>
                     </div>
+                    {canManageTemplates && (
+                      <button
+                        onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
+                        className="text-muted-foreground hover:text-destructive"
+                        aria-label="Delete template"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                  {canManageTemplates && (
-                    <button
-                      onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label="Delete template"
+                  {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
+                  <div className="mt-auto pt-3">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type });
+                        setActivityId("");
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
-                <div className="mt-auto pt-3">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type });
-                      setActivityId("");
-                    }}
-                  >
-                    <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
+                      <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              No templates match your search or filters.
+            </Card>
+          )
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">
             No templates yet.{" "}
@@ -260,33 +346,39 @@ function FormsPage() {
       <section className="space-y-3 mt-8">
         <h2 className="text-sm font-medium text-muted-foreground">Generated forms</h2>
         {instances && instances.length > 0 ? (
-          <div className="space-y-2">
-            {instances.map((inst) => {
-              const url = `${origin}/f/${inst.id}`;
-              return (
-                <Card key={inst.id} className="p-4 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{inst.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {inst.event_date ? new Date(inst.event_date).toLocaleDateString(undefined, { dateStyle: "medium" }) : "No date"}
-                      {inst.country_code ? ` • default ${inst.country_code}` : ""}
+          filteredInstances.length > 0 ? (
+            <div className="space-y-2">
+              {filteredInstances.map((inst) => {
+                const url = `${origin}/f/${inst.id}`;
+                return (
+                  <Card key={inst.id} className="p-4 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{inst.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {inst.event_date ? new Date(inst.event_date).toLocaleDateString(undefined, { dateStyle: "medium" }) : "No date"}
+                        {inst.country_code ? ` • default ${inst.country_code}` : ""}
+                      </div>
                     </div>
-                  </div>
-                  <ShareFormButton url={url} title={inst.name} />
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1.5" /> Open</a>
-                  </Button>
-                  <button
-                    onClick={() => { if (confirm("Delete this form?")) removeInstance.mutate(inst.id); }}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Delete form"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </Card>
-              );
-            })}
-          </div>
+                    <ShareFormButton url={url} title={inst.name} />
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1.5" /> Open</a>
+                    </Button>
+                    <button
+                      onClick={() => { if (confirm("Delete this form?")) removeInstance.mutate(inst.id); }}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete form"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              No generated forms match your search or sort.
+            </Card>
+          )
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">
             No forms generated yet. Pick a template above to generate one for an activity.
