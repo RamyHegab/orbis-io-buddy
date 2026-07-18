@@ -66,17 +66,6 @@ export function AppShell() {
             <div className="text-xs text-sidebar-foreground/60">The IO Buddy</div>
           </div>
         </div>
-        {branding?.logo_url && (
-          <div className="px-6 py-3 flex items-center justify-center">
-            <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
-              <img
-                src={branding.logo_url}
-                alt="University logo"
-                className="max-h-16 max-w-full object-contain"
-              />
-            </div>
-          </div>
-        )}
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems
             .filter((i) => !i.requiresCap || caps[i.requiresCap])
@@ -100,6 +89,17 @@ export function AppShell() {
               );
             })}
         </nav>
+        {branding?.logo_url && (
+          <div className="px-6 pt-2 pb-3 flex items-center justify-center">
+            <div className="bg-white/95 rounded-md p-3 w-full flex items-center justify-center">
+              <img
+                src={branding.logo_url}
+                alt="University logo"
+                className="max-h-16 max-w-full object-contain"
+              />
+            </div>
+          </div>
+        )}
         <div className="border-t border-sidebar-border px-4 py-3">
           <button
             type="button"
@@ -110,7 +110,7 @@ export function AppShell() {
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-gold transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            <span>Log out</span>
+            <span>Sign out</span>
           </button>
         </div>
       </aside>
