@@ -516,6 +516,9 @@ export type Database = {
       }
       events_catalog: {
         Row: {
+          archived: boolean
+          archived_at: string | null
+          archived_cycle: string | null
           cities: string[]
           cost: number | null
           countries: string[]
@@ -532,6 +535,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
+          archived_cycle?: string | null
           cities?: string[]
           cost?: number | null
           countries?: string[]
@@ -548,6 +554,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
+          archived_cycle?: string | null
           cities?: string[]
           cost?: number | null
           countries?: string[]
@@ -809,6 +818,9 @@ export type Database = {
           actual_hotel_cost: number | null
           actual_subsistence_cost: number | null
           actual_travel_cost: number | null
+          archived: boolean
+          archived_at: string | null
+          archived_cycle: string | null
           countries: string[]
           created_at: string
           end_date: string
@@ -837,6 +849,9 @@ export type Database = {
           actual_hotel_cost?: number | null
           actual_subsistence_cost?: number | null
           actual_travel_cost?: number | null
+          archived?: boolean
+          archived_at?: string | null
+          archived_cycle?: string | null
           countries?: string[]
           created_at?: string
           end_date: string
@@ -865,6 +880,9 @@ export type Database = {
           actual_hotel_cost?: number | null
           actual_subsistence_cost?: number | null
           actual_travel_cost?: number | null
+          archived?: boolean
+          archived_at?: string | null
+          archived_cycle?: string | null
           countries?: string[]
           created_at?: string
           end_date?: string
@@ -1274,6 +1292,9 @@ export type Database = {
       }
       trips: {
         Row: {
+          archived: boolean
+          archived_at: string | null
+          archived_cycle: string | null
           checklist: Json
           created_at: string
           destinations: string[]
@@ -1288,6 +1309,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
+          archived_cycle?: string | null
           checklist?: Json
           created_at?: string
           destinations?: string[]
@@ -1302,6 +1326,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
+          archived_cycle?: string | null
           checklist?: Json
           created_at?: string
           destinations?: string[]
