@@ -1,4 +1,5 @@
 import { foregroundFor } from "@/components/branding-provider";
+import { cn } from "@/lib/utils";
 import { LayoutDashboard, Users, MapPin, Bell, Search, Globe2, LogOut } from "lucide-react";
 
 type Mode = "default" | "from_logo" | "custom";
@@ -57,7 +58,7 @@ export function BrandingPreview({
             <NavItem icon={<Users className="h-3 w-3" />} label="Agents" />
             <NavItem icon={<MapPin className="h-3 w-3" />} label="Trips" />
           </div>
-          {/* Middle: uploaded logo centered above logout */}
+          {/* Middle: uploaded logo and sign out centered */}
           <div className="flex-1 flex flex-col items-center justify-center px-3 py-3">
             {logoUrl ? (
               <div className="w-full flex items-center justify-center">
@@ -66,10 +67,10 @@ export function BrandingPreview({
                 </div>
               </div>
             ) : null}
-          </div>
-          <div className="border-t px-3 py-2 flex items-center gap-1.5 text-[10px] opacity-80" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
-            <LogOut className="h-3 w-3" />
-            <span>Sign out</span>
+            <div className={cn("w-full flex items-center justify-center gap-1.5 text-[10px] opacity-80", logoUrl ? "mt-3" : "")} style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+              <LogOut className="h-3 w-3" />
+              <span>Sign out</span>
+            </div>
           </div>
         </div>
 
