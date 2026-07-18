@@ -319,8 +319,8 @@ function TimelineView({ userId }: { userId?: string }) {
   const { data: eventsCatalog = [] } = useQuery({
     queryKey: ["events_catalog_stats"],
     queryFn: async () => {
-      const { data } = await supabase.from("events_catalog").select("id, cost, countries");
-      return (data ?? []) as { id: string; cost: number | null; countries: string[] }[];
+      const { data } = await supabase.from("events_catalog").select("id, cost, countries, status");
+      return (data ?? []) as { id: string; cost: number | null; countries: string[]; status: string }[];
     },
   });
 
