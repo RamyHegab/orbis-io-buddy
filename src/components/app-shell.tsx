@@ -58,13 +58,9 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
         <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          {branding?.logo_url ? (
-            <img src={branding.logo_url} alt="Logo" className="h-10 w-10 rounded-md object-contain bg-white/90 p-1" />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-gold-foreground shadow-sm">
-              <Globe2 className="h-5 w-5" />
-            </div>
-          )}
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-gold-foreground shadow-sm">
+            <Globe2 className="h-5 w-5" />
+          </div>
           <div>
             <div className="font-semibold tracking-tight text-gold">Orbis CRM</div>
             <div className="text-xs text-sidebar-foreground/60">The IO Buddy</div>
@@ -93,9 +89,32 @@ export function AppShell() {
               );
             })}
         </nav>
+        <div className="mt-auto border-t border-sidebar-border px-4 py-4 space-y-3">
+          {branding?.logo_url ? (
+            <div className="flex items-center justify-center">
+              <img
+                src={branding.logo_url}
+                alt="Organisation logo"
+                className="max-h-16 w-auto max-w-full object-contain rounded-md bg-white/90 p-2"
+              />
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate({ to: "/auth" });
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-gold transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Log out</span>
+          </button>
+        </div>
       </aside>
 
       <main className="flex-1 min-w-0 flex flex-col">
+
         <header className="sticky top-0 z-30 flex items-center justify-end gap-2 border-b border-border bg-background/80 backdrop-blur px-4 h-14">
           <HeaderMenu />
         </header>
