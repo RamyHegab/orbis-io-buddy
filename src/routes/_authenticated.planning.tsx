@@ -718,7 +718,11 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
       )}
       <div className="space-y-2">
         {events.map((e) => (
-          <Card key={e.id} className="p-3 flex items-center gap-3">
+          <Card
+            key={e.id}
+            className="p-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => { setEditing(e); setDialogOpen(true); }}
+          >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <div className="font-medium">{e.title}</div>
@@ -733,10 +737,10 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
             </div>
             <div className="text-sm font-semibold">{e.cost != null ? `${e.currency} ${Number(e.cost).toLocaleString()}` : "—"}</div>
             {canManage && (
-              <>
+              <div className="flex gap-1" onClick={(ev) => ev.stopPropagation()}>
                 <Button size="sm" variant="outline" onClick={() => { setEditing(e); setDialogOpen(true); }}><Edit2 className="h-3 w-3" /></Button>
                 <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete event?")) del.mutate(e.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-              </>
+              </div>
             )}
           </Card>
         ))}
