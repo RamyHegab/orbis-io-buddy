@@ -109,7 +109,7 @@ function PlanningPage() {
           <TabsTrigger value="timeline"><LayoutList className="h-4 w-4 mr-1" /> Timeline</TabsTrigger>
           <TabsTrigger value="calendar"><CalendarIcon className="h-4 w-4 mr-1" /> Calendar</TabsTrigger>
           <TabsTrigger value="events"><ListChecks className="h-4 w-4 mr-1" /> Events Catalogue</TabsTrigger>
-          <TabsTrigger value="archive"><ArchiveIcon className="h-4 w-4 mr-1" /> Archive</TabsTrigger>
+          <TabsTrigger value="archive"><History className="h-4 w-4 mr-1" /> Previous Cycles</TabsTrigger>
         </TabsList>
         <TabsContent value="timeline" className="pt-4"><TimelineView userId={user?.id} /></TabsContent>
         <TabsContent value="calendar" className="pt-4"><CalendarView userId={user?.id} /></TabsContent>
