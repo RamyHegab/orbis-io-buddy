@@ -768,7 +768,7 @@ function EventsCatalogView({ canManage }: { canManage: boolean }) {
   );
 }
 
-// ---------- Event catalog dialog ----------
+// ---------- Event catalogue dialog ----------
 function EventDialog({ event, onClose }: { event: EventCatalog | null; onClose: () => void }) {
   const qc = useQueryClient();
   const { user } = useAuth();
