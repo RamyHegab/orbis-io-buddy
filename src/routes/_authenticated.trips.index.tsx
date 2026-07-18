@@ -249,6 +249,10 @@ function TripsPage() {
   const [legs, setLegs] = useState<Leg[]>([{ country: "", start_date: "", end_date: "" }]);
   const [objectives, setObjectives] = useState("");
   const [selectedUpcomingId, setSelectedUpcomingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "in_progress" | "approved" | "past">("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+
 
   const { data: trips } = useQuery({
     queryKey: ["trips"],
