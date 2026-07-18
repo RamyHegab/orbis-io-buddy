@@ -433,16 +433,16 @@ function TimelineView({ userId }: { userId?: string }) {
       {/* Top KPI tiles — navy & gold */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total trips", value: stats.trips.toLocaleString(),
+          { label: "Total Trips", value: stats.trips.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
-          { label: "Total events", value: stats.events.toLocaleString(),
+          { label: "Total Events", value: stats.events.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
           { label: "Countries", value: stats.countries.toLocaleString(),
             cls: "bg-primary text-primary-foreground border-primary",
             accentLabel: "text-gold/90", accentValue: "text-gold" },
-          { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+          { label: "Total Budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
             cls: "bg-gold border-gold",
             accentLabel: "text-primary/80", accentValue: "text-primary" },
         ].map((k) => (
