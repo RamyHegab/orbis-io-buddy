@@ -393,17 +393,21 @@ function TimelineView({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Top KPI tiles */}
+      {/* Top KPI tiles — colorful */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total trips", value: stats.trips.toLocaleString() },
-          { label: "Total events", value: stats.events.toLocaleString() },
-          { label: "Countries", value: stats.countries.toLocaleString() },
-          { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }) },
+          { label: "Total trips", value: stats.trips.toLocaleString(),
+            cls: "bg-gradient-to-br from-sky-500/15 to-sky-500/5 border-sky-500/40", accent: "text-sky-600 dark:text-sky-400" },
+          { label: "Total events", value: stats.events.toLocaleString(),
+            cls: "bg-gradient-to-br from-fuchsia-500/15 to-fuchsia-500/5 border-fuchsia-500/40", accent: "text-fuchsia-600 dark:text-fuchsia-400" },
+          { label: "Countries", value: stats.countries.toLocaleString(),
+            cls: "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/40", accent: "text-emerald-600 dark:text-emerald-400" },
+          { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+            cls: "bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/40", accent: "text-amber-600 dark:text-amber-500" },
         ].map((k) => (
-          <Card key={k.label} className="p-4">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</div>
-            <div className="text-4xl font-bold mt-1 text-primary">{k.value}</div>
+          <Card key={k.label} className={`p-4 border-2 ${k.cls}`}>
+            <div className={`text-xs uppercase tracking-wider font-medium ${k.accent}`}>{k.label}</div>
+            <div className={`text-4xl font-bold mt-1 ${k.accent}`}>{k.value}</div>
           </Card>
         ))}
       </div>
@@ -411,19 +415,26 @@ function TimelineView({ userId }: { userId?: string }) {
       {/* Per-country smaller tiles */}
       {stats.byCountry.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {stats.byCountry.map((c) => (
-            <Card key={c.country} className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl leading-none">{countryFlag(c.country)}</span>
-                <span className="font-medium text-sm truncate">{c.country}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1 text-[11px]">
-                <div><div className="text-muted-foreground">Visits</div><div className="font-semibold">{c.visits}</div></div>
-                <div><div className="text-muted-foreground">Events</div><div className="font-semibold">{c.events}</div></div>
-                <div><div className="text-muted-foreground">Cost</div><div className="font-semibold">{c.cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div></div>
-              </div>
-            </Card>
-          ))}
+          {stats.byCountry.map((c) => {
+            const flag = countryFlagUrl(c.country, 40);
+            return (
+              <Card key={c.country} className="p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  {flag ? (
+                    <img src={flag} alt="" width={20} height={14} className="rounded-sm shadow-sm shrink-0" />
+                  ) : (
+                    <span className="text-xl leading-none">🏳️</span>
+                  )}
+                  <span className="font-medium text-sm truncate">{c.country}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1 text-[11px]">
+                  <div><div className="text-muted-foreground">Visits</div><div className="font-semibold">{c.visits}</div></div>
+                  <div><div className="text-muted-foreground">Events</div><div className="font-semibold">{c.events}</div></div>
+                  <div><div className="text-muted-foreground">Cost</div><div className="font-semibold">{c.cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div></div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 

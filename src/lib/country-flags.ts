@@ -37,9 +37,20 @@ const NAME_TO_ISO2: Record<string, string> = {
   Venezuela: "VE", Vietnam: "VN", Yemen: "YE", Zambia: "ZM", Zimbabwe: "ZW",
 };
 
+export function countryIso2(name: string | null | undefined): string | null {
+  if (!name) return null;
+  return NAME_TO_ISO2[name.trim()] ?? null;
+}
+
 export function countryFlag(name: string | null | undefined): string {
-  if (!name) return "🏳️";
-  const iso = NAME_TO_ISO2[name.trim()];
+  const iso = countryIso2(name);
   if (!iso) return "🏳️";
   return String.fromCodePoint(...iso.toUpperCase().split("").map((c) => 0x1f1a5 + c.charCodeAt(0)));
+}
+
+// Real flag image URL — reliable across OS/browsers (Windows Chrome lacks emoji flags).
+export function countryFlagUrl(name: string | null | undefined, w: 20 | 40 | 80 = 40): string | null {
+  const iso = countryIso2(name);
+  if (!iso) return null;
+  return `https://flagcdn.com/w${w}/${iso.toLowerCase()}.png`;
 }
