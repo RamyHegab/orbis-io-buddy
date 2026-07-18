@@ -286,7 +286,8 @@ function FormsPage() {
                 </div>
               </DialogContent>
             </Dialog>
-          ) : null
+          ) : null}
+          </div>
         }
       />
 
