@@ -346,33 +346,39 @@ function FormsPage() {
       <section className="space-y-3 mt-8">
         <h2 className="text-sm font-medium text-muted-foreground">Generated forms</h2>
         {instances && instances.length > 0 ? (
-          <div className="space-y-2">
-            {instances.map((inst) => {
-              const url = `${origin}/f/${inst.id}`;
-              return (
-                <Card key={inst.id} className="p-4 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{inst.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {inst.event_date ? new Date(inst.event_date).toLocaleDateString(undefined, { dateStyle: "medium" }) : "No date"}
-                      {inst.country_code ? ` • default ${inst.country_code}` : ""}
+          filteredInstances.length > 0 ? (
+            <div className="space-y-2">
+              {filteredInstances.map((inst) => {
+                const url = `${origin}/f/${inst.id}`;
+                return (
+                  <Card key={inst.id} className="p-4 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{inst.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {inst.event_date ? new Date(inst.event_date).toLocaleDateString(undefined, { dateStyle: "medium" }) : "No date"}
+                        {inst.country_code ? ` • default ${inst.country_code}` : ""}
+                      </div>
                     </div>
-                  </div>
-                  <ShareFormButton url={url} title={inst.name} />
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1.5" /> Open</a>
-                  </Button>
-                  <button
-                    onClick={() => { if (confirm("Delete this form?")) removeInstance.mutate(inst.id); }}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Delete form"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </Card>
-              );
-            })}
-          </div>
+                    <ShareFormButton url={url} title={inst.name} />
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1.5" /> Open</a>
+                    </Button>
+                    <button
+                      onClick={() => { if (confirm("Delete this form?")) removeInstance.mutate(inst.id); }}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete form"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              No generated forms match your search or sort.
+            </Card>
+          )
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">
             No forms generated yet. Pick a template above to generate one for an activity.
