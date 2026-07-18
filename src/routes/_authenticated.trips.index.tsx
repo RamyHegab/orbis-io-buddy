@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Plane, Trash2, CheckCircle2, Circle, History as HistoryIcon } from "lucide-react";
+import { Plus, Plane, Trash2, CheckCircle2, Circle, History as HistoryIcon, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
@@ -249,6 +249,10 @@ function TripsPage() {
   const [legs, setLegs] = useState<Leg[]>([{ country: "", start_date: "", end_date: "" }]);
   const [objectives, setObjectives] = useState("");
   const [selectedUpcomingId, setSelectedUpcomingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "in_progress" | "approved" | "past">("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+
 
   const { data: trips } = useQuery({
     queryKey: ["trips"],
@@ -296,16 +300,37 @@ function TripsPage() {
 
   const previewTitle = buildTitle(legs);
 
+  const availableCountries = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of trips ?? []) for (const c of (t.destinations ?? [])) if (c) s.add(c);
+    return Array.from(s).sort();
+  }, [trips]);
+
+  const filteredTrips = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (trips ?? []).filter((t: any) => {
+      if (q) {
+        const hay = `${t.title ?? ""} ${(t.destinations ?? []).join(" ")}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (countryFilter !== "all" && !(t.destinations ?? []).includes(countryFilter)) return false;
+      if (statusFilter !== "all" && bucketOf(t) !== statusFilter) return false;
+      return true;
+    });
+  }, [trips, search, countryFilter, statusFilter]);
+
   const grouped = useMemo(() => {
     const g = { past: [] as any[], in_progress: [] as any[], approved: [] as any[], draft: [] as any[] };
-    for (const t of trips ?? []) g[bucketOf(t)].push(t);
+    for (const t of filteredTrips) g[bucketOf(t)].push(t);
     g.in_progress.sort((a, b) => a.start_date.localeCompare(b.start_date));
     g.approved.sort((a, b) => a.start_date.localeCompare(b.start_date));
     g.draft.sort((a, b) => a.start_date.localeCompare(b.start_date));
     return g;
-  }, [trips]);
+  }, [filteredTrips]);
 
   const pastLimited = grouped.past.slice(0, 3);
+  const filtersActive = search !== "" || statusFilter !== "all" || countryFilter !== "all";
+
 
   const checklistCandidates = useMemo(
     () => [...grouped.in_progress, ...grouped.approved, ...grouped.draft],
@@ -330,8 +355,41 @@ function TripsPage() {
         title="Trips"
         description="Plan and run international recruitment journeys."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New trip</Button></DialogTrigger>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search trips…"
+                className="pl-8 h-9 w-48"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="h-9 w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="in_progress">In progress</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="past">Past</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={countryFilter} onValueChange={setCountryFilter}>
+              <SelectTrigger className="h-9 w-40"><SelectValue placeholder="Country" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All countries</SelectItem>
+                {availableCountries.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setStatusFilter("all"); setCountryFilter("all"); }}>
+                <X className="h-4 w-4 mr-1" /> Clear
+              </Button>
+            )}
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New trip</Button></DialogTrigger>
+
             <DialogContent className="max-w-xl">
               <DialogHeader><DialogTitle>New trip</DialogTitle></DialogHeader>
               <div className="space-y-4">
@@ -393,7 +451,9 @@ function TripsPage() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         }
+
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
