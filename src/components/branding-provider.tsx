@@ -133,8 +133,8 @@ function applyBranding(b: Branding | null | undefined) {
     if (v) {
       root.style.setProperty("--sidebar", v);
       root.style.setProperty("--sidebar-foreground", foregroundFor(sidebar));
-      const border = mixHex(sidebar, 0.15);
-      const sAccent = mixHex(sidebar, 0.2);
+      const border = mixHex(sidebar, 0.18);
+      const sAccent = mixHex(sidebar, 0.28);
       if (border) {
         const bv = hexToOklch(border);
         if (bv) root.style.setProperty("--sidebar-border", bv);
@@ -142,6 +142,17 @@ function applyBranding(b: Branding | null | undefined) {
       if (sAccent) {
         const av = hexToOklch(sAccent);
         if (av) root.style.setProperty("--sidebar-accent", av);
+      }
+      // Hover / active text on the sidebar follows the accent (falls back to a light tint).
+      if (accent) {
+        const av = hexToOklch(accent);
+        if (av) root.style.setProperty("--sidebar-accent-foreground", av);
+      } else {
+        const tint = mixHex(sidebar, 0.85);
+        if (tint) {
+          const tv = hexToOklch(tint);
+          if (tv) root.style.setProperty("--sidebar-accent-foreground", tv);
+        }
       }
     }
   }
