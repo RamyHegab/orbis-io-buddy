@@ -302,6 +302,15 @@ function TimelineView({ userId }: { userId?: string }) {
     },
   });
 
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles_display"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name, email");
+      return (data ?? []) as { id: string; full_name: string | null; email: string | null }[];
+    },
+  });
+  const profileById = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
+
   const filtered = activities.filter((a) => statusFilter === "all" || a.status === statusFilter);
 
   const stats = useMemo(() => {
@@ -393,21 +402,25 @@ function TimelineView({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Top KPI tiles — colorful */}
+      {/* Top KPI tiles — navy & gold */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Total trips", value: stats.trips.toLocaleString(),
-            cls: "bg-gradient-to-br from-sky-500/15 to-sky-500/5 border-sky-500/40", accent: "text-sky-600 dark:text-sky-400" },
+            cls: "bg-primary text-primary-foreground border-primary",
+            accentLabel: "text-gold/90", accentValue: "text-gold" },
           { label: "Total events", value: stats.events.toLocaleString(),
-            cls: "bg-gradient-to-br from-fuchsia-500/15 to-fuchsia-500/5 border-fuchsia-500/40", accent: "text-fuchsia-600 dark:text-fuchsia-400" },
+            cls: "bg-gradient-to-br from-gold to-gold/70 border-gold",
+            accentLabel: "text-primary/80", accentValue: "text-primary" },
           { label: "Countries", value: stats.countries.toLocaleString(),
-            cls: "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/40", accent: "text-emerald-600 dark:text-emerald-400" },
+            cls: "bg-gradient-to-br from-primary via-primary to-gold/40 border-primary",
+            accentLabel: "text-gold/90", accentValue: "text-gold" },
           { label: "Total budget", value: stats.budget.toLocaleString(undefined, { maximumFractionDigits: 0 }),
-            cls: "bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/40", accent: "text-amber-600 dark:text-amber-500" },
+            cls: "bg-gradient-to-br from-gold via-gold/80 to-primary/60 border-gold",
+            accentLabel: "text-primary/80", accentValue: "text-primary" },
         ].map((k) => (
-          <Card key={k.label} className={`p-4 border-2 ${k.cls}`}>
-            <div className={`text-xs uppercase tracking-wider font-medium ${k.accent}`}>{k.label}</div>
-            <div className={`text-4xl font-bold mt-1 ${k.accent}`}>{k.value}</div>
+          <Card key={k.label} className={`p-4 border-2 shadow-md ${k.cls}`}>
+            <div className={`text-xs uppercase tracking-wider font-medium ${k.accentLabel}`}>{k.label}</div>
+            <div className={`text-4xl font-bold mt-1 ${k.accentValue}`}>{k.value}</div>
           </Card>
         ))}
       </div>
@@ -456,8 +469,11 @@ function TimelineView({ userId }: { userId?: string }) {
       )}
       {filtered.map((a) => {
         const total = sum(a.events_cost, a.travel_cost, a.hotel_cost, a.subsistence_cost);
+        const traveller = a.traveller_id ? profileById.get(a.traveller_id) : null;
+        const travellerName = traveller?.full_name || traveller?.email || (a.traveller_id ? a.traveller_id.slice(0, 8) : "Unassigned");
+        const isDelegated = !!a.traveller_id && a.traveller_id !== userId;
         return (
-          <Card key={a.id} className="p-4">
+          <Card key={a.id} className={`p-4 ${isDelegated ? "bg-gold/10 border-gold/40" : ""}`}>
             <div className="flex items-start gap-4">
               <div className="text-center min-w-[70px] rounded-md bg-primary text-primary-foreground py-2">
                 <div className="text-[10px] uppercase tracking-wider text-gold">{format(parseISO(a.start_date), "MMM")}</div>
@@ -479,6 +495,13 @@ function TimelineView({ userId }: { userId?: string }) {
                     </Badge>
                   ))}
                   <Badge variant="outline" className="text-xs">Academic support: {ACADEMIC_SUPPORT_LABEL[a.academic_support]}</Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-xs ${isDelegated ? "border-gold bg-gold/20 text-gold-foreground font-medium" : "border-primary/40 text-primary"}`}
+                    title={isDelegated ? "Delegated to another user" : "You are the traveller"}
+                  >
+                    Traveller: {travellerName}{isDelegated ? " (delegated)" : ""}
+                  </Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs">
                   <div><span className="text-muted-foreground">Events:</span> {Number(a.events_cost || 0).toLocaleString()}</div>
