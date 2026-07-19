@@ -269,7 +269,6 @@ function AccountSettingsBody() {
             {save.isPending ? "Saving…" : "Save settings"}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
