@@ -503,6 +503,7 @@ function EditDialog({
   onClose,
   users,
   inviterCaps,
+  senderSubdomain,
   onSubmit,
   submitting,
 }: {
@@ -510,12 +511,14 @@ function EditDialog({
   onClose: () => void;
   users: UserRow[];
   inviterCaps: CapabilityMap;
+  senderSubdomain: string | null;
   onSubmit: (v: {
     userId: string;
     role?: Role;
     lineManagerId?: string | null;
     status?: "active" | "disabled";
     capabilities?: Partial<CapabilityMap>;
+    emailLocalPart?: string | null;
   }) => void;
   submitting: boolean;
 }) {
@@ -523,6 +526,7 @@ function EditDialog({
   const [lineManagerId, setLineManagerId] = useState<string>(user?.line_manager_id ?? "none");
   const [status, setStatus] = useState<string>(user?.status ?? "active");
   const [caps, setCaps] = useState<CapabilityMap>(EMPTY_CAPS);
+  const [localPart, setLocalPart] = useState(user?.email_local_part ?? "");
 
   const inviterIsAdmin = ALL_CAPABILITIES.every((c) => inviterCaps[c]);
 
@@ -530,6 +534,7 @@ function EditDialog({
     setRole(u.role);
     setLineManagerId(u.line_manager_id ?? "none");
     setStatus(u.status);
+    setLocalPart(u.email_local_part ?? "");
     setCaps({
       can_manage_agents: u.can_manage_agents,
       can_manage_schools: u.can_manage_schools,
@@ -541,6 +546,10 @@ function EditDialog({
 
   if (!user) return null;
 
+  const previewAddress =
+    localPart && senderSubdomain ? `${localPart}@${senderSubdomain}.${ROOT_DOMAIN}` : null;
+  const localInvalid = !!localPart && !isValidLocalPart(localPart);
+
   return (
     <Dialog open={!!user} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
@@ -548,6 +557,36 @@ function EditDialog({
           <DialogTitle>Edit {user.full_name || user.email}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <div>
+            <Label>System email (sender identity)</Label>
+            <div className="flex items-center gap-1">
+              <Input
+                value={localPart}
+                onChange={(e) => setLocalPart(sanitizeLocalPart(e.target.value))}
+                placeholder="firstname"
+                className="max-w-[220px]"
+              />
+              <span className="text-sm text-muted-foreground">
+                @{senderSubdomain || "<subdomain>"}.{ROOT_DOMAIN}
+              </span>
+            </div>
+            {!senderSubdomain && (
+              <p className="text-xs text-amber-600 mt-1">
+                Set the account sender subdomain in Settings first.
+              </p>
+            )}
+            {localInvalid && (
+              <p className="text-xs text-destructive mt-1">
+                Only letters, numbers, . _ - are allowed.
+              </p>
+            )}
+            {previewAddress && !localInvalid && (
+              <p className="text-xs text-muted-foreground mt-1">
+                System emails will be sent from{" "}
+                <span className="font-mono">{previewAddress}</span>
+              </p>
+            )}
+          </div>
           <div>
             <Label>Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
@@ -603,7 +642,7 @@ function EditDialog({
             Cancel
           </Button>
           <Button
-            disabled={submitting}
+            disabled={submitting || localInvalid}
             onClick={() =>
               onSubmit({
                 userId: user.id,
@@ -612,6 +651,7 @@ function EditDialog({
                 status:
                   status === "disabled" ? "disabled" : status === "active" ? "active" : undefined,
                 capabilities: role === "user" ? caps : undefined,
+                emailLocalPart: localPart || null,
               })
             }
           >
