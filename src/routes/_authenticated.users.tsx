@@ -142,7 +142,8 @@ function UsersPage() {
   });
 
   const resend = useMutation({
-    mutationFn: (email: string) => resendFn({ data: email }),
+    mutationFn: (email: string) => resendFn({ data: { email } }),
+
     onSuccess: () => toast.success("Invite re-sent"),
     onError: (e: Error) => toast.error(e.message),
   });
