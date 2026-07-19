@@ -97,21 +97,28 @@ export const submitTripForApproval = createServerFn({ method: "POST" })
 
     const { data: owner, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, line_manager_id")
+      .select("id, full_name, email")
       .eq("id", userId)
       .maybeSingle();
     if (pErr) throw new Error(pErr.message);
-    if (!owner?.line_manager_id) {
-      throw new Error("No line manager assigned. Ask an admin to set your line manager first.");
+
+    // Approvals now go to all admins (line-manager role removed).
+    const { data: adminRoleRows, error: arErr } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+    if (arErr) throw new Error(arErr.message);
+    const adminIds = (adminRoleRows ?? []).map((r: any) => r.user_id as string);
+    if (adminIds.length === 0) {
+      throw new Error("No admin available to approve this trip. Ask an admin to be assigned first.");
     }
 
-    const { data: manager, error: mErr } = await supabaseAdmin
+    const { data: admins, error: mErr } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, email")
-      .eq("id", owner.line_manager_id)
-      .maybeSingle();
+      .in("id", adminIds);
     if (mErr) throw new Error(mErr.message);
-    if (!manager?.email) throw new Error("Line manager has no email on file");
+    const adminList = (admins ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>;
 
     // Cancel any prior pending approval for this trip
     await supabaseAdmin
@@ -125,7 +132,7 @@ export const submitTripForApproval = createServerFn({ method: "POST" })
       .insert({
         trip_id: trip.id,
         requested_by: userId,
-        manager_id: manager.id,
+        manager_id: null,
         decision: "pending",
       })
       .select("id")
@@ -141,33 +148,38 @@ export const submitTripForApproval = createServerFn({ method: "POST" })
     const tripUrl = `${siteOrigin()}/trips/${trip.id}`;
     const tripDates = fmtRange(trip.start_date, trip.end_date);
 
-    await notify(supabaseAdmin, [
-      {
-        user_id: manager.id,
+    await notify(
+      supabaseAdmin,
+      adminList.map((a) => ({
+        user_id: a.id,
         type: "trip_submitted",
         trip_id: trip.id,
-        title: `${owner.full_name ?? "A team member"} needs approval for "${trip.title}"`,
+        title: `${owner?.full_name ?? "A team member"} needs approval for "${trip.title}"`,
         body: tripDates,
-      },
-    ]);
+      })),
+    );
 
-    await sendApprovalEmail({
-      templateName: "trip-submitted-for-approval",
-      recipientEmail: manager.email,
-      idempotencyKey: `${trip.id}-submitted-${approval.id}`,
-      templateData: {
-        managerName: manager.full_name ?? undefined,
-        ownerName: owner.full_name ?? undefined,
-        tripTitle: trip.title,
-        tripDates,
-        objectives: trip.objectives ?? undefined,
-        tripUrl,
-      },
-      senderUserId: userId,
-    });
+    for (const admin of adminList) {
+      if (!admin.email) continue;
+      await sendApprovalEmail({
+        templateName: "trip-submitted-for-approval",
+        recipientEmail: admin.email,
+        idempotencyKey: `${trip.id}-submitted-${approval.id}-${admin.id}`,
+        templateData: {
+          managerName: admin.full_name ?? undefined,
+          ownerName: owner?.full_name ?? undefined,
+          tripTitle: trip.title,
+          tripDates,
+          objectives: trip.objectives ?? undefined,
+          tripUrl,
+        },
+        senderUserId: userId,
+      });
+    }
 
     return { ok: true, approvalId: approval.id };
   });
+
 
 export const withdrawTripSubmission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
