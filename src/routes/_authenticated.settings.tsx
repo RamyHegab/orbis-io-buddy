@@ -12,6 +12,9 @@ import { useIsAdmin } from "@/hooks/use-auth";
 import { CURRENCY_OPTIONS, currencySymbol } from "@/lib/currency";
 import { toast } from "sonner";
 import { BrandingCard } from "@/components/branding-card";
+import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
+import { Link } from "@tanstack/react-router";
+import { ClipboardCheck, ExternalLink, Plus } from "lucide-react";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -104,6 +107,7 @@ function SettingsPage() {
 
       {isAdmin && <AccountSettingsCard />}
       {isAdmin && <BrandingCard />}
+      <AgentOnboardingCard isAdmin={isAdmin} />
 
 
 
@@ -162,6 +166,50 @@ function SettingsPage() {
         </CardContent>
       </Card>
     </PageContainer>
+  );
+}
+
+function AgentOnboardingCard({ isAdmin }: { isAdmin: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardCheck className="h-4 w-4" /> Agent onboarding
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isAdmin ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Set up the Agent Signup form, configure the onboarding checklist, review references
+              and documents, and approve new agents.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <Link to="/onboarding">
+                  <ExternalLink className="h-4 w-4 mr-1" /> Open onboarding management
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Start a new agent onboarding
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Kick off onboarding for a new agent. We'll create a draft record and email you a
+              share link for the Agent Signup form.
+            </p>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Start a new agent onboarding
+            </Button>
+          </>
+        )}
+      </CardContent>
+      <StartOnboardingDialog open={open} onClose={() => setOpen(false)} />
+    </Card>
   );
 }
 

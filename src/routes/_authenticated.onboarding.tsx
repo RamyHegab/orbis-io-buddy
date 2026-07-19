@@ -5,17 +5,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -124,68 +116,9 @@ function OnboardingPage() {
   );
 }
 
-function StartOnboardingDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const qc = useQueryClient();
-  const startFn = useServerFn(startOnboarding);
-  const [tradingName, setTradingName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
 
-  const mutation = useMutation({
-    mutationFn: () => startFn({ data: { tradingName, contactEmail } }),
-    onSuccess: (res) => {
-      toast.success("Agent added to onboarding");
-      qc.invalidateQueries({ queryKey: ["onboarding-list"] });
-      setTradingName("");
-      setContactEmail("");
-      onClose();
-      if (!res.shareToken) {
-        toast.warning(
-          "Agent Signup form is inactive. Configure it in Forms so a share link can be generated.",
-        );
-      }
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Start onboarding</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Agent / company name</Label>
-            <Input value={tradingName} onChange={(e) => setTradingName(e.target.value)} />
-          </div>
-          <div>
-            <Label>Primary contact email</Label>
-            <Input
-              type="email"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-              placeholder="contact@agent.com"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            We'll create a draft record and generate a share link for the Agent Signup form.
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            disabled={!tradingName || !contactEmail || mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            {mutation.isPending ? "Starting…" : "Start"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+
 
 function OnboardingDetail({ onboardingId }: { onboardingId: string }) {
   const qc = useQueryClient();

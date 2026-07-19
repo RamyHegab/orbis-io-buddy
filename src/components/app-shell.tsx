@@ -10,9 +10,10 @@ import {
   FileText,
   Globe2,
   CalendarRange,
-  ClipboardCheck,
   LogOut,
 } from "lucide-react";
+
+// ClipboardCheck was previously used for the Onboarding nav item, now moved to Settings.
 
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
@@ -34,7 +35,7 @@ const navItems: NavItem[] = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
-  { to: "/onboarding", label: "Onboarding", icon: ClipboardCheck, adminOnly: true },
+  
   { to: "/forms", label: "Forms", icon: FileText },
 ];
 
