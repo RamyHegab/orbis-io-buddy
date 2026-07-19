@@ -366,6 +366,14 @@ function FormsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <FormTemplateEditor
+        open={editorOpen}
+        onOpenChange={(o) => { setEditorOpen(o); if (!o) setEditingTemplate(null); }}
+        template={editingTemplate}
+        currentUserId={user?.id}
+        isAdmin={isAdmin}
+      />
     </PageContainer>
   );
 }
