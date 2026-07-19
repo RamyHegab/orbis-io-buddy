@@ -75,7 +75,8 @@ export function AppShell() {
         </div>
         <nav className="px-3 py-4 space-y-1">
           {navItems
-            .filter((i) => !i.requiresCap || caps[i.requiresCap])
+            .filter((i) => (!i.requiresCap || caps[i.requiresCap]) && (!i.adminOnly || isAdmin))
+
             .map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
               const Icon = item.icon;
