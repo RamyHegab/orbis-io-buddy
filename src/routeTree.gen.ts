@@ -31,6 +31,7 @@ import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenti
 import { Route as PublicIntakeTypeRouteImport } from './routes/public.intake.$type'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
+import { Route as FTTokenRouteImport } from './routes/f.t.$token'
 import { Route as AuthenticatedTripsPreviousRouteImport } from './routes/_authenticated.trips.previous'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated.schools.$schoolId'
@@ -159,6 +160,11 @@ const FormsActivityIdTemplateIdRoute =
     path: '/forms/$activityId/$templateId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const FTTokenRoute = FTTokenRouteImport.update({
+  id: '/f/t/$token',
+  path: '/f/t/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTripsPreviousRoute =
   AuthenticatedTripsPreviousRouteImport.update({
     id: '/previous',
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/trips/previous': typeof AuthenticatedTripsPreviousRoute
+  '/f/t/$token': typeof FTTokenRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/trips/previous': typeof AuthenticatedTripsPreviousRoute
+  '/f/t/$token': typeof FTTokenRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/_authenticated/trips/previous': typeof AuthenticatedTripsPreviousRoute
+  '/f/t/$token': typeof FTTokenRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/schools/$schoolId'
     | '/trips/$tripId'
     | '/trips/previous'
+    | '/f/t/$token'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
     | '/schools/$schoolId'
     | '/trips/$tripId'
     | '/trips/previous'
+    | '/f/t/$token'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/trips/$tripId'
     | '/_authenticated/trips/previous'
+    | '/f/t/$token'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -487,6 +499,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FInstanceIdRoute: typeof FInstanceIdRoute
+  FTTokenRoute: typeof FTTokenRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
@@ -655,6 +668,13 @@ declare module '@tanstack/react-router' {
       path: '/forms/$activityId/$templateId'
       fullPath: '/forms/$activityId/$templateId'
       preLoaderRoute: typeof FormsActivityIdTemplateIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/f/t/$token': {
+      id: '/f/t/$token'
+      path: '/f/t/$token'
+      fullPath: '/f/t/$token'
+      preLoaderRoute: typeof FTTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/trips/previous': {
@@ -850,6 +870,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FInstanceIdRoute: FInstanceIdRoute,
+  FTTokenRoute: FTTokenRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,

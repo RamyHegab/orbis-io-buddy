@@ -157,12 +157,11 @@ function PublicTokenForm() {
     setSubmitting(true);
     try {
       const phoneField = fields.find((f) => f.type === "phone");
-      const submitterPhone = phoneField ? String(values[phoneField.id] ?? "") || null : null;
+      const submitterPhone = phoneField ? String(values[phoneField.id] ?? "") || undefined : undefined;
 
       const { error } = await supabase.rpc("submit_public_form", {
         p_token: token,
         p_data: values as never,
-        p_submitter_name: null,
         p_submitter_phone: submitterPhone,
       });
       if (error) throw error;
