@@ -10,8 +10,10 @@ import {
   FileText,
   Globe2,
   CalendarRange,
+  ClipboardCheck,
   LogOut,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
 import { BrandingProvider, useBranding } from "@/components/branding-provider";
