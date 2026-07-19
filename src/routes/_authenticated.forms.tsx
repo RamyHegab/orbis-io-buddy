@@ -222,39 +222,73 @@ function FormsPage() {
         {templates && templates.length > 0 ? (
           filteredTemplates.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredTemplates.map((t) => (
+              {filteredTemplates.map((t: any) => {
+                const inactive = t.is_active === false;
+                const system = !!t.is_system;
+                return (
                 <Card key={t.id} className="p-4 flex flex-col">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{t.name}</div>
+                      <div className="font-medium truncate flex items-center gap-1.5">
+                        {t.name}
+                        {system && <Lock className="h-3 w-3 text-amber-600 shrink-0" />}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {t.activity_type ? (ACTIVITY_TYPE_LABELS[t.activity_type] ?? t.activity_type) : (t.form_type ?? "form")} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                        {t.activity_type && t.activity_type !== "other"
+                          ? (ACTIVITY_TYPE_LABELS[t.activity_type] ?? t.activity_type)
+                          : (t.form_type ?? "form")}
+                        {" • "}{Array.isArray(t.fields) ? t.fields.length : 0} fields
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {inactive && <Badge variant="outline" className="text-amber-700 border-amber-400">Inactive — configure</Badge>}
+                        {system && <Badge variant="outline">System</Badge>}
                       </div>
                     </div>
-                    {canManageTemplates && (
-                      <button
-                        onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
-                        className="text-muted-foreground hover:text-destructive"
-                        aria-label="Delete template"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {canManageTemplates && (
+                        <button
+                          onClick={() => { setEditingTemplate(t); setEditorOpen(true); }}
+                          className="text-muted-foreground hover:text-foreground"
+                          aria-label="Edit template"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
+                      {canManageTemplates && !system && (
+                        <button
+                          onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label="Delete template"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
-                  <div className="mt-auto pt-3">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type ?? "other" });
-                        setActivityId("");
-                      }}
-                    >
-                      <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
-                    </Button>
+                  <div className="mt-auto pt-3 flex gap-2">
+                    {inactive ? (
+                      canManageTemplates ? (
+                        <Button size="sm" variant="outline" onClick={() => { setEditingTemplate(t); setEditorOpen(true); }}>
+                          <Pencil className="h-4 w-4 mr-1.5" /> Configure
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Awaiting admin configuration</span>
+                      )
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type ?? "other" });
+                          setActivityId("");
+                        }}
+                      >
+                        <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
+                      </Button>
+                    )}
                   </div>
                 </Card>
-              ))}
+              );})}
             </div>
           ) : (
             <Card className="p-6 text-center text-sm text-muted-foreground">
