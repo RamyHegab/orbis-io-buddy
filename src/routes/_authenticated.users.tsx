@@ -334,6 +334,7 @@ function InviteDialog({
   onClose,
   users,
   inviterCaps,
+  senderSubdomain,
   onSubmit,
   submitting,
 }: {
@@ -341,12 +342,14 @@ function InviteDialog({
   onClose: () => void;
   users: Array<{ id: string; full_name: string | null; email: string | null }>;
   inviterCaps: CapabilityMap;
+  senderSubdomain: string | null;
   onSubmit: (v: {
     email: string;
     fullName?: string;
     role: Role;
     lineManagerId?: string | null;
     capabilities?: Partial<CapabilityMap>;
+    emailLocalPart?: string | null;
   }) => void;
   submitting: boolean;
 }) {
@@ -355,8 +358,18 @@ function InviteDialog({
   const [role, setRole] = useState<Role>("user");
   const [lineManagerId, setLineManagerId] = useState<string>("none");
   const [caps, setCaps] = useState<CapabilityMap>(EMPTY_CAPS);
+  const [localPart, setLocalPart] = useState("");
+  const [localPartTouched, setLocalPartTouched] = useState(false);
 
   const inviterIsAdmin = ALL_CAPABILITIES.every((c) => inviterCaps[c]);
+
+  const autoLocal = deriveLocalPartFromName(fullName, email);
+  const effectiveLocal = localPartTouched ? localPart : autoLocal;
+  const previewAddress =
+    effectiveLocal && senderSubdomain
+      ? `${effectiveLocal}@${senderSubdomain}.${ROOT_DOMAIN}`
+      : null;
+  const localInvalid = !!effectiveLocal && !isValidLocalPart(effectiveLocal);
 
   return (
     <Dialog
@@ -369,6 +382,8 @@ function InviteDialog({
           setRole("user");
           setLineManagerId("none");
           setCaps(EMPTY_CAPS);
+          setLocalPart("");
+          setLocalPartTouched(false);
         }
       }}
     >
@@ -389,6 +404,39 @@ function InviteDialog({
           <div>
             <Label>Full name (optional)</Label>
             <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div>
+            <Label>System email (sender identity)</Label>
+            <div className="flex items-center gap-1">
+              <Input
+                value={effectiveLocal}
+                onChange={(e) => {
+                  setLocalPartTouched(true);
+                  setLocalPart(sanitizeLocalPart(e.target.value));
+                }}
+                placeholder="firstname"
+                className="max-w-[220px]"
+              />
+              <span className="text-sm text-muted-foreground">
+                @{senderSubdomain || "<subdomain>"}.{ROOT_DOMAIN}
+              </span>
+            </div>
+            {!senderSubdomain && (
+              <p className="text-xs text-amber-600 mt-1">
+                Set the account sender subdomain in Settings first.
+              </p>
+            )}
+            {localInvalid && (
+              <p className="text-xs text-destructive mt-1">
+                Only letters, numbers, . _ - are allowed.
+              </p>
+            )}
+            {previewAddress && !localInvalid && (
+              <p className="text-xs text-muted-foreground mt-1">
+                System emails will be sent from{" "}
+                <span className="font-mono">{previewAddress}</span>
+              </p>
+            )}
           </div>
           <div>
             <Label>Role</Label>
@@ -430,7 +478,7 @@ function InviteDialog({
             Cancel
           </Button>
           <Button
-            disabled={!email || submitting}
+            disabled={!email || submitting || localInvalid}
             onClick={() =>
               onSubmit({
                 email,
@@ -438,6 +486,7 @@ function InviteDialog({
                 role,
                 lineManagerId: lineManagerId === "none" ? null : lineManagerId,
                 capabilities: role === "user" ? caps : undefined,
+                emailLocalPart: effectiveLocal || null,
               })
             }
           >
