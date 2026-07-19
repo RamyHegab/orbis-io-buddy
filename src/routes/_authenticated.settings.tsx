@@ -67,9 +67,22 @@ function SettingsPage() {
         description="Workspace, team, and integration preferences."
       />
 
-      {isAdmin && <AccountSettingsCard />}
-      {isAdmin && <BrandingCard />}
-      <AgentOnboardingCard isAdmin={isAdmin} />
+      {isAdmin && (
+        <SettingsSection title="Account — Recruitment cycle & currency">
+          <AccountSettingsBody />
+        </SettingsSection>
+      )}
+      {isAdmin && (
+        <SettingsSection title="Branding — Logo & theme">
+          <BrandingCard bare />
+        </SettingsSection>
+      )}
+      <SettingsSection
+        title="Agent onboarding"
+        icon={<ClipboardCheck className="h-4 w-4" />}
+      >
+        <AgentOnboardingBody isAdmin={isAdmin} />
+      </SettingsSection>
 
 
 
