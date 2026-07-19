@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
