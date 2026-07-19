@@ -113,7 +113,12 @@ function AgentsPage() {
         actions={
           <div className="flex gap-2 flex-wrap">
             <ImportListDialog type="agent" />
-            <ShareIntakeLink type="agent" />
+            {isAdmin && (
+              <Link to="/onboarding">
+                <Button variant="outline"><UserPlus className="h-4 w-4 mr-1" /> Agent sign up</Button>
+              </Link>
+            )}
+
             {isAdmin && (!agents || agents.length === 0) && (
               <Button variant="outline" onClick={() => runSeed.mutate()} disabled={runSeed.isPending}>
                 <Database className="h-4 w-4 mr-1" /> Import Airtable data
