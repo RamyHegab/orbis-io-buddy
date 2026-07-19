@@ -16,20 +16,33 @@ async function sendApprovalEmail(opts: {
   recipientEmail: string;
   idempotencyKey: string;
   templateData: Record<string, any>;
+  senderUserId?: string | null;
 }) {
   try {
     const req = getRequest();
     const origin = req?.url ? new URL(req.url).origin : siteOrigin();
-    // Server-only call: authorize with the service role key, not the user's
-    // bearer token. The email relay is now restricted to service-role callers.
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+    // Resolve a per-user "from" identity when possible so recipients see the
+    // relevant team member's system address instead of a generic noreply.
+    let from: string | undefined;
+    let replyTo: string | undefined;
+    if (opts.senderUserId) {
+      try {
+        const { getSenderFor } = await import("./system-email.server");
+        const s = await getSenderFor(opts.senderUserId);
+        from = s.from;
+        replyTo = s.replyTo;
+      } catch (e) {
+        console.error("sender resolution failed", e);
+      }
+    }
     const res = await fetch(`${origin}/lovable/email/transactional/send`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
         authorization: `Bearer ${serviceKey}`,
       },
-      body: JSON.stringify(opts),
+      body: JSON.stringify({ ...opts, from, replyTo }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
