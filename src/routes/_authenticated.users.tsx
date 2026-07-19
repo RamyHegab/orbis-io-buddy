@@ -237,6 +237,7 @@ function UsersPage() {
         onClose={() => setInviteOpen(false)}
         users={users}
         inviterCaps={inviterCaps}
+        senderSubdomain={senderSubdomain ?? null}
         onSubmit={(v) => invite.mutate(v)}
         submitting={invite.isPending}
       />
@@ -246,6 +247,7 @@ function UsersPage() {
         onClose={() => setEditing(null)}
         users={users}
         inviterCaps={inviterCaps}
+        senderSubdomain={senderSubdomain ?? null}
         onSubmit={(v) => update.mutate(v)}
         submitting={update.isPending}
       />
