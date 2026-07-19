@@ -54,7 +54,6 @@ type UserRow = {
   id: string;
   full_name: string | null;
   email: string | null;
-  line_manager_id: string | null;
   status: string;
   role: Role;
   last_sign_in_at: string | null;
@@ -66,7 +65,6 @@ export const Route = createFileRoute("/_authenticated/users")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
-    // Admin OR has can_manage_users capability
     const { data: isAdmin } = await supabase.rpc("has_role", {
       _user_id: u.user.id,
       _role: "admin",
@@ -115,7 +113,6 @@ function UsersPage() {
       email: string;
       fullName?: string;
       role: Role;
-      lineManagerId?: string | null;
       capabilities?: Partial<CapabilityMap>;
       emailLocalPart?: string | null;
     }) => inviteFn({ data: input }),
@@ -131,7 +128,6 @@ function UsersPage() {
     mutationFn: (input: {
       userId: string;
       role?: Role;
-      lineManagerId?: string | null;
       status?: "active" | "disabled";
       fullName?: string;
       capabilities?: Partial<CapabilityMap>;
@@ -146,23 +142,16 @@ function UsersPage() {
   });
 
   const resend = useMutation({
-    mutationFn: (email: string) => resendFn({ data: { email } }),
+    mutationFn: (email: string) => resendFn({ data: email }),
     onSuccess: () => toast.success("Invite re-sent"),
     onError: (e: Error) => toast.error(e.message),
   });
-
-  const nameOf = (id: string | null) =>
-    id
-      ? users.find((u) => u.id === id)?.full_name ||
-        users.find((u) => u.id === id)?.email ||
-        "—"
-      : "—";
 
   return (
     <PageContainer>
       <PageHeader
         title="Users"
-        description="Invite users, set permissions and line managers. New users can only receive permissions you already have."
+        description="Invite users and set permissions. New users can only receive permissions you already have. Trip approvals go to admins."
         actions={<Button onClick={() => setInviteOpen(true)}>Invite user</Button>}
       />
 
@@ -181,7 +170,6 @@ function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Permissions</TableHead>
-                  <TableHead>Line manager</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -203,7 +191,6 @@ function UsersPage() {
                         <PermissionSummary user={u} />
                       )}
                     </TableCell>
-                    <TableCell>{nameOf(u.line_manager_id)}</TableCell>
                     <TableCell>
                       <Badge variant={u.status === "active" ? "outline" : "destructive"}>
                         {u.status}
@@ -235,7 +222,6 @@ function UsersPage() {
       <InviteDialog
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
-        users={users}
         inviterCaps={inviterCaps}
         senderSubdomain={senderSubdomain ?? null}
         onSubmit={(v) => invite.mutate(v)}
@@ -245,7 +231,6 @@ function UsersPage() {
       <EditDialog
         user={editing}
         onClose={() => setEditing(null)}
-        users={users}
         inviterCaps={inviterCaps}
         senderSubdomain={senderSubdomain ?? null}
         onSubmit={(v) => update.mutate(v)}
@@ -332,7 +317,6 @@ const EMPTY_CAPS: CapabilityMap = {
 function InviteDialog({
   open,
   onClose,
-  users,
   inviterCaps,
   senderSubdomain,
   onSubmit,
@@ -340,14 +324,12 @@ function InviteDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  users: Array<{ id: string; full_name: string | null; email: string | null }>;
   inviterCaps: CapabilityMap;
   senderSubdomain: string | null;
   onSubmit: (v: {
     email: string;
     fullName?: string;
     role: Role;
-    lineManagerId?: string | null;
     capabilities?: Partial<CapabilityMap>;
     emailLocalPart?: string | null;
   }) => void;
@@ -356,7 +338,6 @@ function InviteDialog({
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<Role>("user");
-  const [lineManagerId, setLineManagerId] = useState<string>("none");
   const [caps, setCaps] = useState<CapabilityMap>(EMPTY_CAPS);
   const [localPart, setLocalPart] = useState("");
   const [localPartTouched, setLocalPartTouched] = useState(false);
@@ -380,7 +361,6 @@ function InviteDialog({
           setEmail("");
           setFullName("");
           setRole("user");
-          setLineManagerId("none");
           setCaps(EMPTY_CAPS);
           setLocalPart("");
           setLocalPartTouched(false);
@@ -456,22 +436,6 @@ function InviteDialog({
               <CapabilityChecklist value={caps} onChange={setCaps} inviterCaps={inviterCaps} />
             </div>
           )}
-          <div>
-            <Label>Line manager</Label>
-            <Select value={lineManagerId} onValueChange={setLineManagerId}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {users.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.full_name || u.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -484,7 +448,6 @@ function InviteDialog({
                 email,
                 fullName: fullName || undefined,
                 role,
-                lineManagerId: lineManagerId === "none" ? null : lineManagerId,
                 capabilities: role === "user" ? caps : undefined,
                 emailLocalPart: effectiveLocal || null,
               })
@@ -501,7 +464,6 @@ function InviteDialog({
 function EditDialog({
   user,
   onClose,
-  users,
   inviterCaps,
   senderSubdomain,
   onSubmit,
@@ -509,13 +471,11 @@ function EditDialog({
 }: {
   user: UserRow | null;
   onClose: () => void;
-  users: UserRow[];
   inviterCaps: CapabilityMap;
   senderSubdomain: string | null;
   onSubmit: (v: {
     userId: string;
     role?: Role;
-    lineManagerId?: string | null;
     status?: "active" | "disabled";
     capabilities?: Partial<CapabilityMap>;
     emailLocalPart?: string | null;
@@ -523,7 +483,6 @@ function EditDialog({
   submitting: boolean;
 }) {
   const [role, setRole] = useState<Role>(user?.role ?? "user");
-  const [lineManagerId, setLineManagerId] = useState<string>(user?.line_manager_id ?? "none");
   const [status, setStatus] = useState<string>(user?.status ?? "active");
   const [caps, setCaps] = useState<CapabilityMap>(EMPTY_CAPS);
   const [localPart, setLocalPart] = useState(user?.email_local_part ?? "");
@@ -532,7 +491,6 @@ function EditDialog({
 
   useStateSync(user, (u) => {
     setRole(u.role);
-    setLineManagerId(u.line_manager_id ?? "none");
     setStatus(u.status);
     setLocalPart(u.email_local_part ?? "");
     setCaps({
@@ -606,24 +564,6 @@ function EditDialog({
             </div>
           )}
           <div>
-            <Label>Line manager</Label>
-            <Select value={lineManagerId} onValueChange={setLineManagerId}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {users
-                  .filter((u) => u.id !== user.id)
-                  .map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.full_name || u.email}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger>
@@ -647,7 +587,6 @@ function EditDialog({
               onSubmit({
                 userId: user.id,
                 role,
-                lineManagerId: lineManagerId === "none" ? null : lineManagerId,
                 status:
                   status === "disabled" ? "disabled" : status === "active" ? "active" : undefined,
                 capabilities: role === "user" ? caps : undefined,
