@@ -172,7 +172,7 @@ function AccountSettingsCard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("app_settings")
-        .select("cycle_start_month, cycle_start_year, cycle_end_month, cycle_end_year, currency")
+        .select("cycle_start_month, cycle_start_year, cycle_end_month, cycle_end_year, currency, sender_subdomain")
         .eq("id", 1)
         .maybeSingle();
       return data;
@@ -184,6 +184,7 @@ function AccountSettingsCard() {
   const [em, setEm] = useState(8);
   const [ey, setEy] = useState(new Date().getFullYear() + 1);
   const [currency, setCurrency] = useState("GBP");
+  const [subdomain, setSubdomain] = useState("");
 
   useEffect(() => {
     if (!data) return;
@@ -192,10 +193,14 @@ function AccountSettingsCard() {
     setEm(data.cycle_end_month);
     setEy(data.cycle_end_year);
     setCurrency(data.currency || "GBP");
+    setSubdomain((data as any).sender_subdomain || "");
   }, [data]);
+
+  const subdomainValid = !subdomain || /^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/.test(subdomain);
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!subdomainValid) throw new Error("Invalid subdomain. Use lowercase letters, numbers, and hyphens only.");
       const payload = {
         id: 1,
         cycle_start_month: sm,
@@ -203,6 +208,7 @@ function AccountSettingsCard() {
         cycle_end_month: em,
         cycle_end_year: ey,
         currency,
+        sender_subdomain: subdomain ? subdomain.toLowerCase() : null,
       };
       const { error } = await supabase.from("app_settings").upsert(payload, { onConflict: "id" });
       if (error) throw error;
@@ -268,6 +274,28 @@ function AccountSettingsCard() {
             </Select>
             <span className="text-sm text-muted-foreground">Preview: {currencySymbol(currency)}1,234.00</span>
           </div>
+        </div>
+
+        <div>
+          <Label className="mb-1 block">System email sender subdomain</Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Shared across your team. Each user's system emails will be sent from{" "}
+            <span className="font-mono">firstname@&lt;subdomain&gt;.orbishub.co.uk</span>. DNS delegation is required before the custom subdomain can send email.
+          </p>
+          <div className="flex items-center gap-1 max-w-md">
+            <Input
+              value={subdomain}
+              onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              placeholder="university"
+              className="max-w-[220px]"
+            />
+            <span className="text-sm text-muted-foreground">.orbishub.co.uk</span>
+          </div>
+          {!subdomainValid && (
+            <p className="text-xs text-destructive mt-1">
+              Use lowercase letters, numbers and hyphens (no leading/trailing hyphen).
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end">

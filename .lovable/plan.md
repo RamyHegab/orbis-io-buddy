@@ -1,50 +1,62 @@
+
 ## Goal
 
-Let an Admin upload a University logo and set the app's colour scheme — either auto-derived from the logo, or manually set (pickers). Applied app-wide (sidebar, header, buttons, accents). Non-admins see the branding but can't change it. Fully revertable from the same settings card.
+Each Orbis user gets their own "from" address like `ramy@harvard.orbishub.co.uk`, used automatically as the sender on system emails (approval requests, reminders, notifications, etc.). The subdomain part is set once for the account; the local part is auto-generated from the user's first name and can be edited by admins.
 
-## Where it plugs in
+## Prerequisite: verify the university subdomain for email
 
-- **Settings page** (`src/routes/_authenticated.settings.tsx`): new "Branding" card, Admin-only, alongside existing "Account" card.
-- **Storage**: reuse existing private `avatars` bucket with a `branding/` prefix (or add a `branding` bucket if you'd prefer public URLs — I'll default to a new **public** `branding` bucket so the logo renders in the sidebar/header without signed URLs).
-- **DB**: extend the existing `app_settings` singleton (id=1) — no new table.
-- **Theme application**: a small `BrandingProvider` mounted in `src/routes/__root.tsx` that reads settings and injects CSS variable overrides (`--primary`, `--accent`, `--sidebar`, `--ring`, `--gold`) onto `:root`. Overrides only when set; otherwise the current navy/gold theme stands.
-- **Logo display**: sidebar header in `src/components/app-shell.tsx` (and the top header) shows the uploaded logo when present.
+The subdomain (e.g. `harvard.orbishub.co.uk`) must be a verified Lovable email domain before any email can be sent from it. This means:
+- Admin sets the desired subdomain in Orbis settings.
+- Admin runs the "Set up email domain" flow for that exact subdomain (adds the NS records Lovable shows at their DNS provider).
+- Until DNS is verified, system emails fall back to the current sender domain.
 
-## Changes
+We surface this in the UI so the admin sees the status and the "Set up email domain" action inline.
 
-1. **DB migration** — add to `app_settings`:
-   - `logo_url text`
-   - `logo_path text` (storage path for delete/replace)
-   - `theme_mode text default 'default'` — `'default' | 'from_logo' | 'custom'`
-   - `theme_primary text`, `theme_accent text`, `theme_sidebar text` (hex, nullable)
-   - RLS already restricts writes to admin; unchanged.
+## Data model
 
-2. **Storage** — create public `branding` bucket via storage tool; RLS: public SELECT, admin-only INSERT/UPDATE/DELETE (via `has_role(auth.uid(),'admin')`).
+Add to `public.app_settings` (single-row org config):
+- `sender_subdomain` — e.g. `harvard` (stored lowercase; validated `[a-z0-9-]`).
 
-3. **Branding card** (`_authenticated.settings.tsx`, Admin-only):
-   - Logo upload (drag/drop or file picker), preview, "Remove logo".
-   - Radio: **Use default theme** / **Derive from logo** / **Custom colours**.
-   - Derive-from-logo: client-side extract dominant + accent colour from the uploaded image using a tiny palette function (canvas + downsample; no dependency needed — or add `colorthief` if you'd prefer).
-   - Custom: three colour pickers (Primary, Accent, Sidebar) with hex input.
-   - "Preview" applies live via the provider; "Save" persists; "Reset to default" clears everything (this is your revert).
+Add to `public.profiles`:
+- `email_local_part` — the part before `@`, auto-generated on invite from `full_name` (first token, lowercased, non-alnum stripped), admin-editable. Unique per account.
 
-4. **BrandingProvider** (`src/components/branding-provider.tsx`):
-   - Reads `app_settings` (via existing `useAppSettings` extended).
-   - Converts hex → oklch and sets CSS vars on `document.documentElement` so Tailwind tokens pick them up automatically.
-   - No override when `theme_mode='default'`.
+Uniqueness enforced with a partial unique index on `lower(email_local_part)`.
 
-5. **Logo rendering**:
-   - `app-shell.tsx` sidebar brand area: show logo if `logo_url` else current text mark.
-   - Optional: header-menu left slot mirrors the same.
+## Auto-generation & admin edit
 
-## Revert path
+- On `inviteUser`: derive `email_local_part` from `fullName || email`. On collision, admin is prompted to override (form validates against the unique index).
+- On `updateUser`: admins with `can_manage_users` can edit `email_local_part` and (Admin only) `sender_subdomain`.
+- New "System email address" row in the user table and edit dialog showing the full computed address, greyed-out subdomain, editable local part.
 
-Everything lives behind `theme_mode` and `logo_url`. Clicking **"Reset to default"** clears the fields — theme + logo revert instantly across the app, no code changes needed. If you dislike the feature entirely, revert this chat message from history and the migration/UI go away together.
+## Sender-address wiring
 
-## Out of scope
+Add a small helper `getSenderAddress(userId)` used by every server-side email path:
+- Returns `{ from, replyTo }` where `from = "<Full Name> <local_part@sender_subdomain.orbishub.co.uk>"`.
+- Falls back to the current default sender when subdomain is unset or unverified.
 
-- Dark-mode-specific overrides (we'll override the light theme only; dark stays as-is unless you want both).
-- Per-user themes.
-- Full brand kit (typography, favicons) — logo + 3 colours only for this pass.
+Update every call site that currently posts to `/lovable/email/transactional/send` to include the acting user's sender:
+- `src/lib/trip-approvals.functions.ts` (submit / approve / changes-requested)
+- `src/routes/api/public/hooks/checklist-reminders.ts`
+- `src/routes/api/public/planning/reminders.ts`
+- `src/routes/api/public/hooks/auto-archive-cycle.ts`
+- Any other `sendTransactionalEmail` caller.
 
-Shall I build it?
+The transactional send route is extended to accept optional `from` / `replyTo` and pass them through to the mailer. When absent, existing behaviour is preserved.
+
+## Admin UI
+
+- `Settings → Branding/Account`: new "System email" section — input for university subdomain + live preview `youruser@<subdomain>.orbishub.co.uk` + status pill ("Verified" / "DNS pending" / "Not set up"). Includes the `<presentation-open-email-setup>` action when unverified.
+- `Users` page: new column "System address"; edit dialog gains an editable local-part field with collision validation.
+
+## Out of scope (flag for later)
+
+- Inbound email / replies routed back to the user (would require MX + mailbox routing; today `replyTo` is just set on outgoing).
+- Multiple university subdomains in one Orbis deployment.
+- Per-user avatars/signatures in system emails.
+
+## Technical notes
+
+- Migration: `alter table app_settings add column sender_subdomain text;` + `alter table profiles add column email_local_part text;` + partial unique index. RLS on `profiles`: admins/self can update the local part; only admins can update `sender_subdomain` on `app_settings` (existing policies cover this).
+- Generation helper is deterministic and pure; unit-test via a small util in `src/lib/system-email.ts`.
+- Validation: local part `^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$`; subdomain `^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$`.
+- No change to auth login email — that remains the user's real inbox address in `profiles.email`. The new field is sender-identity only.

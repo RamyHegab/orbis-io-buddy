@@ -67,6 +67,8 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
         let idempotencyKey: string
         let messageId: string
         let templateData: Record<string, any> = {}
+        let customFrom: string | undefined
+        let customReplyTo: string | undefined
         try {
           const body = await request.json()
           templateName = body.templateName || body.template_name
@@ -76,6 +78,11 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           if (body.templateData && typeof body.templateData === 'object') {
             templateData = body.templateData
           }
+          // Sanitize header overrides — strip CR/LF to prevent header injection.
+          const strip = (v: unknown) =>
+            typeof v === 'string' ? v.replace(/[\r\n]/g, '').slice(0, 320) : undefined
+          customFrom = strip(body.from)
+          customReplyTo = strip(body.replyTo || body.reply_to)
         } catch {
           return Response.json(
             { error: 'Invalid JSON in request body' },
@@ -280,7 +287,11 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           payload: {
             message_id: messageId,
             to: effectiveRecipient,
-            from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+            // sender_domain must remain the Lovable-verified subdomain so DKIM/SPF
+            // pass. `from` is the header the recipient sees; when the caller
+            // provides a per-user sender identity we display that instead.
+            from: customFrom || `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+            reply_to: customReplyTo,
             sender_domain: SENDER_DOMAIN,
             subject: resolvedSubject,
             html,

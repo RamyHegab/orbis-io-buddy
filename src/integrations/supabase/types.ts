@@ -337,6 +337,7 @@ export type Database = {
           id: number
           logo_path: string | null
           logo_url: string | null
+          sender_subdomain: string | null
           theme_accent: string | null
           theme_mode: string
           theme_primary: string | null
@@ -353,6 +354,7 @@ export type Database = {
           id?: number
           logo_path?: string | null
           logo_url?: string | null
+          sender_subdomain?: string | null
           theme_accent?: string | null
           theme_mode?: string
           theme_primary?: string | null
@@ -369,6 +371,7 @@ export type Database = {
           id?: number
           logo_path?: string | null
           logo_url?: string | null
+          sender_subdomain?: string | null
           theme_accent?: string | null
           theme_mode?: string
           theme_primary?: string | null
@@ -976,6 +979,7 @@ export type Database = {
           created_at: string
           discovery_banner_dismissed_at: string | null
           email: string | null
+          email_local_part: string | null
           full_name: string | null
           id: string
           line_manager_id: string | null
@@ -992,6 +996,7 @@ export type Database = {
           created_at?: string
           discovery_banner_dismissed_at?: string | null
           email?: string | null
+          email_local_part?: string | null
           full_name?: string | null
           id: string
           line_manager_id?: string | null
@@ -1008,6 +1013,7 @@ export type Database = {
           created_at?: string
           discovery_banner_dismissed_at?: string | null
           email?: string | null
+          email_local_part?: string | null
           full_name?: string | null
           id?: string
           line_manager_id?: string | null

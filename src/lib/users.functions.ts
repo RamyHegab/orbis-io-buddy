@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { deriveLocalPartFromName, isValidLocalPart, sanitizeLocalPart } from "@/lib/system-email";
 
 type Role = "admin" | "user";
 type DbRole = "admin" | "manager" | "member";
@@ -71,7 +72,7 @@ export const listUsers = createServerFn({ method: "GET" })
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, full_name, email, line_manager_id, status, created_at, " + CAPS.join(","),
+        "id, full_name, email, line_manager_id, status, created_at, email_local_part, " + CAPS.join(","),
       )
       .order("created_at", { ascending: true });
     if (pErr) throw new Error(pErr.message);
@@ -104,6 +105,7 @@ export const listUsers = createServerFn({ method: "GET" })
         line_manager_id: p.line_manager_id as string | null,
         status: p.status as string,
         role,
+        email_local_part: (p.email_local_part as string | null) ?? null,
         can_manage_agents: !!p.can_manage_agents,
         can_manage_schools: !!p.can_manage_schools,
         can_view_all_trips: !!p.can_view_all_trips,
@@ -123,6 +125,7 @@ export const inviteUser = createServerFn({ method: "POST" })
       role: Role;
       lineManagerId?: string | null;
       capabilities?: CapMap;
+      emailLocalPart?: string | null;
     }) => i,
   )
   .handler(async ({ data, context }) => {
@@ -161,6 +164,13 @@ export const inviteUser = createServerFn({ method: "POST" })
     const userId = invited.user?.id;
     if (!userId) throw new Error("Invite failed: no user id returned");
 
+    // Derive or sanitize local-part. Falls back to name/email if missing.
+    let localPart =
+      data.emailLocalPart != null
+        ? sanitizeLocalPart(data.emailLocalPart)
+        : deriveLocalPartFromName(data.fullName ?? null, email);
+    if (localPart && !isValidLocalPart(localPart)) localPart = "";
+
     await supabaseAdmin.from("profiles").upsert(
       {
         id: userId,
@@ -168,6 +178,7 @@ export const inviteUser = createServerFn({ method: "POST" })
         full_name: data.fullName ?? null,
         line_manager_id: data.lineManagerId ?? null,
         status: "invited",
+        email_local_part: localPart || null,
         ...caps,
       } as any,
       { onConflict: "id" },
@@ -193,6 +204,7 @@ export const updateUser = createServerFn({ method: "POST" })
       status?: "active" | "disabled";
       fullName?: string;
       capabilities?: CapMap;
+      emailLocalPart?: string | null;
     }) => i,
   )
   .handler(async ({ data, context }) => {
@@ -204,6 +216,13 @@ export const updateUser = createServerFn({ method: "POST" })
     if (data.lineManagerId !== undefined) patch.line_manager_id = data.lineManagerId;
     if (data.status) patch.status = data.status;
     if (data.fullName !== undefined) patch.full_name = data.fullName;
+    if (data.emailLocalPart !== undefined) {
+      const cleaned = data.emailLocalPart ? sanitizeLocalPart(data.emailLocalPart) : "";
+      if (cleaned && !isValidLocalPart(cleaned)) {
+        throw new Error("Invalid email local part. Use letters, numbers, . _ - only.");
+      }
+      patch.email_local_part = cleaned || null;
+    }
 
     if (data.capabilities) {
       // Only write caps the inviter is allowed to grant/revoke. Leave the rest
