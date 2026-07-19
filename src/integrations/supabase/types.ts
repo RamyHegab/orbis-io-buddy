@@ -1854,6 +1854,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      ingest_agent_signup_files: {
+        Args: { p_agent_id: string; p_data: Json; p_submission_id: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string

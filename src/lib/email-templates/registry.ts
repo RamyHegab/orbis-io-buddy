@@ -5,6 +5,8 @@ import { template as tripChangesRequested } from './trip-changes-requested'
 import { template as planningItineraryReminder } from './planning-itinerary-reminder'
 import { template as planningActualCostsReminder } from './planning-actual-costs-reminder'
 import { template as checklistReminder } from './checklist-reminder'
+import { template as agentSignupInvite } from './agent-signup-invite'
+import { template as referenceRequest } from './reference-request'
 
 
 export interface TemplateEntry {
@@ -23,4 +25,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'planning-itinerary-reminder': planningItineraryReminder,
   'planning-actual-costs-reminder': planningActualCostsReminder,
   'checklist-reminder': checklistReminder,
+  'agent-signup-invite': agentSignupInvite,
+  'reference-request': referenceRequest,
 }

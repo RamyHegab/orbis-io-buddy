@@ -21,6 +21,8 @@ import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { Link } from "@tanstack/react-router";
 import { EditAgentDialog } from "@/components/edit-agent-dialog";
+import { useServerFn } from "@tanstack/react-start";
+import { getAgentAttachments } from "@/lib/onboarding.functions";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
@@ -193,6 +195,8 @@ function AgentDetail() {
         )}
       </Card>
 
+      <AgentAttachments agentId={agentId} />
+
       <VisitReports agentId={agentId} />
 
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
@@ -316,6 +320,60 @@ function AgentDetail() {
   );
 }
 
+const DOC_CATEGORY_LABELS: Record<string, string> = {
+  british_council: "British Council certificate",
+  company_registration: "Company registration",
+  agreement: "Signed agreement",
+  other: "Supporting document",
+};
+
+function AgentAttachments({ agentId }: { agentId: string }) {
+  const fetchFn = useServerFn(getAgentAttachments);
+  const { data: docs = [] } = useQuery({
+    queryKey: ["agent-attachments", agentId],
+    queryFn: () => fetchFn({ data: { agentId } }),
+  });
+  if (!docs || docs.length === 0) {
+    return (
+      <div id="attachments" className="mb-6">
+        <h2 className="text-lg font-semibold mb-3">Attachments</h2>
+        <Card className="p-4 text-center text-sm text-muted-foreground">
+          No attachments yet. Files uploaded via the agent signup form appear here.
+        </Card>
+      </div>
+    );
+  }
+  return (
+    <div id="attachments" className="mb-6">
+      <h2 className="text-lg font-semibold mb-3">Attachments ({docs.length})</h2>
+      <div className="space-y-2">
+        {docs.map((d: any) => (
+          <Card key={d.id} className="p-3 flex items-center justify-between gap-3 flex-wrap text-sm">
+            <div className="min-w-0">
+              <div className="font-medium truncate">
+                {d.title || DOC_CATEGORY_LABELS[d.category] || d.file_name || "Attachment"}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
+                <Badge variant="outline" className="text-[10px] mr-2">
+                  {DOC_CATEGORY_LABELS[d.category] ?? d.category}
+                </Badge>
+                {d.file_name}
+                {d.uploaded_at ? ` · ${fmtDate(d.uploaded_at)}` : ""}
+              </div>
+            </div>
+            {d.url && (
+              <a href={d.url} target="_blank" rel="noreferrer">
+                <Button size="sm" variant="outline">
+                  <ExternalLink className="h-3 w-3 mr-1" /> Open
+                </Button>
+              </a>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
 function VisitReports({ agentId }: { agentId: string }) {
   const { data: visits } = useQuery({
     queryKey: ["agent-visits", agentId],
