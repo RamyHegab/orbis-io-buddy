@@ -5,17 +5,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
