@@ -23,14 +23,6 @@ export const Route = createFileRoute("/_authenticated/forms")({
   component: FormsPage,
 });
 
-type FieldType = "text" | "textarea" | "number" | "phone" | "select" | "checkbox" | "rating";
-interface Field {
-  id: string;
-  type: FieldType;
-  label: string;
-  options?: string[];
-  required?: boolean;
-}
 
 function FormsPage() {
   const { user } = useAuth();
