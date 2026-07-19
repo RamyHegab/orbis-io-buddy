@@ -44,11 +44,10 @@ function FormsPage() {
   const [pickerTemplate, setPickerTemplate] = useState<{ id: string; name: string; activity_type: string } | null>(null);
   const [activityId, setActivityId] = useState<string>("");
 
-  // Template creation state
-  const [tplOpen, setTplOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [fields, setFields] = useState<Field[]>([]);
+  // Template editor state
+  const { isAdmin } = useRole();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
 
   const { data: templates } = useQuery({
     queryKey: ["templates"],
