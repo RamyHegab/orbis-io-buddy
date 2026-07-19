@@ -163,6 +163,7 @@ export const submitTripForApproval = createServerFn({ method: "POST" })
         objectives: trip.objectives ?? undefined,
         tripUrl,
       },
+      senderUserId: userId,
     });
 
     return { ok: true, approvalId: approval.id };
