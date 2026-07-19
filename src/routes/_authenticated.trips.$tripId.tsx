@@ -124,6 +124,8 @@ const emptyHotel: HotelForm = {
 function TripPlanner() {
   const { tripId } = Route.useParams();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
+
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
