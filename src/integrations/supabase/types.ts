@@ -949,7 +949,7 @@ export type Database = {
           related_agent_id: string | null
           related_reference_id: string | null
           template_id: string
-          token: string | null
+          token: string
           updated_at: string
         }
         Insert: {
@@ -964,7 +964,7 @@ export type Database = {
           related_agent_id?: string | null
           related_reference_id?: string | null
           template_id: string
-          token?: string | null
+          token: string
           updated_at?: string
         }
         Update: {
@@ -979,7 +979,7 @@ export type Database = {
           related_agent_id?: string | null
           related_reference_id?: string | null
           template_id?: string
-          token?: string | null
+          token?: string
           updated_at?: string
         }
         Relationships: [
@@ -1814,6 +1814,23 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_form_instance_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          activity_id: string
+          country_code: string
+          event_date: string
+          form_type: Database["public"]["Enums"]["form_type"]
+          id: string
+          name: string
+          template_active: boolean
+          template_description: string
+          template_fields: Json
+          template_id: string
+          template_name: string
+          template_parts: Json
+        }[]
+      }
       get_public_form_instance: {
         Args: { p_id: string }
         Returns: {
@@ -1867,6 +1884,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      submit_public_form: {
+        Args: {
+          p_data: Json
+          p_submitter_name?: string
+          p_submitter_phone?: string
+          p_token: string
+        }
+        Returns: string
       }
     }
     Enums: {
