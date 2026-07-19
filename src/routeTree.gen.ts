@@ -14,7 +14,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as FInstanceIdRouteImport } from './routes/f.$instanceId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated.users'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
@@ -31,6 +30,7 @@ import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenti
 import { Route as PublicIntakeTypeRouteImport } from './routes/public.intake.$type'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FormsActivityIdTemplateIdRouteImport } from './routes/forms.$activityId.$templateId'
+import { Route as FTTokenRouteImport } from './routes/f.t.$token'
 import { Route as AuthenticatedTripsPreviousRouteImport } from './routes/_authenticated.trips.previous'
 import { Route as AuthenticatedTripsTripIdRouteImport } from './routes/_authenticated.trips.$tripId'
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated.schools.$schoolId'
@@ -41,7 +41,8 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicPlanningRemindersRouteImport } from './routes/api/public/planning/reminders'
 import { Route as ApiPublicHooksChecklistRemindersRouteImport } from './routes/api/public/hooks/checklist-reminders'
 import { Route as ApiPublicHooksAutoArchiveCycleRouteImport } from './routes/api/public/hooks/auto-archive-cycle'
-import { Route as ApiPublicFormInstanceIdRouteImport } from './routes/api/public/form-instance.$id'
+import { Route as ApiPublicFormUploadTokenRouteImport } from './routes/api/public/form-upload.$token'
+import { Route as ApiPublicFormByTokenTokenRouteImport } from './routes/api/public/form-by-token.$token'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
 import { Route as AuthenticatedTripsTripIdActivitiesActivityIdRouteImport } from './routes/_authenticated.trips.$tripId.activities.$activityId'
 
@@ -67,11 +68,6 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FInstanceIdRoute = FInstanceIdRouteImport.update({
-  id: '/f/$instanceId',
-  path: '/f/$instanceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -157,6 +153,11 @@ const FormsActivityIdTemplateIdRoute =
     path: '/forms/$activityId/$templateId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const FTTokenRoute = FTTokenRouteImport.update({
+  id: '/f/t/$token',
+  path: '/f/t/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTripsPreviousRoute =
   AuthenticatedTripsPreviousRouteImport.update({
     id: '/previous',
@@ -217,11 +218,18 @@ const ApiPublicHooksAutoArchiveCycleRoute =
     path: '/api/public/hooks/auto-archive-cycle',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicFormInstanceIdRoute = ApiPublicFormInstanceIdRouteImport.update({
-  id: '/api/public/form-instance/$id',
-  path: '/api/public/form-instance/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ApiPublicFormUploadTokenRoute =
+  ApiPublicFormUploadTokenRouteImport.update({
+    id: '/api/public/form-upload/$token',
+    path: '/api/public/form-upload/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicFormByTokenTokenRoute =
+  ApiPublicFormByTokenTokenRouteImport.update({
+    id: '/api/public/form-by-token/$token',
+    path: '/api/public/form-by-token/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTripsTripIdReportRoute =
   AuthenticatedTripsTripIdReportRouteImport.update({
     id: '/report',
@@ -250,11 +258,11 @@ export interface FileRoutesByFullPath {
   '/trips': typeof AuthenticatedTripsRouteWithChildren
   '/users': typeof AuthenticatedUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/f/$instanceId': typeof FInstanceIdRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/trips/previous': typeof AuthenticatedTripsPreviousRoute
+  '/f/t/$token': typeof FTTokenRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -262,7 +270,8 @@ export interface FileRoutesByFullPath {
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/trips/': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
-  '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
+  '/api/public/form-by-token/$token': typeof ApiPublicFormByTokenTokenRoute
+  '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -284,11 +293,11 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/f/$instanceId': typeof FInstanceIdRoute
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/trips/previous': typeof AuthenticatedTripsPreviousRoute
+  '/f/t/$token': typeof FTTokenRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -296,7 +305,8 @@ export interface FileRoutesByTo {
   '/schools': typeof AuthenticatedSchoolsIndexRoute
   '/trips': typeof AuthenticatedTripsIndexRoute
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
-  '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
+  '/api/public/form-by-token/$token': typeof ApiPublicFormByTokenTokenRoute
+  '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -322,11 +332,11 @@ export interface FileRoutesById {
   '/_authenticated/trips': typeof AuthenticatedTripsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/f/$instanceId': typeof FInstanceIdRoute
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRouteWithChildren
   '/_authenticated/trips/previous': typeof AuthenticatedTripsPreviousRoute
+  '/f/t/$token': typeof FTTokenRoute
   '/forms/$activityId/$templateId': typeof FormsActivityIdTemplateIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/public/intake/$type': typeof PublicIntakeTypeRoute
@@ -334,7 +344,8 @@ export interface FileRoutesById {
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
   '/_authenticated/trips/': typeof AuthenticatedTripsIndexRoute
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
-  '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
+  '/api/public/form-by-token/$token': typeof ApiPublicFormByTokenTokenRoute
+  '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -360,11 +371,11 @@ export interface FileRouteTypes {
     | '/trips'
     | '/users'
     | '/email/unsubscribe'
-    | '/f/$instanceId'
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
     | '/trips/previous'
+    | '/f/t/$token'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -372,7 +383,8 @@ export interface FileRouteTypes {
     | '/schools/'
     | '/trips/'
     | '/trips/$tripId/report'
-    | '/api/public/form-instance/$id'
+    | '/api/public/form-by-token/$token'
+    | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -394,11 +406,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/users'
     | '/email/unsubscribe'
-    | '/f/$instanceId'
     | '/agents/$agentId'
     | '/schools/$schoolId'
     | '/trips/$tripId'
     | '/trips/previous'
+    | '/f/t/$token'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -406,7 +418,8 @@ export interface FileRouteTypes {
     | '/schools'
     | '/trips'
     | '/trips/$tripId/report'
-    | '/api/public/form-instance/$id'
+    | '/api/public/form-by-token/$token'
+    | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -431,11 +444,11 @@ export interface FileRouteTypes {
     | '/_authenticated/trips'
     | '/_authenticated/users'
     | '/email/unsubscribe'
-    | '/f/$instanceId'
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/trips/$tripId'
     | '/_authenticated/trips/previous'
+    | '/f/t/$token'
     | '/forms/$activityId/$templateId'
     | '/lovable/email/suppression'
     | '/public/intake/$type'
@@ -443,7 +456,8 @@ export interface FileRouteTypes {
     | '/_authenticated/schools/'
     | '/_authenticated/trips/'
     | '/_authenticated/trips/$tripId/report'
-    | '/api/public/form-instance/$id'
+    | '/api/public/form-by-token/$token'
+    | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -460,11 +474,12 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
-  FInstanceIdRoute: typeof FInstanceIdRoute
+  FTTokenRoute: typeof FTTokenRoute
   FormsActivityIdTemplateIdRoute: typeof FormsActivityIdTemplateIdRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
-  ApiPublicFormInstanceIdRoute: typeof ApiPublicFormInstanceIdRoute
+  ApiPublicFormByTokenTokenRoute: typeof ApiPublicFormByTokenTokenRoute
+  ApiPublicFormUploadTokenRoute: typeof ApiPublicFormUploadTokenRoute
   ApiPublicHooksAutoArchiveCycleRoute: typeof ApiPublicHooksAutoArchiveCycleRoute
   ApiPublicHooksChecklistRemindersRoute: typeof ApiPublicHooksChecklistRemindersRoute
   ApiPublicPlanningRemindersRoute: typeof ApiPublicPlanningRemindersRoute
@@ -508,13 +523,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/f/$instanceId': {
-      id: '/f/$instanceId'
-      path: '/f/$instanceId'
-      fullPath: '/f/$instanceId'
-      preLoaderRoute: typeof FInstanceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -629,6 +637,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormsActivityIdTemplateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/f/t/$token': {
+      id: '/f/t/$token'
+      path: '/f/t/$token'
+      fullPath: '/f/t/$token'
+      preLoaderRoute: typeof FTTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/trips/previous': {
       id: '/_authenticated/trips/previous'
       path: '/previous'
@@ -699,11 +714,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoArchiveCycleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/form-instance/$id': {
-      id: '/api/public/form-instance/$id'
-      path: '/api/public/form-instance/$id'
-      fullPath: '/api/public/form-instance/$id'
-      preLoaderRoute: typeof ApiPublicFormInstanceIdRouteImport
+    '/api/public/form-upload/$token': {
+      id: '/api/public/form-upload/$token'
+      path: '/api/public/form-upload/$token'
+      fullPath: '/api/public/form-upload/$token'
+      preLoaderRoute: typeof ApiPublicFormUploadTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/form-by-token/$token': {
+      id: '/api/public/form-by-token/$token'
+      path: '/api/public/form-by-token/$token'
+      fullPath: '/api/public/form-by-token/$token'
+      preLoaderRoute: typeof ApiPublicFormByTokenTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/trips/$tripId/report': {
@@ -807,11 +829,12 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
-  FInstanceIdRoute: FInstanceIdRoute,
+  FTTokenRoute: FTTokenRoute,
   FormsActivityIdTemplateIdRoute: FormsActivityIdTemplateIdRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
-  ApiPublicFormInstanceIdRoute: ApiPublicFormInstanceIdRoute,
+  ApiPublicFormByTokenTokenRoute: ApiPublicFormByTokenTokenRoute,
+  ApiPublicFormUploadTokenRoute: ApiPublicFormUploadTokenRoute,
   ApiPublicHooksAutoArchiveCycleRoute: ApiPublicHooksAutoArchiveCycleRoute,
   ApiPublicHooksChecklistRemindersRoute: ApiPublicHooksChecklistRemindersRoute,
   ApiPublicPlanningRemindersRoute: ApiPublicPlanningRemindersRoute,

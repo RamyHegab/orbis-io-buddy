@@ -51,7 +51,7 @@ function FormsPage() {
     queryFn: async () =>
       (await supabase
         .from("form_instances")
-        .select("id, name, event_date, country_code, template_id, activity_id, created_at")
+        .select("id, name, event_date, country_code, template_id, activity_id, created_at, token")
         .order("created_at", { ascending: false })
       ).data ?? [],
   });
@@ -93,6 +93,7 @@ function FormsPage() {
           name: activity.title,
           event_date: activity.day_date,
           country_code: dial,
+          token: crypto.randomUUID().replace(/-/g, ""),
         })
         .select("id")
         .single();
@@ -301,7 +302,7 @@ function FormsPage() {
           filteredInstances.length > 0 ? (
             <div className="space-y-2">
               {filteredInstances.map((inst) => {
-                const url = `${origin}/f/${inst.id}`;
+                const url = `${origin}/f/t/${inst.token}`;
                 return (
                   <Card key={inst.id} className="p-4 flex items-center gap-3">
                     <div className="flex-1 min-w-0">
