@@ -320,7 +320,7 @@ function FormsPage() {
                     <Button
                       size="sm"
                       onClick={() => {
-                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type });
+                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type ?? "other" });
                         setActivityId("");
                       }}
                     >
