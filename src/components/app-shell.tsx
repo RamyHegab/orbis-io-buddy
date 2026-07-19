@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
-  { to: "/onboarding", label: "Onboarding", icon: ClipboardCheck, adminOnly: true },
+  
   { to: "/forms", label: "Forms", icon: FileText },
 ];
 
