@@ -1794,6 +1794,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _split_csv: { Args: { _s: string }; Returns: string[] }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
