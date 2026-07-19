@@ -302,7 +302,7 @@ function FormsPage() {
           filteredInstances.length > 0 ? (
             <div className="space-y-2">
               {filteredInstances.map((inst) => {
-                const url = `${origin}/f/${inst.id}`;
+                const url = `${origin}/f/t/${inst.token}`;
                 return (
                   <Card key={inst.id} className="p-4 flex items-center gap-3">
                     <div className="flex-1 min-w-0">
