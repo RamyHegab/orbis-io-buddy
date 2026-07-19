@@ -176,7 +176,7 @@ export const inviteUser = createServerFn({ method: "POST" })
         id: userId,
         email,
         full_name: data.fullName ?? null,
-        line_manager_id: data.lineManagerId ?? null,
+        
         status: "invited",
         email_local_part: localPart || null,
         ...caps,
