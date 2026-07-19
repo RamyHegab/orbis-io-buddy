@@ -116,8 +116,8 @@ function OnboardingPage() {
   );
 }
 
-// Start dialog extracted to @/components/start-onboarding-dialog for reuse in Settings.
-import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
+
+
 
 
 function OnboardingDetail({ onboardingId }: { onboardingId: string }) {
