@@ -276,6 +276,28 @@ function AccountSettingsCard() {
           </div>
         </div>
 
+        <div>
+          <Label className="mb-1 block">System email sender subdomain</Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Shared across your team. Each user's system emails will be sent from{" "}
+            <span className="font-mono">firstname@&lt;subdomain&gt;.orbishub.co.uk</span>. DNS delegation is required before the custom subdomain can send email.
+          </p>
+          <div className="flex items-center gap-1 max-w-md">
+            <Input
+              value={subdomain}
+              onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              placeholder="university"
+              className="max-w-[220px]"
+            />
+            <span className="text-sm text-muted-foreground">.orbishub.co.uk</span>
+          </div>
+          {!subdomainValid && (
+            <p className="text-xs text-destructive mt-1">
+              Use lowercase letters, numbers and hyphens (no leading/trailing hyphen).
+            </p>
+          )}
+        </div>
+
         <div className="flex justify-end">
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             {save.isPending ? "Saving…" : "Save settings"}
