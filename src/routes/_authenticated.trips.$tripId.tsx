@@ -474,6 +474,10 @@ function TripPlanner() {
       if (valid.length === 0) throw new Error("Add at least one country");
       const badYear = valid.find((l) => Number(l.start_date.slice(0, 4)) < 2000 || Number(l.end_date.slice(0, 4)) < 2000);
       if (badYear) throw new Error(`Dates need a 4-digit year (e.g. 2026), got ${badYear.start_date} → ${badYear.end_date}`);
+      for (const l of valid) {
+        assertTripDateInRange(l.start_date, `Start date for ${l.country}`);
+        assertTripDateInRange(l.end_date, `End date for ${l.country}`);
+      }
       const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
       const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
       const countries = valid.map((l) => l.country);
