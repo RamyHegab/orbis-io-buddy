@@ -12,6 +12,9 @@ import { useIsAdmin } from "@/hooks/use-auth";
 import { CURRENCY_OPTIONS, currencySymbol } from "@/lib/currency";
 import { toast } from "sonner";
 import { BrandingCard } from "@/components/branding-card";
+import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
+import { Link } from "@tanstack/react-router";
+import { ClipboardCheck, ExternalLink, Plus } from "lucide-react";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
