@@ -115,7 +115,7 @@ function AgentsPage() {
             <ImportListDialog type="agent" />
             {isAdmin && (
               <Link to="/onboarding">
-                <Button variant="outline"><UserPlus className="h-4 w-4 mr-1" /> Agent sign up</Button>
+                <Button><UserPlus className="h-4 w-4 mr-1" /> Sign up new agent</Button>
               </Link>
             )}
 
@@ -126,7 +126,7 @@ function AgentsPage() {
             )}
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-1" /> New agent</Button>
+                <Button variant="outline"><Plus className="h-4 w-4 mr-1" /> Add existing agent</Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader><DialogTitle>New agent</DialogTitle></DialogHeader>
