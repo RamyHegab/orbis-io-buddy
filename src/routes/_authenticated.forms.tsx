@@ -77,25 +77,6 @@ function FormsPage() {
     },
   });
 
-  const createTemplate = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Not signed in");
-      const { error } = await supabase.from("form_templates").insert({
-        created_by: user.id,
-        name, description, activity_type: "other" as any,
-        fields: fields as any,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Template created");
-      setTplOpen(false);
-      setName(""); setDescription(""); setFields([]);
-      qc.invalidateQueries({ queryKey: ["templates"] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
   const removeTemplate = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("form_templates").delete().eq("id", id);
@@ -104,13 +85,6 @@ function FormsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["templates"] }),
     onError: (e: any) => toast.error(e.message),
   });
-
-  const addField = (type: FieldType) => {
-    setFields([...fields, { id: crypto.randomUUID(), type, label: "", required: false, options: type === "select" ? [] : undefined }]);
-  };
-  const updateField = (id: string, patch: Partial<Field>) => {
-    setFields(fields.map((f) => (f.id === id ? { ...f, ...patch } : f)));
-  };
 
   const generate = useMutation({
     mutationFn: async () => {
