@@ -30,6 +30,13 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   active: "default",
   inactive: "outline",
   prospect: "secondary",
+  onboarding: "outline",
+  pending_approval: "secondary",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  onboarding: "On-boarding",
+  pending_approval: "Pending approval",
 };
 
 function AgentsPage() {
