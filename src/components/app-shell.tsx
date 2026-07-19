@@ -10,9 +10,10 @@ import {
   FileText,
   Globe2,
   CalendarRange,
-  ClipboardCheck,
   LogOut,
 } from "lucide-react";
+
+// ClipboardCheck was previously used for the Onboarding nav item, now moved to Settings.
 
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
