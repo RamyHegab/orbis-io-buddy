@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
+import { tripDateBounds, assertTripDateInRange } from "@/lib/date-range";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
@@ -473,6 +474,10 @@ function TripPlanner() {
       if (valid.length === 0) throw new Error("Add at least one country");
       const badYear = valid.find((l) => Number(l.start_date.slice(0, 4)) < 2000 || Number(l.end_date.slice(0, 4)) < 2000);
       if (badYear) throw new Error(`Dates need a 4-digit year (e.g. 2026), got ${badYear.start_date} → ${badYear.end_date}`);
+      for (const l of valid) {
+        assertTripDateInRange(l.start_date, `Start date for ${l.country}`);
+        assertTripDateInRange(l.end_date, `End date for ${l.country}`);
+      }
       const start = valid.reduce((a, l) => (a < l.start_date ? a : l.start_date), valid[0].start_date);
       const end = valid.reduce((a, l) => (a > l.end_date ? a : l.end_date), valid[0].end_date);
       const countries = valid.map((l) => l.country);
@@ -885,9 +890,9 @@ function TripPlanner() {
                 <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
                   <Input placeholder="Country" value={leg.country}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, country: e.target.value } : l))} />
-                  <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.start_date}
+                  <Input type="date" min={tripDateBounds().min} max={tripDateBounds().max} value={leg.start_date}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, start_date: e.target.value } : l))} />
-                  <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.end_date}
+                  <Input type="date" min={tripDateBounds().min} max={tripDateBounds().max} value={leg.end_date}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, end_date: e.target.value } : l))} />
                   <Button type="button" size="icon" variant="ghost" disabled={editLegs.length === 1}
                     onClick={() => setEditLegs(editLegs.filter((_, idx) => idx !== i))}>
