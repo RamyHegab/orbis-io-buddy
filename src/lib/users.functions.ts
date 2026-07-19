@@ -102,7 +102,7 @@ export const listUsers = createServerFn({ method: "GET" })
         id: p.id as string,
         full_name: p.full_name as string | null,
         email: p.email as string | null,
-        line_manager_id: p.line_manager_id as string | null,
+        line_manager_id: null,
         status: p.status as string,
         role,
         email_local_part: (p.email_local_part as string | null) ?? null,
