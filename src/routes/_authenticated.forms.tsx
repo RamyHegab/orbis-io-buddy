@@ -93,6 +93,7 @@ function FormsPage() {
           name: activity.title,
           event_date: activity.day_date,
           country_code: dial,
+          token: crypto.randomUUID().replace(/-/g, ""),
         })
         .select("id")
         .single();
