@@ -115,7 +115,7 @@ function AgentsPage() {
             <ImportListDialog type="agent" />
             {isAdmin && (
               <Link to="/onboarding">
-                <Button variant="outline"><UserPlus className="h-4 w-4 mr-1" /> Agent sign up</Button>
+                <Button><UserPlus className="h-4 w-4 mr-1" /> Sign up new agent</Button>
               </Link>
             )}
 
@@ -126,10 +126,10 @@ function AgentsPage() {
             )}
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-1" /> New agent</Button>
+                <Button variant="outline"><Plus className="h-4 w-4 mr-1" /> Add existing agent</Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
-                <DialogHeader><DialogTitle>New agent</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>Add existing agent</DialogTitle></DialogHeader>
                 <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Trading name *</Label><Input value={form.trading_name} onChange={(e) => setForm({ ...form, trading_name: e.target.value })} /></div>
