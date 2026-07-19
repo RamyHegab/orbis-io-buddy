@@ -146,11 +146,11 @@ function SchoolsPage() {
         actions={
           <div className="flex gap-2 flex-wrap">
             <ImportListDialog type="school" />
-            <ShareIntakeLink type="school" />
+            <ShareIntakeLink type="school" label="New school form" variant="default" />
             <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New school</Button></DialogTrigger>
+              <DialogTrigger asChild><Button variant="outline"><Plus className="h-4 w-4 mr-1" /> Add existing school</Button></DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>School contact form</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>Add existing school</DialogTitle></DialogHeader>
                 <div className="space-y-6">
                   <section className="space-y-3">
                     <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">School</h3>
