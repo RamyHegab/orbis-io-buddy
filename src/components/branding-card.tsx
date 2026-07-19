@@ -14,7 +14,7 @@ import { BrandingPreview } from "@/components/branding-preview";
 
 type ThemeMode = "default" | "from_logo" | "custom";
 
-export function BrandingCard() {
+export function BrandingCard({ bare = false }: { bare?: boolean } = {}) {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,11 +145,13 @@ export function BrandingCard() {
   };
 
   return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle>Branding — Logo & theme</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Card className={bare ? "border-0 shadow-none mb-0" : "mb-4"}>
+      {!bare && (
+        <CardHeader>
+          <CardTitle>Branding — Logo & theme</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={bare ? "p-0 space-y-6" : "space-y-6"}>
         <div>
           <Label className="mb-2 block">University logo</Label>
           <div className="flex items-center gap-4">

@@ -14,7 +14,39 @@ import { toast } from "sonner";
 import { BrandingCard } from "@/components/branding-card";
 import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
 import { Link } from "@tanstack/react-router";
-import { ClipboardCheck, ExternalLink, Plus } from "lucide-react";
+import { ClipboardCheck, ExternalLink, Plus, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+function SettingsSection({
+  title,
+  icon,
+  defaultOpen = false,
+  children,
+}: {
+  title: React.ReactNode;
+  icon?: React.ReactNode;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="mb-4">
+      <Collapsible defaultOpen={defaultOpen}>
+        <CollapsibleTrigger className="w-full group">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-muted/40 transition-colors">
+            <CardTitle className="flex items-center gap-2 text-left">
+              {icon}
+              {title}
+            </CardTitle>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>{children}</CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -35,9 +67,22 @@ function SettingsPage() {
         description="Workspace, team, and integration preferences."
       />
 
-      {isAdmin && <AccountSettingsCard />}
-      {isAdmin && <BrandingCard />}
-      <AgentOnboardingCard isAdmin={isAdmin} />
+      {isAdmin && (
+        <SettingsSection title="Account — Recruitment cycle & currency">
+          <AccountSettingsBody />
+        </SettingsSection>
+      )}
+      {isAdmin && (
+        <SettingsSection title="Branding — Logo & theme">
+          <BrandingCard bare />
+        </SettingsSection>
+      )}
+      <SettingsSection
+        title="Agent onboarding"
+        icon={<ClipboardCheck className="h-4 w-4" />}
+      >
+        <AgentOnboardingBody isAdmin={isAdmin} />
+      </SettingsSection>
 
 
 
@@ -53,51 +98,44 @@ function SettingsPage() {
   );
 }
 
-function AgentOnboardingCard({ isAdmin }: { isAdmin: boolean }) {
+function AgentOnboardingBody({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardCheck className="h-4 w-4" /> Agent onboarding
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {isAdmin ? (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Set up the Agent Signup form, configure the onboarding checklist, review references
-              and documents, and approve new agents.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild>
-                <Link to="/onboarding">
-                  <ExternalLink className="h-4 w-4 mr-1" /> Open onboarding management
-                </Link>
-              </Button>
-              <Button variant="outline" onClick={() => setOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Start a new agent onboarding
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Kick off onboarding for a new agent. We'll create a draft record and email you a
-              share link for the Agent Signup form.
-            </p>
-            <Button onClick={() => setOpen(true)}>
+    <div className="space-y-3">
+      {isAdmin ? (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Set up the Agent Signup form, configure the onboarding checklist, review references
+            and documents, and approve new agents.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link to="/onboarding">
+                <ExternalLink className="h-4 w-4 mr-1" /> Open onboarding management
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /> Start a new agent onboarding
             </Button>
-          </>
-        )}
-      </CardContent>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Kick off onboarding for a new agent. We'll create a draft record and email you a
+            share link for the Agent Signup form.
+          </p>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Start a new agent onboarding
+          </Button>
+        </>
+      )}
       <StartOnboardingDialog open={open} onClose={() => setOpen(false)} />
-    </Card>
+    </div>
   );
 }
 
-function AccountSettingsCard() {
+function AccountSettingsBody() {
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["app_settings"],
@@ -153,11 +191,7 @@ function AccountSettingsCard() {
   });
 
   return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle>Account — Recruitment cycle & currency</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
         <div>
           <Label className="mb-1 block">Recruitment cycle</Label>
           <p className="text-xs text-muted-foreground mb-2">
@@ -235,7 +269,6 @@ function AccountSettingsCard() {
             {save.isPending ? "Saving…" : "Save settings"}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
