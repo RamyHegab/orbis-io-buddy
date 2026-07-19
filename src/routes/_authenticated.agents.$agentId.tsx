@@ -374,8 +374,7 @@ function AgentAttachments({ agentId }: { agentId: string }) {
     </div>
   );
 }
-
-
+function VisitReports({ agentId }: { agentId: string }) {
   const { data: visits } = useQuery({
     queryKey: ["agent-visits", agentId],
     queryFn: async () => {
