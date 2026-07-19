@@ -2,33 +2,27 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useCan } from "@/hooks/use-auth";
+import { useAuth, useCan, useRole } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical, Search, X, ArrowUpDown } from "lucide-react";
+import { FilePlus2, ExternalLink, Trash2, Plus, Search, X, ArrowUpDown, Pencil, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { dialCodeForLocation } from "@/lib/country-codes";
 import { ShareFormButton } from "@/components/share-form-button";
+import { FormTemplateEditor } from "@/components/form-template-editor";
 
 export const Route = createFileRoute("/_authenticated/forms")({
   head: () => ({ meta: [{ title: "Forms — Orbis CRM" }] }),
   component: FormsPage,
 });
 
-type FieldType = "text" | "textarea" | "number" | "phone" | "select" | "checkbox" | "rating";
-interface Field {
-  id: string;
-  type: FieldType;
-  label: string;
-  options?: string[];
-  required?: boolean;
-}
 
 function FormsPage() {
   const { user } = useAuth();
@@ -42,11 +36,10 @@ function FormsPage() {
   const [pickerTemplate, setPickerTemplate] = useState<{ id: string; name: string; activity_type: string } | null>(null);
   const [activityId, setActivityId] = useState<string>("");
 
-  // Template creation state
-  const [tplOpen, setTplOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [fields, setFields] = useState<Field[]>([]);
+  // Template editor state
+  const { isAdmin } = useRole();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
 
   const { data: templates } = useQuery({
     queryKey: ["templates"],
@@ -76,25 +69,6 @@ function FormsPage() {
     },
   });
 
-  const createTemplate = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Not signed in");
-      const { error } = await supabase.from("form_templates").insert({
-        created_by: user.id,
-        name, description, activity_type: "other" as any,
-        fields: fields as any,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Template created");
-      setTplOpen(false);
-      setName(""); setDescription(""); setFields([]);
-      qc.invalidateQueries({ queryKey: ["templates"] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
   const removeTemplate = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("form_templates").delete().eq("id", id);
@@ -103,13 +77,6 @@ function FormsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["templates"] }),
     onError: (e: any) => toast.error(e.message),
   });
-
-  const addField = (type: FieldType) => {
-    setFields([...fields, { id: crypto.randomUUID(), type, label: "", required: false, options: type === "select" ? [] : undefined }]);
-  };
-  const updateField = (id: string, patch: Partial<Field>) => {
-    setFields(fields.map((f) => (f.id === id ? { ...f, ...patch } : f)));
-  };
 
   const generate = useMutation({
     mutationFn: async () => {
@@ -234,59 +201,10 @@ function FormsPage() {
               </Button>
             )}
             {canManageTemplates ? (
-              <Dialog open={tplOpen} onOpenChange={setTplOpen}>
-                <DialogTrigger asChild>
-                  <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
-                </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader><DialogTitle>New form template</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div><Label>Name *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Event check-in form" /></div>
-                  <div><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-
-                  <div className="border-t pt-3">
-                    <Label className="mb-2 block">Fields</Label>
-                    <div className="space-y-2 mb-3">
-                      {fields.map((f) => (
-                        <Card key={f.id} className="p-3">
-                          <div className="flex items-start gap-2">
-                            <GripVertical className="h-4 w-4 text-muted-foreground mt-2" />
-                            <div className="flex-1 space-y-2">
-                              <div className="flex gap-2">
-                                <Input placeholder="Question label" value={f.label} onChange={(e) => updateField(f.id, { label: e.target.value })} />
-                                <span className="text-xs text-muted-foreground self-center capitalize">{f.type}</span>
-                              </div>
-                              {f.type === "select" && (
-                                <Input
-                                  placeholder="Options, comma separated"
-                                  value={f.options?.join(", ") ?? ""}
-                                  onChange={(e) => updateField(f.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-                                />
-                              )}
-                            </div>
-                            <button onClick={() => setFields(fields.filter((x) => x.id !== f.id))} className="text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(["text", "textarea", "number", "phone", "select", "checkbox", "rating"] as FieldType[]).map((t) => (
-                        <Button key={t} variant="outline" size="sm" type="button" onClick={() => addField(t)}>
-                          + {t}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button onClick={() => createTemplate.mutate()} disabled={!name || fields.length === 0} className="w-full">
-                    Create template
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          ) : null}
+              <Button onClick={() => { setEditingTemplate(null); setEditorOpen(true); }}>
+                <Plus className="h-4 w-4 mr-1.5" /> New template
+              </Button>
+            ) : null}
           </div>
         }
       />
@@ -296,39 +214,73 @@ function FormsPage() {
         {templates && templates.length > 0 ? (
           filteredTemplates.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredTemplates.map((t) => (
+              {filteredTemplates.map((t: any) => {
+                const inactive = t.is_active === false;
+                const system = !!t.is_system;
+                return (
                 <Card key={t.id} className="p-4 flex flex-col">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{t.name}</div>
+                      <div className="font-medium truncate flex items-center gap-1.5">
+                        {t.name}
+                        {system && <Lock className="h-3 w-3 text-amber-600 shrink-0" />}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {t.activity_type ? (ACTIVITY_TYPE_LABELS[t.activity_type] ?? t.activity_type) : (t.form_type ?? "form")} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                        {t.activity_type && t.activity_type !== "other"
+                          ? (ACTIVITY_TYPE_LABELS[t.activity_type] ?? t.activity_type)
+                          : (t.form_type ?? "form")}
+                        {" • "}{Array.isArray(t.fields) ? t.fields.length : 0} fields
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {inactive && <Badge variant="outline" className="text-amber-700 border-amber-400">Inactive — configure</Badge>}
+                        {system && <Badge variant="outline">System</Badge>}
                       </div>
                     </div>
-                    {canManageTemplates && (
-                      <button
-                        onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
-                        className="text-muted-foreground hover:text-destructive"
-                        aria-label="Delete template"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {canManageTemplates && (
+                        <button
+                          onClick={() => { setEditingTemplate(t); setEditorOpen(true); }}
+                          className="text-muted-foreground hover:text-foreground"
+                          aria-label="Edit template"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
+                      {canManageTemplates && !system && (
+                        <button
+                          onClick={() => { if (confirm("Delete template?")) removeTemplate.mutate(t.id); }}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label="Delete template"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {t.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.description}</p>}
-                  <div className="mt-auto pt-3">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type ?? "other" });
-                        setActivityId("");
-                      }}
-                    >
-                      <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
-                    </Button>
+                  <div className="mt-auto pt-3 flex gap-2">
+                    {inactive ? (
+                      canManageTemplates ? (
+                        <Button size="sm" variant="outline" onClick={() => { setEditingTemplate(t); setEditorOpen(true); }}>
+                          <Pencil className="h-4 w-4 mr-1.5" /> Configure
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Awaiting admin configuration</span>
+                      )
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type ?? "other" });
+                          setActivityId("");
+                        }}
+                      >
+                        <FilePlus2 className="h-4 w-4 mr-1.5" /> Use form
+                      </Button>
+                    )}
                   </div>
                 </Card>
-              ))}
+              );})}
             </div>
           ) : (
             <Card className="p-6 text-center text-sm text-muted-foreground">
@@ -414,6 +366,14 @@ function FormsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <FormTemplateEditor
+        open={editorOpen}
+        onOpenChange={(o) => { setEditorOpen(o); if (!o) setEditingTemplate(null); }}
+        template={editingTemplate}
+        currentUserId={user?.id}
+        isAdmin={isAdmin}
+      />
     </PageContainer>
   );
 }

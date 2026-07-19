@@ -1068,11 +1068,13 @@ export type Database = {
         Row: {
           activity_type: Database["public"]["Enums"]["activity_type"] | null
           created_at: string
-          created_by: string
+          created_by: string | null
           description: string | null
           fields: Json
           form_type: Database["public"]["Enums"]["form_type"]
           id: string
+          is_active: boolean
+          is_system: boolean
           name: string
           parts: Json
           updated_at: string
@@ -1080,11 +1082,13 @@ export type Database = {
         Insert: {
           activity_type?: Database["public"]["Enums"]["activity_type"] | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           description?: string | null
           fields?: Json
           form_type?: Database["public"]["Enums"]["form_type"]
           id?: string
+          is_active?: boolean
+          is_system?: boolean
           name: string
           parts?: Json
           updated_at?: string
@@ -1092,11 +1096,13 @@ export type Database = {
         Update: {
           activity_type?: Database["public"]["Enums"]["activity_type"] | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           description?: string | null
           fields?: Json
           form_type?: Database["public"]["Enums"]["form_type"]
           id?: string
+          is_active?: boolean
+          is_system?: boolean
           name?: string
           parts?: Json
           updated_at?: string
