@@ -51,7 +51,7 @@ function FormsPage() {
     queryFn: async () =>
       (await supabase
         .from("form_instances")
-        .select("id, name, event_date, country_code, template_id, activity_id, created_at")
+        .select("id, name, event_date, country_code, template_id, activity_id, created_at, token")
         .order("created_at", { ascending: false })
       ).data ?? [],
   });
