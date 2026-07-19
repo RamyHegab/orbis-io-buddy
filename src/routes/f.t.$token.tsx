@@ -497,7 +497,8 @@ function RepeatableGroup({
   min: number;
   token: string;
 }) {
-  const rows = value.length > 0 ? value : Array.from({ length: Math.max(min, 0) }, () => ({}));
+  const rows: Record<string, unknown>[] =
+    value.length > 0 ? value : Array.from({ length: Math.max(min, 0) }, () => ({} as Record<string, unknown>));
 
   function update(i: number, key: string, v: unknown) {
     const next = rows.map((r, idx) => (idx === i ? { ...r, [key]: v } : r));
