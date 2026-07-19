@@ -21,6 +21,8 @@ import { DiscoverBranchesButton } from "@/components/discover-branches-button";
 import { mapsSearchUrl } from "@/lib/google-maps";
 import { Link } from "@tanstack/react-router";
 import { EditAgentDialog } from "@/components/edit-agent-dialog";
+import { useServerFn } from "@tanstack/react-start";
+import { getAgentAttachments } from "@/lib/onboarding.functions";
 
 export const Route = createFileRoute("/_authenticated/agents/$agentId")({
   component: AgentDetail,
