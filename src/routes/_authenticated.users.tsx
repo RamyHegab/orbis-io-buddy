@@ -95,6 +95,18 @@ function UsersPage() {
     queryFn: () => listFn({}) as Promise<UserRow[]>,
   });
 
+  const { data: senderSubdomain } = useQuery({
+    queryKey: ["app_settings", "sender_subdomain"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("sender_subdomain")
+        .eq("id", 1)
+        .maybeSingle();
+      return (data as any)?.sender_subdomain as string | null;
+    },
+  });
+
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editing, setEditing] = useState<UserRow | null>(null);
 
@@ -105,6 +117,7 @@ function UsersPage() {
       role: Role;
       lineManagerId?: string | null;
       capabilities?: Partial<CapabilityMap>;
+      emailLocalPart?: string | null;
     }) => inviteFn({ data: input }),
     onSuccess: () => {
       toast.success("Invite sent");
@@ -122,6 +135,7 @@ function UsersPage() {
       status?: "active" | "disabled";
       fullName?: string;
       capabilities?: Partial<CapabilityMap>;
+      emailLocalPart?: string | null;
     }) => updateFn({ data: input }),
     onSuccess: () => {
       toast.success("User updated");
