@@ -23,9 +23,9 @@ export function useAuth() {
   return { session, user, loading };
 }
 
-export type AppRole = "admin" | "manager" | "member";
+export type AppRole = "admin" | "member";
 
-export function useRole(): { role: AppRole | null; isAdmin: boolean; isManager: boolean } {
+export function useRole(): { role: AppRole | null; isAdmin: boolean } {
   const { user } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   useEffect(() => {
@@ -38,22 +38,18 @@ export function useRole(): { role: AppRole | null; isAdmin: boolean; isManager: 
       .select("role")
       .eq("user_id", user.id)
       .then(({ data }) => {
-        const roles = (data ?? []).map((r) => r.role as AppRole);
+        const roles = (data ?? []).map((r) => r.role as string);
         if (roles.includes("admin")) setRole("admin");
-        else if (roles.includes("manager")) setRole("manager");
         else setRole("member");
       });
   }, [user]);
-  return { role, isAdmin: role === "admin", isManager: role === "manager" };
+  return { role, isAdmin: role === "admin" };
 }
 
 export function useIsAdmin() {
   return useRole().isAdmin;
 }
 
-export function useIsManager() {
-  return useRole().isManager;
-}
 
 export type Capability =
   | "can_manage_agents"

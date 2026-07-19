@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
@@ -124,6 +124,8 @@ const emptyHotel: HotelForm = {
 function TripPlanner() {
   const { tripId } = Route.useParams();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
+
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
@@ -669,7 +671,7 @@ function TripPlanner() {
   const validationMessage = validateForm(form);
   const isOwner = !!user && trip.user_id === user.id;
   const pendingApproval = latestApproval?.decision === "pending" ? latestApproval : null;
-  const isManagerForThisTrip = !!user && pendingApproval?.manager_id === user.id;
+  const isManagerForThisTrip = !!user && isAdmin && !!pendingApproval && trip.user_id !== user.id;
 
   return (
     <PageContainer>

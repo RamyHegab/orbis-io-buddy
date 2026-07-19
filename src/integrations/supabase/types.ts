@@ -1360,7 +1360,6 @@ export type Database = {
           email_local_part: string | null
           full_name: string | null
           id: string
-          line_manager_id: string | null
           status: string
           updated_at: string
         }
@@ -1377,7 +1376,6 @@ export type Database = {
           email_local_part?: string | null
           full_name?: string | null
           id: string
-          line_manager_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -1394,19 +1392,10 @@ export type Database = {
           email_local_part?: string | null
           full_name?: string | null
           id?: string
-          line_manager_id?: string | null
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_line_manager_id_fkey"
-            columns: ["line_manager_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       schools: {
         Row: {
@@ -1534,7 +1523,7 @@ export type Database = {
           decided_at: string | null
           decision: string
           id: string
-          manager_id: string
+          manager_id: string | null
           note: string | null
           requested_by: string
           trip_id: string
@@ -1545,7 +1534,7 @@ export type Database = {
           decided_at?: string | null
           decision?: string
           id?: string
-          manager_id: string
+          manager_id?: string | null
           note?: string | null
           requested_by: string
           trip_id: string
@@ -1556,7 +1545,7 @@ export type Database = {
           decided_at?: string | null
           decision?: string
           id?: string
-          manager_id?: string
+          manager_id?: string | null
           note?: string | null
           requested_by?: string
           trip_id?: string
@@ -1862,10 +1851,6 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
-        Returns: boolean
-      }
-      is_line_manager_of: {
-        Args: { _manager: string; _user: string }
         Returns: boolean
       }
       move_to_dlq: {

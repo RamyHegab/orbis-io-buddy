@@ -72,7 +72,7 @@ export const listUsers = createServerFn({ method: "GET" })
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, full_name, email, line_manager_id, status, created_at, email_local_part, " + CAPS.join(","),
+        "id, full_name, email, status, created_at, email_local_part, " + CAPS.join(","),
       )
       .order("created_at", { ascending: true });
     if (pErr) throw new Error(pErr.message);
@@ -102,7 +102,7 @@ export const listUsers = createServerFn({ method: "GET" })
         id: p.id as string,
         full_name: p.full_name as string | null,
         email: p.email as string | null,
-        line_manager_id: p.line_manager_id as string | null,
+        
         status: p.status as string,
         role,
         email_local_part: (p.email_local_part as string | null) ?? null,
@@ -123,8 +123,8 @@ export const inviteUser = createServerFn({ method: "POST" })
       email: string;
       fullName?: string;
       role: Role;
-      lineManagerId?: string | null;
       capabilities?: CapMap;
+
       emailLocalPart?: string | null;
     }) => i,
   )
@@ -176,7 +176,7 @@ export const inviteUser = createServerFn({ method: "POST" })
         id: userId,
         email,
         full_name: data.fullName ?? null,
-        line_manager_id: data.lineManagerId ?? null,
+        
         status: "invited",
         email_local_part: localPart || null,
         ...caps,
@@ -200,7 +200,6 @@ export const updateUser = createServerFn({ method: "POST" })
     (i: {
       userId: string;
       role?: Role;
-      lineManagerId?: string | null;
       status?: "active" | "disabled";
       fullName?: string;
       capabilities?: CapMap;
@@ -213,8 +212,8 @@ export const updateUser = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const patch: Record<string, unknown> = {};
-    if (data.lineManagerId !== undefined) patch.line_manager_id = data.lineManagerId;
     if (data.status) patch.status = data.status;
+
     if (data.fullName !== undefined) patch.full_name = data.fullName;
     if (data.emailLocalPart !== undefined) {
       const cleaned = data.emailLocalPart ? sanitizeLocalPart(data.emailLocalPart) : "";
