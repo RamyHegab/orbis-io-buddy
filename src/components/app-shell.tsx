@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAuth, useCapabilities, type Capability } from "@/hooks/use-auth";
+import { useAuth, useCapabilities, useIsAdmin, type Capability } from "@/hooks/use-auth";
+
 import {
   LayoutDashboard,
   Users,
@@ -9,8 +10,10 @@ import {
   FileText,
   Globe2,
   CalendarRange,
+  ClipboardCheck,
   LogOut,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { HeaderMenu } from "@/components/header-menu";
 import { BrandingProvider, useBranding } from "@/components/branding-provider";
@@ -22,6 +25,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   requiresCap?: Capability;
+  adminOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
@@ -30,12 +34,15 @@ const navItems: NavItem[] = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
+  { to: "/onboarding", label: "Onboarding", icon: ClipboardCheck, adminOnly: true },
   { to: "/forms", label: "Forms", icon: FileText },
 ];
 
 export function AppShell() {
   const { user, loading } = useAuth();
   const { caps } = useCapabilities();
+  const isAdmin = useIsAdmin();
+
   const branding = useBranding();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -68,7 +75,8 @@ export function AppShell() {
         </div>
         <nav className="px-3 py-4 space-y-1">
           {navItems
-            .filter((i) => !i.requiresCap || caps[i.requiresCap])
+            .filter((i) => (!i.requiresCap || caps[i.requiresCap]) && (!i.adminOnly || isAdmin))
+
             .map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
               const Icon = item.icon;
