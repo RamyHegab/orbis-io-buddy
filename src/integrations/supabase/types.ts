@@ -376,6 +376,7 @@ export type Database = {
           id: string
           item_key: string
           label: string
+          last_reminder_at: string | null
           onboarding_id: string
           order_index: number
           phase: string
@@ -390,6 +391,7 @@ export type Database = {
           id?: string
           item_key: string
           label: string
+          last_reminder_at?: string | null
           onboarding_id: string
           order_index?: number
           phase?: string
@@ -404,6 +406,7 @@ export type Database = {
           id?: string
           item_key?: string
           label?: string
+          last_reminder_at?: string | null
           onboarding_id?: string
           order_index?: number
           phase?: string
@@ -427,6 +430,7 @@ export type Database = {
           email: string
           id: string
           institution: string | null
+          last_reminder_at: string | null
           name: string
           request_form_instance_id: string | null
           request_sent_at: string | null
@@ -442,6 +446,7 @@ export type Database = {
           email: string
           id?: string
           institution?: string | null
+          last_reminder_at?: string | null
           name: string
           request_form_instance_id?: string | null
           request_sent_at?: string | null
@@ -457,6 +462,7 @@ export type Database = {
           email?: string
           id?: string
           institution?: string | null
+          last_reminder_at?: string | null
           name?: string
           request_form_instance_id?: string | null
           request_sent_at?: string | null
