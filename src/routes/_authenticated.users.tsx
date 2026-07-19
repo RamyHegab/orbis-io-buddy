@@ -41,6 +41,12 @@ import {
   type Capability,
   type CapabilityMap,
 } from "@/hooks/use-auth";
+import {
+  ROOT_DOMAIN,
+  deriveLocalPartFromName,
+  isValidLocalPart,
+  sanitizeLocalPart,
+} from "@/lib/system-email";
 
 type Role = "admin" | "user";
 
@@ -52,6 +58,7 @@ type UserRow = {
   status: string;
   role: Role;
   last_sign_in_at: string | null;
+  email_local_part: string | null;
 } & CapabilityMap;
 
 export const Route = createFileRoute("/_authenticated/users")({
