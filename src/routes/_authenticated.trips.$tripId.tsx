@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { exportTripPdf, exportTripWord } from "@/lib/trip-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
+import { tripDateBounds, assertTripDateInRange } from "@/lib/date-range";
 import { fmtDate, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/lib/format";
 import { addDays, differenceInDays, parseISO, format } from "date-fns";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
