@@ -125,6 +125,7 @@ export const inviteUser = createServerFn({ method: "POST" })
       role: Role;
       lineManagerId?: string | null;
       capabilities?: CapMap;
+      emailLocalPart?: string | null;
     }) => i,
   )
   .handler(async ({ data, context }) => {
@@ -163,6 +164,13 @@ export const inviteUser = createServerFn({ method: "POST" })
     const userId = invited.user?.id;
     if (!userId) throw new Error("Invite failed: no user id returned");
 
+    // Derive or sanitize local-part. Falls back to name/email if missing.
+    let localPart =
+      data.emailLocalPart != null
+        ? sanitizeLocalPart(data.emailLocalPart)
+        : deriveLocalPartFromName(data.fullName ?? null, email);
+    if (localPart && !isValidLocalPart(localPart)) localPart = "";
+
     await supabaseAdmin.from("profiles").upsert(
       {
         id: userId,
@@ -170,6 +178,7 @@ export const inviteUser = createServerFn({ method: "POST" })
         full_name: data.fullName ?? null,
         line_manager_id: data.lineManagerId ?? null,
         status: "invited",
+        email_local_part: localPart || null,
         ...caps,
       } as any,
       { onConflict: "id" },
