@@ -233,8 +233,14 @@ export const decideTripApproval = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!approval) throw new Error("Approval request not found");
-    if (approval.manager_id !== userId) throw new Error("Only the assigned manager can decide");
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Only admins can decide trip approvals");
     if (approval.decision !== "pending") throw new Error("This request has already been decided");
+
+
 
     const { data: trip, error: tErr } = await supabaseAdmin
       .from("trips")
