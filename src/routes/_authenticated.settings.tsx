@@ -14,7 +14,39 @@ import { toast } from "sonner";
 import { BrandingCard } from "@/components/branding-card";
 import { StartOnboardingDialog } from "@/components/start-onboarding-dialog";
 import { Link } from "@tanstack/react-router";
-import { ClipboardCheck, ExternalLink, Plus } from "lucide-react";
+import { ClipboardCheck, ExternalLink, Plus, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+function SettingsSection({
+  title,
+  icon,
+  defaultOpen = false,
+  children,
+}: {
+  title: React.ReactNode;
+  icon?: React.ReactNode;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="mb-4">
+      <Collapsible defaultOpen={defaultOpen}>
+        <CollapsibleTrigger className="w-full group">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-muted/40 transition-colors">
+            <CardTitle className="flex items-center gap-2 text-left">
+              {icon}
+              {title}
+            </CardTitle>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>{children}</CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
