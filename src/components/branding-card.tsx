@@ -14,7 +14,7 @@ import { BrandingPreview } from "@/components/branding-preview";
 
 type ThemeMode = "default" | "from_logo" | "custom";
 
-export function BrandingCard() {
+export function BrandingCard({ bare = false }: { bare?: boolean } = {}) {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
