@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAuth, useCapabilities, type Capability } from "@/hooks/use-auth";
+import { useAuth, useCapabilities, useIsAdmin, type Capability } from "@/hooks/use-auth";
+
 import {
   LayoutDashboard,
   Users,
