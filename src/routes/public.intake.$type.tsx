@@ -90,6 +90,15 @@ function IntakePage() {
           <input type="text" tabIndex={-1} autoComplete="off" className="hidden" value={submitter.honey} onChange={(e) => setSubmitter({ ...submitter, honey: e.target.value })} />
         </div>
 
+        {t === "agent_branch" && (
+          <div>
+            <Label>Agent</Label>
+            <Input value={agentName ?? (agent ? "Loading…" : "(not specified)")} disabled readOnly />
+            <p className="text-xs text-muted-foreground mt-1">This branch will be added to the agent above.</p>
+          </div>
+        )}
+
+
         <div className="space-y-3">
           {fields.map((f) => (
             <div key={f.key}>
