@@ -410,8 +410,8 @@ function TripsPage() {
                             {COUNTRIES.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
                           </SelectContent>
                         </Select>
-                        <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
-                        <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
+                        <Input type="date" min={tripDateBounds().min} max={tripDateBounds().max} value={leg.start_date} onChange={(e) => updateLeg(i, { start_date: e.target.value })} />
+                        <Input type="date" min={tripDateBounds().min} max={tripDateBounds().max} value={leg.end_date} onChange={(e) => updateLeg(i, { end_date: e.target.value })} />
                         <Button type="button" size="icon" variant="ghost" disabled={legs.length === 1} onClick={() => setLegs(legs.filter((_, idx) => idx !== i))}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
