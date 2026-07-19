@@ -890,9 +890,9 @@ function TripPlanner() {
                 <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
                   <Input placeholder="Country" value={leg.country}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, country: e.target.value } : l))} />
-                  <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.start_date}
+                  <Input type="date" min={tripDateBounds().min} max={tripDateBounds().max} value={leg.start_date}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, start_date: e.target.value } : l))} />
-                  <Input type="date" min="2000-01-01" max="2099-12-31" value={leg.end_date}
+                  <Input type="date" min={tripDateBounds().min} max={tripDateBounds().max} value={leg.end_date}
                     onChange={(e) => setEditLegs((prev) => prev.map((l, idx) => idx === i ? { ...l, end_date: e.target.value } : l))} />
                   <Button type="button" size="icon" variant="ghost" disabled={editLegs.length === 1}
                     onClick={() => setEditLegs(editLegs.filter((_, idx) => idx !== i))}>
