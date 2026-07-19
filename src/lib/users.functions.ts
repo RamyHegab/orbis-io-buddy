@@ -123,8 +123,8 @@ export const inviteUser = createServerFn({ method: "POST" })
       email: string;
       fullName?: string;
       role: Role;
-      lineManagerId?: string | null;
       capabilities?: CapMap;
+
       emailLocalPart?: string | null;
     }) => i,
   )
