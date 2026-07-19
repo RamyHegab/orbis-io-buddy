@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building2, MapPin, Database, Pencil } from "lucide-react";
+import { Plus, Building2, MapPin, Database, Pencil, UserPlus } from "lucide-react";
 import { EditAgentDialog } from "@/components/edit-agent-dialog";
 import { toast } from "sonner";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
@@ -19,7 +19,7 @@ import { seedAirtableData } from "@/lib/seed-airtable.functions";
 import { fmtDate } from "@/lib/format";
 import { AddToItineraryButton } from "@/components/add-to-itinerary-button";
 import { ImportListDialog } from "@/components/import-list-dialog";
-import { ShareIntakeLink } from "@/components/share-intake-link";
+
 
 export const Route = createFileRoute("/_authenticated/agents/")({
   head: () => ({ meta: [{ title: "Agents — Orbis CRM" }] }),
@@ -113,7 +113,12 @@ function AgentsPage() {
         actions={
           <div className="flex gap-2 flex-wrap">
             <ImportListDialog type="agent" />
-            <ShareIntakeLink type="agent" />
+            {isAdmin && (
+              <Link to="/onboarding">
+                <Button variant="outline"><UserPlus className="h-4 w-4 mr-1" /> Agent sign up</Button>
+              </Link>
+            )}
+
             {isAdmin && (!agents || agents.length === 0) && (
               <Button variant="outline" onClick={() => runSeed.mutate()} disabled={runSeed.isPending}>
                 <Database className="h-4 w-4 mr-1" /> Import Airtable data

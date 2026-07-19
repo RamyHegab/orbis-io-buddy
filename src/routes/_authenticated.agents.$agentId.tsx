@@ -200,7 +200,7 @@ function AgentDetail() {
         <div className="flex gap-2 flex-wrap">
           <DiscoverBranchesButton agentId={agentId} />
           <ImportListDialog type="agent_branch" agentId={agentId} />
-          <ShareIntakeLink type="agent_branch" agentId={agentId} label="Share branch form" />
+          <ShareIntakeLink type="agent_branch" agentId={agentId} label="Add branch form" />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add branch</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
