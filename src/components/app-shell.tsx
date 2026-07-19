@@ -25,6 +25,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   requiresCap?: Capability;
+  adminOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
@@ -33,12 +34,15 @@ const navItems: NavItem[] = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/schools", label: "Schools", icon: GraduationCap },
   { to: "/trips", label: "Trips", icon: Plane },
+  { to: "/onboarding", label: "Onboarding", icon: ClipboardCheck, adminOnly: true },
   { to: "/forms", label: "Forms", icon: FileText },
 ];
 
 export function AppShell() {
   const { user, loading } = useAuth();
   const { caps } = useCapabilities();
+  const isAdmin = useIsAdmin();
+
   const branding = useBranding();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
