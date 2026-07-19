@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { deriveLocalPartFromName, isValidLocalPart, sanitizeLocalPart } from "@/lib/system-email";
 
 type Role = "admin" | "user";
 type DbRole = "admin" | "manager" | "member";
