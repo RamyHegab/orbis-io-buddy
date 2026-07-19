@@ -263,6 +263,232 @@ export type Database = {
           },
         ]
       }
+      agent_documents: {
+        Row: {
+          agent_id: string
+          category: Database["public"]["Enums"]["agent_doc_category"]
+          content_type: string | null
+          file_name: string | null
+          file_path: string
+          id: string
+          renewal_cycle: number
+          size_bytes: number | null
+          title: string | null
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          agent_id: string
+          category: Database["public"]["Enums"]["agent_doc_category"]
+          content_type?: string | null
+          file_name?: string | null
+          file_path: string
+          id?: string
+          renewal_cycle?: number
+          size_bytes?: number | null
+          title?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          agent_id?: string
+          category?: Database["public"]["Enums"]["agent_doc_category"]
+          content_type?: string | null
+          file_name?: string | null
+          file_path?: string
+          id?: string
+          renewal_cycle?: number
+          size_bytes?: number | null
+          title?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_documents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_onboarding: {
+        Row: {
+          agent_id: string
+          approved_at: string | null
+          approved_by: string | null
+          contact_email: string
+          created_at: string
+          declared_branches: number | null
+          id: string
+          rejection_comment: string | null
+          started_by: string
+          status: string
+          submitted_for_approval_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          approved_at?: string | null
+          approved_by?: string | null
+          contact_email: string
+          created_at?: string
+          declared_branches?: number | null
+          id?: string
+          rejection_comment?: string | null
+          started_by: string
+          status?: string
+          submitted_for_approval_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          contact_email?: string
+          created_at?: string
+          declared_branches?: number | null
+          id?: string
+          rejection_comment?: string | null
+          started_by?: string
+          status?: string
+          submitted_for_approval_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_onboarding_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_onboarding_checklist: {
+        Row: {
+          auto: boolean
+          created_at: string
+          done: boolean
+          done_at: string | null
+          done_by: string | null
+          id: string
+          item_key: string
+          label: string
+          onboarding_id: string
+          order_index: number
+          phase: string
+          updated_at: string
+        }
+        Insert: {
+          auto?: boolean
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          item_key: string
+          label: string
+          onboarding_id: string
+          order_index?: number
+          phase?: string
+          updated_at?: string
+        }
+        Update: {
+          auto?: boolean
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          item_key?: string
+          label?: string
+          onboarding_id?: string
+          order_index?: number
+          phase?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_onboarding_checklist_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "agent_onboarding"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_references: {
+        Row: {
+          agent_id: string
+          created_at: string
+          done: boolean
+          email: string
+          id: string
+          institution: string | null
+          name: string
+          request_form_instance_id: string | null
+          request_sent_at: string | null
+          role: string | null
+          sent_via: string | null
+          submission_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          done?: boolean
+          email: string
+          id?: string
+          institution?: string | null
+          name: string
+          request_form_instance_id?: string | null
+          request_sent_at?: string | null
+          role?: string | null
+          sent_via?: string | null
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          done?: boolean
+          email?: string
+          id?: string
+          institution?: string | null
+          name?: string
+          request_form_instance_id?: string | null
+          request_sent_at?: string | null
+          role?: string | null
+          sent_via?: string | null
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_references_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_references_request_form_instance_id_fkey"
+            columns: ["request_form_instance_id"]
+            isOneToOne: false
+            referencedRelation: "form_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_references_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "form_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           account_manager: string | null
@@ -460,6 +686,35 @@ export type Database = {
           },
         ]
       }
+      document_permissions: {
+        Row: {
+          agent_id: string
+          granted_at: string
+          granted_by: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          granted_at?: string
+          granted_by?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          granted_at?: string
+          granted_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_permissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -547,6 +802,59 @@ export type Database = {
         }
         Relationships: []
       }
+      emails_log: {
+        Row: {
+          body_preview: string | null
+          error: string | null
+          from_email: string | null
+          id: string
+          related_agent_id: string | null
+          reply_to: string | null
+          sent_at: string
+          sent_by: string | null
+          status: string
+          subject: string | null
+          template: string | null
+          to_email: string
+        }
+        Insert: {
+          body_preview?: string | null
+          error?: string | null
+          from_email?: string | null
+          id?: string
+          related_agent_id?: string | null
+          reply_to?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          subject?: string | null
+          template?: string | null
+          to_email: string
+        }
+        Update: {
+          body_preview?: string | null
+          error?: string | null
+          from_email?: string | null
+          id?: string
+          related_agent_id?: string | null
+          reply_to?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          subject?: string | null
+          template?: string | null
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_log_related_agent_id_fkey"
+            columns: ["related_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_cities: {
         Row: {
           city: string
@@ -630,36 +938,48 @@ export type Database = {
       }
       form_instances: {
         Row: {
-          activity_id: string
+          activity_id: string | null
           country_code: string | null
           created_at: string
           created_by: string
           event_date: string | null
+          form_type: Database["public"]["Enums"]["form_type"]
           id: string
           name: string
+          related_agent_id: string | null
+          related_reference_id: string | null
           template_id: string
+          token: string | null
           updated_at: string
         }
         Insert: {
-          activity_id: string
+          activity_id?: string | null
           country_code?: string | null
           created_at?: string
           created_by: string
           event_date?: string | null
+          form_type?: Database["public"]["Enums"]["form_type"]
           id?: string
           name: string
+          related_agent_id?: string | null
+          related_reference_id?: string | null
           template_id: string
+          token?: string | null
           updated_at?: string
         }
         Update: {
-          activity_id?: string
+          activity_id?: string | null
           country_code?: string | null
           created_at?: string
           created_by?: string
           event_date?: string | null
+          form_type?: Database["public"]["Enums"]["form_type"]
           id?: string
           name?: string
+          related_agent_id?: string | null
+          related_reference_id?: string | null
           template_id?: string
+          token?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -668,6 +988,13 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_instances_related_agent_id_fkey"
+            columns: ["related_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
             referencedColumns: ["id"]
           },
           {
@@ -739,33 +1066,39 @@ export type Database = {
       }
       form_templates: {
         Row: {
-          activity_type: Database["public"]["Enums"]["activity_type"]
+          activity_type: Database["public"]["Enums"]["activity_type"] | null
           created_at: string
           created_by: string
           description: string | null
           fields: Json
+          form_type: Database["public"]["Enums"]["form_type"]
           id: string
           name: string
+          parts: Json
           updated_at: string
         }
         Insert: {
-          activity_type: Database["public"]["Enums"]["activity_type"]
+          activity_type?: Database["public"]["Enums"]["activity_type"] | null
           created_at?: string
           created_by: string
           description?: string | null
           fields?: Json
+          form_type?: Database["public"]["Enums"]["form_type"]
           id?: string
           name: string
+          parts?: Json
           updated_at?: string
         }
         Update: {
-          activity_type?: Database["public"]["Enums"]["activity_type"]
+          activity_type?: Database["public"]["Enums"]["activity_type"] | null
           created_at?: string
           created_by?: string
           description?: string | null
           fields?: Json
+          form_type?: Database["public"]["Enums"]["form_type"]
           id?: string
           name?: string
+          parts?: Json
           updated_at?: string
         }
         Relationships: []
@@ -810,6 +1143,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_checklist_templates: {
+        Row: {
+          auto_tick_rule: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_system: boolean
+          item_key: string
+          label: string
+          order_index: number
+          phase: string
+          updated_at: string
+        }
+        Insert: {
+          auto_tick_rule?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          item_key: string
+          label: string
+          order_index?: number
+          phase?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_tick_rule?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          item_key?: string
+          label?: string
+          order_index?: number
+          phase?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       pending_submissions: {
         Row: {
@@ -1500,8 +1872,23 @@ export type Database = {
         | "resting_day"
         | "other"
         | "hotel"
-      agent_status: "active" | "inactive" | "prospect"
+      agent_doc_category:
+        | "british_council"
+        | "company_registration"
+        | "supporting"
+      agent_status:
+        | "active"
+        | "inactive"
+        | "prospect"
+        | "onboarding"
+        | "pending_approval"
       app_role: "admin" | "member" | "manager"
+      form_type:
+        | "activity"
+        | "agent_signup"
+        | "reference_request"
+        | "agent_branch"
+        | "other"
       school_level: "high_school" | "university" | "language_school" | "other"
       trip_status:
         | "planning"
@@ -1647,8 +2034,26 @@ export const Constants = {
         "other",
         "hotel",
       ],
-      agent_status: ["active", "inactive", "prospect"],
+      agent_doc_category: [
+        "british_council",
+        "company_registration",
+        "supporting",
+      ],
+      agent_status: [
+        "active",
+        "inactive",
+        "prospect",
+        "onboarding",
+        "pending_approval",
+      ],
       app_role: ["admin", "member", "manager"],
+      form_type: [
+        "activity",
+        "agent_signup",
+        "reference_request",
+        "agent_branch",
+        "other",
+      ],
       school_level: ["high_school", "university", "language_school", "other"],
       trip_status: [
         "planning",

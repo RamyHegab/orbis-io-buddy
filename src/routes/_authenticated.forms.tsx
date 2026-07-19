@@ -302,7 +302,7 @@ function FormsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{t.name}</div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {ACTIVITY_TYPE_LABELS[t.activity_type]} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
+                        {t.activity_type ? (ACTIVITY_TYPE_LABELS[t.activity_type] ?? t.activity_type) : (t.form_type ?? "form")} • {Array.isArray(t.fields) ? t.fields.length : 0} fields
                       </div>
                     </div>
                     {canManageTemplates && (
@@ -320,7 +320,7 @@ function FormsPage() {
                     <Button
                       size="sm"
                       onClick={() => {
-                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type });
+                        setPickerTemplate({ id: t.id, name: t.name, activity_type: t.activity_type ?? "other" });
                         setActivityId("");
                       }}
                     >
