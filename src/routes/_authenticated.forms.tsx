@@ -209,59 +209,10 @@ function FormsPage() {
               </Button>
             )}
             {canManageTemplates ? (
-              <Dialog open={tplOpen} onOpenChange={setTplOpen}>
-                <DialogTrigger asChild>
-                  <Button><Plus className="h-4 w-4 mr-1.5" /> New template</Button>
-                </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader><DialogTitle>New form template</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div><Label>Name *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Event check-in form" /></div>
-                  <div><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-
-                  <div className="border-t pt-3">
-                    <Label className="mb-2 block">Fields</Label>
-                    <div className="space-y-2 mb-3">
-                      {fields.map((f) => (
-                        <Card key={f.id} className="p-3">
-                          <div className="flex items-start gap-2">
-                            <GripVertical className="h-4 w-4 text-muted-foreground mt-2" />
-                            <div className="flex-1 space-y-2">
-                              <div className="flex gap-2">
-                                <Input placeholder="Question label" value={f.label} onChange={(e) => updateField(f.id, { label: e.target.value })} />
-                                <span className="text-xs text-muted-foreground self-center capitalize">{f.type}</span>
-                              </div>
-                              {f.type === "select" && (
-                                <Input
-                                  placeholder="Options, comma separated"
-                                  value={f.options?.join(", ") ?? ""}
-                                  onChange={(e) => updateField(f.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-                                />
-                              )}
-                            </div>
-                            <button onClick={() => setFields(fields.filter((x) => x.id !== f.id))} className="text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(["text", "textarea", "number", "phone", "select", "checkbox", "rating"] as FieldType[]).map((t) => (
-                        <Button key={t} variant="outline" size="sm" type="button" onClick={() => addField(t)}>
-                          + {t}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button onClick={() => createTemplate.mutate()} disabled={!name || fields.length === 0} className="w-full">
-                    Create template
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          ) : null}
+              <Button onClick={() => { setEditingTemplate(null); setEditorOpen(true); }}>
+                <Plus className="h-4 w-4 mr-1.5" /> New template
+              </Button>
+            ) : null}
           </div>
         }
       />
