@@ -312,6 +312,7 @@ export const decideTripApproval = createServerFn({ method: "POST" })
         recipientEmail: owner.email,
         idempotencyKey: `${trip.id}-${data.decision}-${approval.id}`,
         templateData: { ...baseTemplateData, audience: "owner" },
+        senderUserId: userId,
       });
     }
 
@@ -322,6 +323,7 @@ export const decideTripApproval = createServerFn({ method: "POST" })
         recipientEmail: manager.email,
         idempotencyKey: `${trip.id}-approved-manager-${approval.id}`,
         templateData: { ...baseTemplateData, audience: "manager" },
+        senderUserId: userId,
       });
     }
 
