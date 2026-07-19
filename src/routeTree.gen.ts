@@ -41,6 +41,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicPlanningRemindersRouteImport } from './routes/api/public/planning/reminders'
 import { Route as ApiPublicHooksChecklistRemindersRouteImport } from './routes/api/public/hooks/checklist-reminders'
 import { Route as ApiPublicHooksAutoArchiveCycleRouteImport } from './routes/api/public/hooks/auto-archive-cycle'
+import { Route as ApiPublicFormUploadTokenRouteImport } from './routes/api/public/form-upload.$token'
 import { Route as ApiPublicFormInstanceIdRouteImport } from './routes/api/public/form-instance.$id'
 import { Route as ApiPublicFormByTokenTokenRouteImport } from './routes/api/public/form-by-token.$token'
 import { Route as AuthenticatedTripsTripIdReportRouteImport } from './routes/_authenticated.trips.$tripId.report'
@@ -218,6 +219,12 @@ const ApiPublicHooksAutoArchiveCycleRoute =
     path: '/api/public/hooks/auto-archive-cycle',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicFormUploadTokenRoute =
+  ApiPublicFormUploadTokenRouteImport.update({
+    id: '/api/public/form-upload/$token',
+    path: '/api/public/form-upload/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicFormInstanceIdRoute = ApiPublicFormInstanceIdRouteImport.update({
   id: '/api/public/form-instance/$id',
   path: '/api/public/form-instance/$id',
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/api/public/form-by-token/$token': typeof ApiPublicFormByTokenTokenRoute
   '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
+  '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -306,6 +314,7 @@ export interface FileRoutesByTo {
   '/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/api/public/form-by-token/$token': typeof ApiPublicFormByTokenTokenRoute
   '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
+  '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -345,6 +354,7 @@ export interface FileRoutesById {
   '/_authenticated/trips/$tripId/report': typeof AuthenticatedTripsTripIdReportRoute
   '/api/public/form-by-token/$token': typeof ApiPublicFormByTokenTokenRoute
   '/api/public/form-instance/$id': typeof ApiPublicFormInstanceIdRoute
+  '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/trips/$tripId/report'
     | '/api/public/form-by-token/$token'
     | '/api/public/form-instance/$id'
+    | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/trips/$tripId/report'
     | '/api/public/form-by-token/$token'
     | '/api/public/form-instance/$id'
+    | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -457,6 +469,7 @@ export interface FileRouteTypes {
     | '/_authenticated/trips/$tripId/report'
     | '/api/public/form-by-token/$token'
     | '/api/public/form-instance/$id'
+    | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
     | '/api/public/planning/reminders'
@@ -479,6 +492,7 @@ export interface RootRouteChildren {
   PublicIntakeTypeRoute: typeof PublicIntakeTypeRoute
   ApiPublicFormByTokenTokenRoute: typeof ApiPublicFormByTokenTokenRoute
   ApiPublicFormInstanceIdRoute: typeof ApiPublicFormInstanceIdRoute
+  ApiPublicFormUploadTokenRoute: typeof ApiPublicFormUploadTokenRoute
   ApiPublicHooksAutoArchiveCycleRoute: typeof ApiPublicHooksAutoArchiveCycleRoute
   ApiPublicHooksChecklistRemindersRoute: typeof ApiPublicHooksChecklistRemindersRoute
   ApiPublicPlanningRemindersRoute: typeof ApiPublicPlanningRemindersRoute
@@ -713,6 +727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoArchiveCycleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/form-upload/$token': {
+      id: '/api/public/form-upload/$token'
+      path: '/api/public/form-upload/$token'
+      fullPath: '/api/public/form-upload/$token'
+      preLoaderRoute: typeof ApiPublicFormUploadTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/form-instance/$id': {
       id: '/api/public/form-instance/$id'
       path: '/api/public/form-instance/$id'
@@ -834,6 +855,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicIntakeTypeRoute: PublicIntakeTypeRoute,
   ApiPublicFormByTokenTokenRoute: ApiPublicFormByTokenTokenRoute,
   ApiPublicFormInstanceIdRoute: ApiPublicFormInstanceIdRoute,
+  ApiPublicFormUploadTokenRoute: ApiPublicFormUploadTokenRoute,
   ApiPublicHooksAutoArchiveCycleRoute: ApiPublicHooksAutoArchiveCycleRoute,
   ApiPublicHooksChecklistRemindersRoute: ApiPublicHooksChecklistRemindersRoute,
   ApiPublicPlanningRemindersRoute: ApiPublicPlanningRemindersRoute,
