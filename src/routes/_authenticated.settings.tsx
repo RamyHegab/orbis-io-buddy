@@ -107,6 +107,7 @@ function SettingsPage() {
 
       {isAdmin && <AccountSettingsCard />}
       {isAdmin && <BrandingCard />}
+      <AgentOnboardingCard isAdmin={isAdmin} />
 
 
 
