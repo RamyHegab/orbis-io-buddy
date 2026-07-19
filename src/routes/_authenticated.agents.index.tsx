@@ -185,8 +185,10 @@ function AgentsPage() {
       {filtered.length > 0 ? (
         <div className="max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((a: any) => (
-              <div key={a.id} className="relative">
+            {filtered.map((a: any) => {
+              const dim = a.status === "onboarding" || a.status === "pending_approval";
+              return (
+              <div key={a.id} className={`relative ${dim ? "opacity-60" : ""}`}>
                 <Link to="/agents/$agentId" params={{ agentId: a.id }}>
                   <Card className="p-5 hover:shadow-md transition-shadow h-full">
                     <div className="flex items-start gap-3">
@@ -196,7 +198,7 @@ function AgentsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <div className="font-medium truncate">{a.trading_name}</div>
-                          <Badge variant={STATUS_VARIANT[a.status] ?? "outline"} className="text-[10px] uppercase">{a.status}</Badge>
+                          <Badge variant={STATUS_VARIANT[a.status] ?? "outline"} className="text-[10px] uppercase">{STATUS_LABEL[a.status] ?? a.status}</Badge>
                         </div>
                         {a.legal_name && a.legal_name !== a.trading_name && (
                           <div className="text-xs text-muted-foreground truncate">{a.legal_name}</div>
