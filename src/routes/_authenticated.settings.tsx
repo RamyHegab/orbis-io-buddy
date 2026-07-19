@@ -135,7 +135,7 @@ function AgentOnboardingBody({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-function AccountSettingsCard() {
+function AccountSettingsBody() {
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["app_settings"],
@@ -191,11 +191,7 @@ function AccountSettingsCard() {
   });
 
   return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle>Account — Recruitment cycle & currency</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
         <div>
           <Label className="mb-1 block">Recruitment cycle</Label>
           <p className="text-xs text-muted-foreground mb-2">
