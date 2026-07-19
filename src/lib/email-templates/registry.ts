@@ -7,6 +7,7 @@ import { template as planningActualCostsReminder } from './planning-actual-costs
 import { template as checklistReminder } from './checklist-reminder'
 import { template as agentSignupInvite } from './agent-signup-invite'
 import { template as referenceRequest } from './reference-request'
+import { template as onboardingStepReminder } from './onboarding-step-reminder'
 
 
 export interface TemplateEntry {
@@ -27,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'checklist-reminder': checklistReminder,
   'agent-signup-invite': agentSignupInvite,
   'reference-request': referenceRequest,
+  'onboarding-step-reminder': onboardingStepReminder,
 }
