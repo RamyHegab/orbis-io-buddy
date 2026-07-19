@@ -301,7 +301,7 @@ export function FormTemplateEditor({ open, onOpenChange, template, currentUserId
               <Select
                 value={formType}
                 onValueChange={(v) => setFormType(v as FormType)}
-                disabled={!isNew || (template?.is_system ?? false)}
+                disabled={!isNew || !!(template as Template | null)?.is_system}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
