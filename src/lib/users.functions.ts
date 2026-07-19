@@ -72,7 +72,7 @@ export const listUsers = createServerFn({ method: "GET" })
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, full_name, email, line_manager_id, status, created_at, email_local_part, " + CAPS.join(","),
+        "id, full_name, email, status, created_at, email_local_part, " + CAPS.join(","),
       )
       .order("created_at", { ascending: true });
     if (pErr) throw new Error(pErr.message);
