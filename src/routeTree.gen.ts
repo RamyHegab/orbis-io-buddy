@@ -40,6 +40,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPlanningRemindersRouteImport } from './routes/api/public/planning/reminders'
+import { Route as ApiPublicHooksOnboardingRemindersRouteImport } from './routes/api/public/hooks/onboarding-reminders'
 import { Route as ApiPublicHooksChecklistRemindersRouteImport } from './routes/api/public/hooks/checklist-reminders'
 import { Route as ApiPublicHooksAutoArchiveCycleRouteImport } from './routes/api/public/hooks/auto-archive-cycle'
 import { Route as ApiPublicFormUploadTokenRouteImport } from './routes/api/public/form-upload.$token'
@@ -212,6 +213,12 @@ const ApiPublicPlanningRemindersRoute =
     path: '/api/public/planning/reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksOnboardingRemindersRoute =
+  ApiPublicHooksOnboardingRemindersRouteImport.update({
+    id: '/api/public/hooks/onboarding-reminders',
+    path: '/api/public/hooks/onboarding-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksChecklistRemindersRoute =
   ApiPublicHooksChecklistRemindersRouteImport.update({
     id: '/api/public/hooks/checklist-reminders',
@@ -281,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
+  '/api/public/hooks/onboarding-reminders': typeof ApiPublicHooksOnboardingRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -317,6 +325,7 @@ export interface FileRoutesByTo {
   '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
+  '/api/public/hooks/onboarding-reminders': typeof ApiPublicHooksOnboardingRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -357,6 +366,7 @@ export interface FileRoutesById {
   '/api/public/form-upload/$token': typeof ApiPublicFormUploadTokenRoute
   '/api/public/hooks/auto-archive-cycle': typeof ApiPublicHooksAutoArchiveCycleRoute
   '/api/public/hooks/checklist-reminders': typeof ApiPublicHooksChecklistRemindersRoute
+  '/api/public/hooks/onboarding-reminders': typeof ApiPublicHooksOnboardingRemindersRoute
   '/api/public/planning/reminders': typeof ApiPublicPlanningRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
+    | '/api/public/hooks/onboarding-reminders'
     | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -433,6 +444,7 @@ export interface FileRouteTypes {
     | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
+    | '/api/public/hooks/onboarding-reminders'
     | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -472,6 +484,7 @@ export interface FileRouteTypes {
     | '/api/public/form-upload/$token'
     | '/api/public/hooks/auto-archive-cycle'
     | '/api/public/hooks/checklist-reminders'
+    | '/api/public/hooks/onboarding-reminders'
     | '/api/public/planning/reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -494,6 +507,7 @@ export interface RootRouteChildren {
   ApiPublicFormUploadTokenRoute: typeof ApiPublicFormUploadTokenRoute
   ApiPublicHooksAutoArchiveCycleRoute: typeof ApiPublicHooksAutoArchiveCycleRoute
   ApiPublicHooksChecklistRemindersRoute: typeof ApiPublicHooksChecklistRemindersRoute
+  ApiPublicHooksOnboardingRemindersRoute: typeof ApiPublicHooksOnboardingRemindersRoute
   ApiPublicPlanningRemindersRoute: typeof ApiPublicPlanningRemindersRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -719,6 +733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPlanningRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/onboarding-reminders': {
+      id: '/api/public/hooks/onboarding-reminders'
+      path: '/api/public/hooks/onboarding-reminders'
+      fullPath: '/api/public/hooks/onboarding-reminders'
+      preLoaderRoute: typeof ApiPublicHooksOnboardingRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/checklist-reminders': {
       id: '/api/public/hooks/checklist-reminders'
       path: '/api/public/hooks/checklist-reminders'
@@ -858,6 +879,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicFormUploadTokenRoute: ApiPublicFormUploadTokenRoute,
   ApiPublicHooksAutoArchiveCycleRoute: ApiPublicHooksAutoArchiveCycleRoute,
   ApiPublicHooksChecklistRemindersRoute: ApiPublicHooksChecklistRemindersRoute,
+  ApiPublicHooksOnboardingRemindersRoute:
+    ApiPublicHooksOnboardingRemindersRoute,
   ApiPublicPlanningRemindersRoute: ApiPublicPlanningRemindersRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
