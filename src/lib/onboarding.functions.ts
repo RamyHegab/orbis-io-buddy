@@ -21,7 +21,8 @@ export const startOnboarding = createServerFn({ method: "POST" })
     return { tradingName: name, contactEmail: email };
   })
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    // Any authenticated user may start a new agent onboarding. Admin-only actions
+    // (list, detail, checklist toggle) remain gated below.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
 
