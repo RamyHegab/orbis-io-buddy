@@ -235,7 +235,7 @@ function AgentsPage() {
                   />
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         </div>
       ) : (
