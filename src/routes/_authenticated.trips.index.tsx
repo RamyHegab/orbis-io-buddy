@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { format, parseISO } from "date-fns";
 import { COUNTRIES } from "@/lib/countries";
+import { tripDateBounds, assertTripDateInRange } from "@/lib/date-range";
 
 export const Route = createFileRoute("/_authenticated/trips/")({
   head: () => ({ meta: [{ title: "Trips — Orbis CRM" }] }),
