@@ -229,8 +229,6 @@ export const toggleChecklistItem = createServerFn({ method: "POST" })
 
 function siteOrigin(): string {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getRequest } = require("@tanstack/react-start/server");
     const req = getRequest();
     if (req?.url) return new URL(req.url).origin;
   } catch {}
