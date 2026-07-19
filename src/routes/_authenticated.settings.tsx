@@ -41,52 +41,6 @@ function SettingsPage() {
 
 
 
-
-      {isAdmin && (
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>Data maintenance — Trip dates</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm text-muted-foreground">
-                Scan for trips whose start or end date has an invalid year (outside 2000–2099). The auto-fix converts 2-digit years to the 2000s.
-              </p>
-              <div className="flex gap-2 shrink-0">
-                <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
-                  Re-scan
-                </Button>
-                {scan && scan.length > 0 && (
-                  <Button size="sm" onClick={() => fixAll.mutate()} disabled={fixAll.isPending}>
-                    Fix all ({scan.length})
-                  </Button>
-                )}
-              </div>
-            </div>
-            {scan && scan.length === 0 ? (
-              <p className="text-sm text-emerald-600">✓ No trips with invalid years.</p>
-            ) : (
-              <ul className="space-y-2">
-                {(scan ?? []).map((item: any) => (
-                  <li key={item.trip?.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{item.trip?.title ?? "(missing trip)"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {item.trip?.start_date} → {item.trip?.end_date}
-                        {item.legs.length > 0 && ` • ${item.legs.length} leg(s)`}
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={() => fixOne.mutate(item)} disabled={fixOne.isPending}>
-                      Fix year
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle>Coming soon</CardTitle>
