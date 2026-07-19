@@ -204,6 +204,7 @@ export const updateUser = createServerFn({ method: "POST" })
       status?: "active" | "disabled";
       fullName?: string;
       capabilities?: CapMap;
+      emailLocalPart?: string | null;
     }) => i,
   )
   .handler(async ({ data, context }) => {
@@ -215,6 +216,13 @@ export const updateUser = createServerFn({ method: "POST" })
     if (data.lineManagerId !== undefined) patch.line_manager_id = data.lineManagerId;
     if (data.status) patch.status = data.status;
     if (data.fullName !== undefined) patch.full_name = data.fullName;
+    if (data.emailLocalPart !== undefined) {
+      const cleaned = data.emailLocalPart ? sanitizeLocalPart(data.emailLocalPart) : "";
+      if (cleaned && !isValidLocalPart(cleaned)) {
+        throw new Error("Invalid email local part. Use letters, numbers, . _ - only.");
+      }
+      patch.email_local_part = cleaned || null;
+    }
 
     if (data.capabilities) {
       // Only write caps the inviter is allowed to grant/revoke. Leave the rest
