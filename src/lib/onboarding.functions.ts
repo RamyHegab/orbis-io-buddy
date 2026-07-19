@@ -225,3 +225,193 @@ export const toggleChecklistItem = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+function siteOrigin(): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getRequest } = require("@tanstack/react-start/server");
+    const req = getRequest();
+    if (req?.url) return new URL(req.url).origin;
+  } catch {}
+  return process.env.SITE_URL ?? "https://orbishub.co.uk";
+}
+
+async function sendSystemEmail(opts: {
+  templateName: string;
+  recipientEmail: string;
+  idempotencyKey: string;
+  templateData: Record<string, any>;
+  senderUserId?: string | null;
+}) {
+  const origin = siteOrigin();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  let from: string | undefined;
+  let replyTo: string | undefined;
+  if (opts.senderUserId) {
+    try {
+      const { getSenderFor } = await import("./system-email.server");
+      const s = await getSenderFor(opts.senderUserId);
+      from = s.from;
+      replyTo = s.replyTo;
+    } catch (e) {
+      console.error("sender resolution failed", e);
+    }
+  }
+  const res = await fetch(`${origin}/lovable/email/transactional/send`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${serviceKey}` },
+    body: JSON.stringify({ ...opts, from, replyTo }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Email send failed: ${res.status} ${text}`);
+  }
+}
+
+// Send the Agent Signup form link to the agent's main contact.
+export const sendSignupInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { onboardingId: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: onb } = await supabaseAdmin
+      .from("agent_onboarding")
+      .select("id, contact_email, agent:agents!agent_onboarding_agent_id_fkey(id, trading_name)")
+      .eq("id", data.onboardingId)
+      .maybeSingle();
+    if (!onb) throw new Error("Onboarding not found");
+
+    const agentId = (onb as any).agent?.id;
+    const { data: instance } = await supabaseAdmin
+      .from("form_instances")
+      .select("token")
+      .eq("related_agent_id", agentId)
+      .eq("form_type", "agent_signup")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!instance?.token) throw new Error("No signup form configured — activate an Agent Signup form template first.");
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    const formUrl = `${siteOrigin()}/f/t/${instance.token}`;
+    await sendSystemEmail({
+      templateName: "agent-signup-invite",
+      recipientEmail: onb.contact_email,
+      idempotencyKey: `signup-invite:${onb.id}:${Date.now()}`,
+      senderUserId: context.userId,
+      templateData: {
+        agentName: (onb as any).agent?.trading_name ?? "",
+        senderName: (profile as any)?.full_name ?? "",
+        formUrl,
+      },
+    });
+
+    await supabaseAdmin
+      .from("agent_onboarding_checklist")
+      .update({ done: true, done_by: context.userId, done_at: new Date().toISOString() })
+      .eq("onboarding_id", data.onboardingId)
+      .eq("item_key", "signup_form_sent")
+      .eq("done", false);
+
+    return { ok: true };
+  });
+
+// Send a reference request email to one referee.
+export const sendReferenceRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { referenceId: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: ref } = await supabaseAdmin
+      .from("agent_references")
+      .select("id, name, email, agent_id, agents:agent_id(trading_name)")
+      .eq("id", data.referenceId)
+      .maybeSingle();
+    if (!ref) throw new Error("Reference not found");
+
+    // Optional: create a reference_request form_instance if a template exists.
+    let formUrl: string | null = null;
+    const { data: tmpl } = await supabaseAdmin
+      .from("form_templates")
+      .select("id")
+      .eq("form_type", "reference_request")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (tmpl) {
+      const { data: instance } = await supabaseAdmin
+        .from("form_instances")
+        .insert({
+          name: `${(ref as any).agents?.trading_name ?? "Agent"} — reference from ${ref.name ?? ref.email}`,
+          template_id: tmpl.id,
+          form_type: "reference_request" as const,
+          related_agent_id: ref.agent_id,
+          related_reference_id: ref.id,
+          created_by: context.userId,
+          activity_id: null,
+        } as any)
+        .select("token")
+        .single();
+      if (instance?.token) formUrl = `${siteOrigin()}/f/t/${instance.token}`;
+    }
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    await sendSystemEmail({
+      templateName: "reference-request",
+      recipientEmail: ref.email,
+      idempotencyKey: `ref-request:${ref.id}:${Date.now()}`,
+      senderUserId: context.userId,
+      templateData: {
+        refereeName: ref.name ?? "",
+        agentName: (ref as any).agents?.trading_name ?? "",
+        senderName: (profile as any)?.full_name ?? "",
+        formUrl,
+      },
+    });
+
+    await supabaseAdmin
+      .from("agent_references")
+      .update({ request_sent_at: new Date().toISOString(), sent_via: "email" })
+      .eq("id", ref.id);
+
+    return { ok: true };
+  });
+
+// Signed URLs for the attachments on an agent.
+export const getAgentAttachments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { agentId: string }) => i)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: docs } = await supabaseAdmin
+      .from("agent_documents")
+      .select("id, category, title, file_path, file_name, content_type, size_bytes, uploaded_at")
+      .eq("agent_id", data.agentId)
+      .order("uploaded_at", { ascending: false });
+    const list = docs ?? [];
+    const withUrls = await Promise.all(
+      list.map(async (d: any) => {
+        const { data: signed } = await supabaseAdmin.storage
+          .from("agent-documents")
+          .createSignedUrl(d.file_path, 60 * 60);
+        return { ...d, url: signed?.signedUrl ?? null };
+      }),
+    );
+    return withUrls;
+  });
+
