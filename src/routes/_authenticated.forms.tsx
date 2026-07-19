@@ -2,19 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useCan } from "@/hooks/use-auth";
+import { useAuth, useCan, useRole } from "@/hooks/use-auth";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FilePlus2, ExternalLink, Trash2, Plus, GripVertical, Search, X, ArrowUpDown } from "lucide-react";
+import { FilePlus2, ExternalLink, Trash2, Plus, Search, X, ArrowUpDown, Pencil, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/format";
 import { dialCodeForLocation } from "@/lib/country-codes";
 import { ShareFormButton } from "@/components/share-form-button";
+import { FormTemplateEditor } from "@/components/form-template-editor";
 
 export const Route = createFileRoute("/_authenticated/forms")({
   head: () => ({ meta: [{ title: "Forms — Orbis CRM" }] }),
