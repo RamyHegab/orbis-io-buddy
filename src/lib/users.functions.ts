@@ -200,7 +200,6 @@ export const updateUser = createServerFn({ method: "POST" })
     (i: {
       userId: string;
       role?: Role;
-      lineManagerId?: string | null;
       status?: "active" | "disabled";
       fullName?: string;
       capabilities?: CapMap;
@@ -213,8 +212,8 @@ export const updateUser = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const patch: Record<string, unknown> = {};
-    if (data.lineManagerId !== undefined) patch.line_manager_id = data.lineManagerId;
     if (data.status) patch.status = data.status;
+
     if (data.fullName !== undefined) patch.full_name = data.fullName;
     if (data.emailLocalPart !== undefined) {
       const cleaned = data.emailLocalPart ? sanitizeLocalPart(data.emailLocalPart) : "";
