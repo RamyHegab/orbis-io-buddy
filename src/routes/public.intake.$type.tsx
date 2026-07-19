@@ -1,5 +1,5 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,15 @@ function IntakePage() {
   const [submitter, setSubmitter] = useState({ name: "", email: "", honey: "" });
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [agentName, setAgentName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (t === "agent_branch" && agent) {
+      supabase.from("agents").select("trading_name").eq("id", agent).maybeSingle()
+        .then(({ data }) => setAgentName(data?.trading_name ?? null));
+    }
+  }, [t, agent]);
+
 
   const submit = async () => {
     if (submitter.honey) return; // bot
