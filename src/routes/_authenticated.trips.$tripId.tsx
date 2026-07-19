@@ -671,7 +671,7 @@ function TripPlanner() {
   const validationMessage = validateForm(form);
   const isOwner = !!user && trip.user_id === user.id;
   const pendingApproval = latestApproval?.decision === "pending" ? latestApproval : null;
-  const isManagerForThisTrip = !!user && pendingApproval?.manager_id === user.id;
+  const isManagerForThisTrip = !!user && isAdmin && !!pendingApproval && trip.user_id !== user.id;
 
   return (
     <PageContainer>
