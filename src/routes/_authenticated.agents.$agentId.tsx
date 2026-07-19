@@ -195,6 +195,8 @@ function AgentDetail() {
         )}
       </Card>
 
+      <AgentAttachments agentId={agentId} />
+
       <VisitReports agentId={agentId} />
 
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
