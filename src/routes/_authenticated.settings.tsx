@@ -105,7 +105,7 @@ function AgentOnboardingBody({ isAdmin }: { isAdmin: boolean }) {
       {isAdmin ? (
         <>
           <p className="text-sm text-muted-foreground">
-            Set up the Agent Signup form, configure the onboarding checklist, review references
+            Set up the Agent Application form, configure the onboarding checklist, review references
             and documents, and approve new agents.
           </p>
           <div className="flex flex-wrap gap-2">
@@ -123,7 +123,7 @@ function AgentOnboardingBody({ isAdmin }: { isAdmin: boolean }) {
         <>
           <p className="text-sm text-muted-foreground">
             Kick off onboarding for a new agent. We'll create a draft record and email you a
-            share link for the Agent Signup form.
+            share link for the Agent Application form.
           </p>
           <Button onClick={() => setOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Start a new agent onboarding

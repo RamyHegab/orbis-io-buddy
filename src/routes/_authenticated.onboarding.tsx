@@ -274,7 +274,7 @@ function OnboardingDetail({ onboardingId }: { onboardingId: string }) {
       {shareUrl ? (
         <div className="flex items-center gap-2 rounded-md border p-3 bg-muted/30">
           <div className="flex-1 min-w-0">
-            <div className="text-xs text-muted-foreground">Agent signup link</div>
+            <div className="text-xs text-muted-foreground">Agent Application link</div>
             <div className="font-mono text-xs truncate">{shareUrl}</div>
           </div>
           <Button
@@ -295,7 +295,7 @@ function OnboardingDetail({ onboardingId }: { onboardingId: string }) {
         </div>
       ) : (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          No active Agent Signup form template. Configure and activate one in Forms so we can
+          No active Agent Application form template. Configure and activate one in Forms so we can
           share a link.
         </div>
       )}

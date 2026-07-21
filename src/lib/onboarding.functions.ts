@@ -11,7 +11,7 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
 }
 
 // Start onboarding for a new agent. Creates a draft agents row + agent_onboarding row +
-// seeds the pre-approval checklist + generates an Agent Signup form_instance with a share token.
+// seeds the pre-approval checklist + generates an Agent Application form_instance with a share token.
 export const startOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { tradingName: string; contactEmail: string }) => {
@@ -71,7 +71,7 @@ export const startOnboarding = createServerFn({ method: "POST" })
       );
     }
 
-    // Create a form_instance pointing at the active Agent Signup template (if configured)
+    // Create a form_instance pointing at the active Agent Application template (if configured)
     const { data: template } = await supabaseAdmin
       .from("form_templates")
       .select("id, name")
@@ -86,7 +86,7 @@ export const startOnboarding = createServerFn({ method: "POST" })
       const { data: instance, error: fiErr } = await supabaseAdmin
         .from("form_instances")
         .insert({
-          name: `${data.tradingName} — Agent signup`,
+          name: `${data.tradingName} — Agent Application`,
           template_id: template.id,
           form_type: "agent_signup" as const,
           related_agent_id: agent.id,
@@ -189,7 +189,7 @@ export const getOnboardingDetail = createServerFn({ method: "POST" })
 
     if (!onboarding) throw new Error("Onboarding not found");
 
-    // Look up the share token for this agent's Agent Signup form_instance
+    // Look up the share token for this agent's Agent Application form_instance
     const agentId = (onboarding as any).agent?.id as string;
     const { data: instance } = await supabaseAdmin
       .from("form_instances")
@@ -267,7 +267,7 @@ async function sendSystemEmail(opts: {
   }
 }
 
-// Send the Agent Signup form link to the agent's main contact.
+// Send the Agent Application form link to the agent's main contact.
 export const sendSignupInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { onboardingId: string }) => i)
@@ -291,7 +291,7 @@ export const sendSignupInvite = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!instance?.token) throw new Error("No signup form configured — activate an Agent Signup form template first.");
+    if (!instance?.token) throw new Error("No signup form configured — activate an Agent Application form template first.");
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")

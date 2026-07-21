@@ -268,9 +268,87 @@ export function buildTripPdfBytes(trip: Trip, activities: Activity[], hotels: Ho
 }
 
 export function exportTripPdf(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
-  const doc = buildTripPdf(trip, activities, hotels);
-  doc.save(tripPdfFilename(trip));
+  // Route through the branded print-preview shell — the user picks
+  // "Save as PDF" from the native print dialog. This keeps a single
+  // source of truth (buildTripBodyHtml) and avoids the fragile
+  // jsPDF/autoTable rendering path.
+  const body = buildTripBodyHtml(trip, activities, hotels);
+  // Import lazily to avoid a circular type dependency and to keep the
+  // print-preview branding lookup off the hot path.
+  import("@/lib/print-preview").then(({ openPrintPreview }) =>
+    openPrintPreview({
+      title: trip.title,
+      subtitle: `${format(parseISO(trip.start_date), "d MMM yyyy")} → ${format(parseISO(trip.end_date), "d MMM yyyy")}`,
+      bodyHtml: body,
+    }),
+  );
 }
+
+/** HTML body used by both the Word export and the branded print-preview. */
+export function buildTripBodyHtml(trip: Trip, activities: Activity[], hotels: Hotel[] = []): string {
+  const days = buildDays(trip, activities);
+  const totals = computeCostTotals(activities, hotels);
+
+  const costTable = `
+    <h2>Cost summary</h2>
+    <table><tr><th>Travel</th><th>Hotels</th><th>Events</th><th>Total</th></tr>
+      <tr>
+        <td>${esc(totals.travel)}</td>
+        <td>${esc(totals.hotel)}</td>
+        <td>${esc(totals.events)}</td>
+        <td><strong>${esc(totals.total)}</strong></td>
+      </tr>
+    </table>`;
+
+  const rows = days.map((day) => {
+    const acts = day.acts.length === 0
+      ? `<p class="muted" style="font-style:italic;margin:4px 0 12px 0">No activities</p>`
+      : `<table style="table-layout:fixed">
+          <tr><th style="width:12%">Time</th><th style="width:20%">Activity</th><th style="width:38%">Details</th><th style="width:30%">Objectives</th></tr>
+          ${day.acts.map((a) => {
+            const [t, act, det, obj] = activityRow(a);
+            let detailsCell = esc(det);
+            if (a.agent_id) {
+              const branch = a.agent_branches?.branch_name;
+              const trading = a.agents?.trading_name;
+              const url = agentUrl(a.agent_id);
+              if (branch) detailsCell = detailsCell.replace(esc(branch), `<a href="${esc(url)}">${esc(branch)}</a>`);
+              else if (trading) detailsCell = detailsCell.replace(esc(trading), `<a href="${esc(url)}">${esc(trading)}</a>`);
+              else detailsCell = `<a href="${esc(url)}">${detailsCell}</a>`;
+            }
+            const bg = ACTIVITY_ROW_HEX[a.type] ?? "#ffffff";
+            return `<tr style="background:${bg}"><td>${esc(t)}</td><td>${esc(act)}</td><td>${detailsCell}</td><td style="white-space:pre-wrap">${esc(obj)}</td></tr>`;
+          }).join("")}
+        </table>`;
+    const refs = day.acts.map((a) => {
+      const items: string[] = [];
+      if (!a.agent_id) {
+        if (a.school_id && a.schools?.name) {
+          items.push(`<a href="${esc(schoolUrl())}">School: ${esc(a.schools.name)}</a>`);
+        }
+        const mapUrl = activityMapUrl(a);
+        if (mapUrl) {
+          const addr = a.formatted_address || a.location || a.schools?.address || "View on Google Maps";
+          items.push(`<a href="${esc(mapUrl)}">📍 ${esc(addr)}</a>`);
+        }
+      }
+      const linkLine = items.length
+        ? `<div style="margin:2px 0 4px 0;font-size:12px">${items.join(" &nbsp; · &nbsp; ")}</div>` : "";
+      const vis = a.visit_notes
+        ? `<div style="margin:2px 0 8px 0;font-size:12px"><strong>Notes during visit:</strong> ${esc(a.visit_notes)}</div>` : "";
+      if (!linkLine && !vis) return "";
+      return `<div style="margin-bottom:6px"><div style="font-weight:600;font-size:12px">${esc(a.title)}</div>${linkLine}${vis}</div>`;
+    }).join("");
+
+    return `<h3>${format(day.date, "EEEE, d MMMM yyyy")}</h3>${acts}${refs}`;
+  }).join("");
+
+  const objectivesBlock = trip.objectives
+    ? `<h2>Trip objectives</h2><p style="white-space:pre-wrap">${esc(trip.objectives)}</p>` : "";
+
+  return `${objectivesBlock}${costTable}${rows}`;
+}
+
 
 export function exportTripWord(trip: Trip, activities: Activity[], hotels: Hotel[] = []) {
   const days = buildDays(trip, activities);

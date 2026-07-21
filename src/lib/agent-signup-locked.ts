@@ -45,7 +45,8 @@ export interface Part {
 const LOCK_PREFIX = "__locked__";
 
 export const AGENT_SIGNUP_LOCKED_FIELDS: Field[] = [
-  { id: `${LOCK_PREFIX}agent_name`, type: "text", label: "Agent / company name", required: true, locked: true },
+  { id: `${LOCK_PREFIX}agent_name`, type: "text", label: "Trading Name (Known in the Market as)", required: true, locked: true },
+  { id: `${LOCK_PREFIX}legal_name`, type: "text", label: "Legal Name (Name as in official registration documents)", required: true, locked: true },
   { id: `${LOCK_PREFIX}website`, type: "text", label: "Website", locked: true },
   { id: `${LOCK_PREFIX}hq_country`, type: "text", label: "Headquarters country", required: true, locked: true },
   { id: `${LOCK_PREFIX}countries_of_operation`, type: "textarea", label: "Countries of operation (comma separated)", locked: true },
