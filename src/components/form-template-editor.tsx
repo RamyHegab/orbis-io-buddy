@@ -310,7 +310,7 @@ export function FormTemplateEditor({ open, onOpenChange, template, currentUserId
                   <SelectItem value="school_visit">School visit</SelectItem>
                   <SelectItem value="agent_visit">Agent visit</SelectItem>
                   <SelectItem value="recruitment_event">Recruitment event</SelectItem>
-                  {isAdmin && <SelectItem value="agent_signup">Agent signup (admin)</SelectItem>}
+                  {isAdmin && <SelectItem value="agent_signup">Agent Application (admin)</SelectItem>}
                   {isAdmin && <SelectItem value="reference_request">Reference request (admin)</SelectItem>}
                   {isAdmin && <SelectItem value="agent_branch">Agent branch (admin)</SelectItem>}
                 </SelectContent>

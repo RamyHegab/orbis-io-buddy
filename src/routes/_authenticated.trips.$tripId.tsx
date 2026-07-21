@@ -799,7 +799,7 @@ function TripPlanner() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => exportTripPdf(trip, (activities ?? []) as any, (hotels ?? []) as any)}>
-                  <FileText className="h-4 w-4 mr-2" /> PDF
+                  <FileText className="h-4 w-4 mr-2" /> Print / Download
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportTripWord(trip, (activities ?? []) as any, (hotels ?? []) as any)}>
                   <FileText className="h-4 w-4 mr-2" /> Word (.doc)

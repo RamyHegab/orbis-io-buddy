@@ -13,9 +13,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Loader2, Download, Sparkles, Globe, X, Search, Check } from "lucide-react";
 import { generateAggregateReport, type AggregateReport } from "@/lib/aggregate-report.functions";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { renderMarkdownToPdf } from "@/lib/markdown-pdf";
+import { openPrintPreview, esc as escHtml } from "@/lib/print-preview";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { renderToStaticMarkup } from "react-dom/server";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Global Reporting — Orbis CRM" }] }),
@@ -67,77 +68,57 @@ function ReportsPage() {
   };
 
 
-  const onExportPdf = () => {
+  const onExportPdf = async () => {
     if (!report) return;
-    const doc = new jsPDF();
-    const pageW = doc.internal.pageSize.getWidth();
+    // Render the AI markdown to HTML server-safe using ReactMarkdown, then
+    // wrap in supporting-data tables and open the branded print-preview.
+    const aiHtml = report.aiSummary
+      ? renderToStaticMarkup(
+          <div className="ai-summary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{report.aiSummary}</ReactMarkdown>
+          </div>,
+        )
+      : `<p class="muted"><em>No AI summary available for this range.</em></p>`;
 
-    // Title block — mirrors the on-screen Trip Report header
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("Recruitment Report", 14, 22);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(110);
-    doc.text(`${report.startDate} – ${report.endDate}`, 14, 29);
-    doc.text(`Generated ${new Date().toLocaleString()}`, 14, 34);
-    doc.setTextColor(0);
-    doc.setDrawColor(220);
-    doc.line(14, 38, pageW - 14, 38);
+    const totalsTable = `
+      <h2>Supporting data</h2>
+      <table>
+        <thead><tr><th>Metric</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody>
+          <tr><td>Trips</td><td style="text-align:right">${report.totals.trips}</td></tr>
+          <tr><td>Recruitment events</td><td style="text-align:right">${report.totals.events}</td></tr>
+          <tr><td>Agent visits</td><td style="text-align:right">${report.totals.agentVisits}</td></tr>
+          <tr><td>School visits</td><td style="text-align:right">${report.totals.schoolVisits}</td></tr>
+        </tbody>
+      </table>`;
 
-    // AI summary rendered as formatted markdown — the same body the
-    // itinerary planner's Trip Report shows on screen.
-    let y = 44;
-    if (report.aiSummary) {
-      y = renderMarkdownToPdf(doc, report.aiSummary, { x: 14, y, width: pageW - 28, bottom: 280 });
-    } else {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.setTextColor(140);
-      doc.text("No AI summary available for this range.", 14, y);
-      doc.setTextColor(0);
-      y += 8;
-    }
+    const byCountryTable = report.byCountry.length
+      ? `<h3>By country</h3><table><thead><tr>
+          <th>Country</th><th>Trips</th><th>Events</th><th>Agent visits</th><th>School visits</th>
+        </tr></thead><tbody>
+        ${report.byCountry.map((r) => `<tr>
+          <td>${escHtml(r.country)}</td><td>${r.trips}</td><td>${r.events}</td>
+          <td>${r.agentVisits}</td><td>${r.schoolVisits}</td></tr>`).join("")}
+        </tbody></table>`
+      : "";
 
-    // Supporting data tables on a fresh page
-    doc.addPage();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Supporting data", 14, 20);
+    const tripsTable = report.tripsList.length
+      ? `<h3>Trips in range</h3><table><thead><tr><th>Trip</th><th>Dates</th><th>Destinations</th></tr></thead><tbody>
+        ${report.tripsList.map((t) => `<tr>
+          <td>${escHtml(t.title)}</td>
+          <td>${escHtml(t.start_date)} → ${escHtml(t.end_date)}</td>
+          <td>${escHtml(t.destinations.join(", "))}</td></tr>`).join("")}
+        </tbody></table>`
+      : "";
 
-    autoTable(doc, {
-      startY: 26,
-      head: [["Metric", "Total"]],
-      body: [
-        ["Trips", String(report.totals.trips)],
-        ["Recruitment events", String(report.totals.events)],
-        ["Agent visits", String(report.totals.agentVisits)],
-        ["School visits", String(report.totals.schoolVisits)],
-      ],
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [30, 41, 75] },
+    await openPrintPreview({
+      title: "Recruitment Report",
+      subtitle: `${report.startDate} – ${report.endDate}`,
+      bodyHtml: `<div class="ai-summary">${aiHtml}</div>${totalsTable}${byCountryTable}${tripsTable}`,
+      extraCss: `.ai-summary h1 { font-size: 18px; } .ai-summary h2 { font-size: 15px; border: 0; } .ai-summary h3 { font-size: 12px; } .ai-summary p, .ai-summary li { font-size: 11.5px; }`,
     });
-
-    if (report.byCountry.length) {
-      autoTable(doc, {
-        head: [["Country", "Trips", "Events", "Agent visits", "School visits"]],
-        body: report.byCountry.map((r) => [r.country, r.trips, r.events, r.agentVisits, r.schoolVisits]),
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [30, 41, 75] },
-      });
-    }
-
-    if (report.tripsList.length) {
-      autoTable(doc, {
-        head: [["Trip", "Dates", "Destinations"]],
-        body: report.tripsList.map((t) => [t.title, `${t.start_date} → ${t.end_date}`, t.destinations.join(", ")]),
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [30, 41, 75] },
-      });
-    }
-
-    doc.save(`report_${report.startDate}_to_${report.endDate}.pdf`);
   };
+
 
   return (
     <PageContainer>
@@ -171,7 +152,7 @@ function ReportsPage() {
             </Button>
             {report && (
               <Button variant="outline" onClick={onExportPdf}>
-                <Download className="h-4 w-4 mr-2" /> Download PDF
+                <Download className="h-4 w-4 mr-2" /> Print / Download
               </Button>
             )}
           </div>

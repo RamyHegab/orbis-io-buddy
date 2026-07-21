@@ -38,7 +38,7 @@ export function StartOnboardingDialog({
       onClose();
       if (!res.shareToken) {
         toast.warning(
-          "Agent Signup form is inactive. Ask an admin to configure it in Forms so a share link can be generated.",
+          "Agent Application form is inactive. Ask an admin to configure it in Forms so a share link can be generated.",
         );
       }
       onStarted?.(res);
@@ -67,7 +67,7 @@ export function StartOnboardingDialog({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            We'll create a draft record and generate a share link for the Agent Signup form.
+            We'll create a draft record and generate a share link for the Agent Application form.
           </p>
         </div>
         <DialogFooter>

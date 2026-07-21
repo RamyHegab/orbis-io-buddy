@@ -195,6 +195,8 @@ function AgentDetail() {
         )}
       </Card>
 
+      <AgentApplicationFormLink agentId={agentId} agentName={agent.trading_name} />
+
       <AgentAttachments agentId={agentId} />
 
       <VisitReports agentId={agentId} />
@@ -326,6 +328,86 @@ const DOC_CATEGORY_LABELS: Record<string, string> = {
   agreement: "Signed agreement",
   other: "Supporting document",
 };
+
+function AgentApplicationFormLink({ agentId, agentName }: { agentId: string; agentName: string }) {
+  const { data: submission } = useQuery({
+    queryKey: ["agent-application-form", agentId],
+    queryFn: async () => {
+      // The signup form_instance for this agent has related_agent_id set;
+      // grab its latest submission and render it via the branded print preview.
+      const { data: inst } = await supabase
+        .from("form_instances")
+        .select("id, template_id, form_templates(name, fields, parts)")
+        .eq("related_agent_id", agentId)
+        .eq("form_type", "agent_signup")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!inst) return null;
+      const { data: sub } = await supabase
+        .from("form_submissions")
+        .select("id, created_at, data, submitter_name")
+        .eq("instance_id", inst.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!sub) return null;
+      return { instance: inst, submission: sub };
+    },
+  });
+
+  if (!submission) return null;
+
+  const openForm = async () => {
+    const { openPrintPreview, esc } = await import("@/lib/print-preview");
+    const tmpl: any = (submission.instance as any).form_templates;
+    const fields: Array<{ id: string; label: string; type?: string }> = tmpl?.fields ?? [];
+    const data = (submission.submission.data ?? {}) as Record<string, unknown>;
+    const rows = fields
+      .map((f) => {
+        const raw = data[f.id];
+        if (raw == null || raw === "") return "";
+        let display: string;
+        if (Array.isArray(raw)) {
+          display = raw
+            .map((v) => {
+              if (v && typeof v === "object" && "name" in (v as any)) return String((v as any).name);
+              if (v && typeof v === "object") return Object.values(v as any).filter(Boolean).join(" — ");
+              return String(v);
+            })
+            .join("<br/>");
+        } else if (typeof raw === "object") {
+          display = Object.entries(raw as Record<string, unknown>)
+            .map(([k, v]) => `<strong>${esc(k)}:</strong> ${esc(String(v ?? ""))}`).join("<br/>");
+        } else {
+          display = esc(String(raw));
+        }
+        return `<tr><th style="text-align:left;width:36%">${esc(f.label)}</th><td>${display}</td></tr>`;
+      })
+      .join("");
+    await openPrintPreview({
+      title: `Agent Application Form — ${agentName}`,
+      subtitle: `Submitted ${new Date(submission.submission.created_at).toLocaleDateString()}${submission.submission.submitter_name ? ` by ${submission.submission.submitter_name}` : ""}`,
+      bodyHtml: `<table><tbody>${rows}</tbody></table>`,
+    });
+  };
+
+  return (
+    <Card className="p-4 mb-4 flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <div className="font-medium">Agent Application Form</div>
+        <div className="text-xs text-muted-foreground">
+          Submitted {fmtDate(submission.submission.created_at)}
+          {submission.submission.submitter_name ? ` · ${submission.submission.submitter_name}` : ""}
+        </div>
+      </div>
+      <Button size="sm" variant="outline" onClick={openForm}>
+        <FileText className="h-3 w-3 mr-1" /> Print / Download
+      </Button>
+    </Card>
+  );
+}
+
 
 function AgentAttachments({ agentId }: { agentId: string }) {
   const fetchFn = useServerFn(getAgentAttachments);

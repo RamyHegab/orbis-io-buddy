@@ -6,13 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, RefreshCw } from "lucide-react";
+import { ArrowLeft, Sparkles, RefreshCw, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { generateTripReport } from "@/lib/trip-report.functions";
+import { renderToStaticMarkup } from "react-dom/server";
+import { openPrintPreview } from "@/lib/print-preview";
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId/report")({
   component: TripReportPage,
@@ -65,10 +67,28 @@ function TripReportPage() {
         title="Trip Report"
         description={`${trip.title} • ${fmtDate(trip.start_date)} – ${fmtDate(trip.end_date)}`}
         actions={
-          <Button onClick={() => runGenerate.mutate()} disabled={generating}>
-            {generating ? <RefreshCw className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-            {latest ? "Regenerate" : "Generate report"}
-          </Button>
+          <div className="flex gap-2">
+            {latest && (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  openPrintPreview({
+                    title: `${trip.title} — Trip Report`,
+                    subtitle: `${fmtDate(trip.start_date)} – ${fmtDate(trip.end_date)}`,
+                    bodyHtml: renderToStaticMarkup(
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{latest.content_md}</ReactMarkdown>,
+                    ),
+                  })
+                }
+              >
+                <Printer className="h-4 w-4 mr-1" /> Print / Download
+              </Button>
+            )}
+            <Button onClick={() => runGenerate.mutate()} disabled={generating}>
+              {generating ? <RefreshCw className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+              {latest ? "Regenerate" : "Generate report"}
+            </Button>
+          </div>
         }
       />
 
