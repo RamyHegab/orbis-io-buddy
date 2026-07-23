@@ -1364,8 +1364,13 @@ export type Database = {
           discovery_banner_dismissed_at: string | null
           email: string | null
           email_local_part: string | null
+          first_name: string | null
+          frozen_at: string | null
           full_name: string | null
           id: string
+          job_role: string | null
+          last_name: string | null
+          line_manager_id: string | null
           status: string
           updated_at: string
         }
@@ -1380,8 +1385,13 @@ export type Database = {
           discovery_banner_dismissed_at?: string | null
           email?: string | null
           email_local_part?: string | null
+          first_name?: string | null
+          frozen_at?: string | null
           full_name?: string | null
           id: string
+          job_role?: string | null
+          last_name?: string | null
+          line_manager_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -1396,10 +1406,48 @@ export type Database = {
           discovery_banner_dismissed_at?: string | null
           email?: string | null
           email_local_part?: string | null
+          first_name?: string | null
+          frozen_at?: string | null
           full_name?: string | null
           id?: string
+          job_role?: string | null
+          last_name?: string | null
+          line_manager_id?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      role_permission_defaults: {
+        Row: {
+          can_manage_agents: boolean
+          can_manage_schools: boolean
+          can_manage_templates: boolean
+          can_manage_users: boolean
+          can_view_all_trips: boolean
+          job_role: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          can_manage_agents?: boolean
+          can_manage_schools?: boolean
+          can_manage_templates?: boolean
+          can_manage_users?: boolean
+          can_view_all_trips?: boolean
+          job_role: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          can_manage_agents?: boolean
+          can_manage_schools?: boolean
+          can_manage_templates?: boolean
+          can_manage_users?: boolean
+          can_view_all_trips?: boolean
+          job_role?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1774,6 +1822,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_agent_assignments: {
+        Row: {
+          agent_id: string
+          created_at: string
+          created_by: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          created_by?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          created_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_agent_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1863,6 +1940,10 @@ export type Database = {
       ingest_agent_signup_files: {
         Args: { p_agent_id: string; p_data: Json; p_submission_id: string }
         Returns: undefined
+      }
+      is_manager_of: {
+        Args: { _manager: string; _user: string }
+        Returns: boolean
       }
       move_to_dlq: {
         Args: {
